@@ -1,12 +1,17 @@
+import { Navbar } from "@/components/layout/navbar";
+
 const MarketingLayout = ({
     children,
 }: {
     children: React.ReactNode;
 }) => {
     return (
-        <main className="w-full relative">
-            {children}
-        </main>
+        <>
+            <main className="w-full relative">
+                <Navbar />
+                {children}
+            </main>
+        </>
     );
 };
 

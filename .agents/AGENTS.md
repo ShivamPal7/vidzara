@@ -6,6 +6,50 @@ Agents MUST read and follow this file before making changes.
 
 ---
 
+## Global Rules (Must Follow)
+
+### Theme & Styling
+- **Always use `@global.css` for theme variables** (colors, radius, shadows, typography tokens).
+- **Never hardcode colors** (no hex, rgb, hsl in components).
+- Use **CSS variables from `@global.css` only**.
+- Respect light/dark modes via variables — **no conditional color hacks in components**.
+
+---
+
+### UI Components
+- **Always use shadcn/ui components** for UI.
+- If a required component does not exist, **add it to shadcn/ui** (do not recreate from scratch).
+- Prefer **composition over custom styling**.
+- Extend shadcn **variants** when customization is required.
+
+---
+
+### Package Manager
+- **Always use `pnpm`** for installs, scripts, and commands.
+- **Never use npm or yarn**.
+
+---
+
+### UI Quality Bar
+- UI must be **modern, clean, and minimal**.
+- Prefer **spacing, hierarchy, and subtle motion** over heavy visuals.
+- Use **consistent radius, shadows, and typography** from the theme.
+- Avoid clutter.
+- Always provide **sensible empty states and loading states**.
+
+---
+
+### Code Structure & Organization
+- **Never write all code in a single file**.
+- Follow a **proper component-based architecture**.
+- Split logic into **reusable components, hooks, and utilities** where appropriate.
+- Maintain a **clear and scalable folder structure**  
+  (`components`, `features`, `hooks`, `lib`, `styles`, etc.).
+- Each component must have a **single clear responsibility**.
+- Avoid **deeply nested or monolithic components**.
+
+---
+
 ## 1. Project Identity
 
 **Project Name:** Vidzara  
