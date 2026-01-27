@@ -1,8 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Users, Eye, Zap as ZapIcon, Heart } from "lucide-react";
+import { Link as LinkIcon, Zap, Users, Eye, Zap as ZapIcon, Heart } from "lucide-react";
 import Link from "next/link";
+import { Wrapper } from "@/components/marketing/wrapper";
 import { HeroBackground } from "./hero-background";
 import { HeroBadge } from "./hero-badge";
 import { StatCard } from "./stat-card";
@@ -40,28 +41,28 @@ export function Hero() {
             {/* Floating Stats - Desktop Only */}
             <div className="hidden lg:block absolute inset-0 pointer-events-none z-20">
                 {/* Top Left */}
-                <div className="absolute top-24 left-0 xl:left-20 pointer-events-auto">
+                <div className="absolute top-32 left-0 xl:left-20 pointer-events-auto">
                     <StatCard value="10K+" label="Creators Trust Us" icon={Users} delay={0.4} floatingDelay={0} />
                 </div>
 
                 {/* Top Right */}
-                <div className="absolute top-32 right-0 xl:right-20 pointer-events-auto">
+                <div className="absolute top-36 right-0 xl:right-20 pointer-events-auto">
                     <StatCard value="50M+" label="Views Generated" icon={Eye} delay={0.5} floatingDelay={0.5} />
                 </div>
 
                 {/* Bottom Left */}
-                <div className="absolute bottom-28 left-0 xl:left-32 pointer-events-auto">
-                    <StatCard value="5x" label="Faster Creation" icon={ZapIcon} delay={0.6} floatingDelay={1} />
+                <div className="absolute bottom-20 left-0 xl:left-32 pointer-events-auto">
+                    <StatCard value="8x" label="Faster Creation" icon={ZapIcon} delay={0.6} floatingDelay={1} />
                 </div>
 
                 {/* Bottom Right */}
-                <div className="absolute bottom-20 right-0 xl:right-32 pointer-events-auto">
+                <div className="absolute bottom-12 right-0 xl:right-32 pointer-events-auto">
                     <StatCard value="98%" label="Satisfaction Rate" icon={Heart} delay={0.7} floatingDelay={1.5} />
                 </div>
             </div>
 
             {/* Content Container */}
-            <div className="container px-4 md:px-6 relative z-10">
+            <Wrapper className="py-0 md:py-0 relative z-10">
                 <motion.div
                     className="flex flex-col items-center text-center space-y-8 py-12"
                     variants={containerVariants}
@@ -76,12 +77,12 @@ export function Hero() {
 
                     {/* Headline with Gradient */}
                     <motion.div className="space-y-4 max-w-4xl" variants={itemVariants}>
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight">
                             Turn Ideas Into{" "}
-                            <span className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-sm text-5xl md:text-5xl lg:text-6xl font-bold mt-1.5 md:mt-0">
+                            <span className="inline-block px-4 md:px-4 py-1 md:py-2 bg-primary text-primary-foreground rounded-sm text-4xl md:text-5xl lg:text-6xl font-bold mt-1.5 md:mt-0">
                                 Viral Content
                             </span>
-                            <span className="text-4xl md:text-5xl lg:text-6xl font-bold block mt-1.5 md:mt-1">
+                            <span className="text-3xl md:text-5xl lg:text-6xl font-bold block mt-1.5 md:mt-0.5">
                                 Powered by Vidzara
                             </span>
                         </h1>
@@ -114,11 +115,11 @@ export function Hero() {
                     <div className="lg:hidden grid grid-cols-2 gap-4 md:gap-6 pt-8 md:pt-12 max-w-2xl w-full">
                         <StatCard value="10K+" label="Creators Trust Us" icon={Users} delay={0.4} floatingDelay={0} />
                         <StatCard value="50M+" label="Views Generated" icon={Eye} delay={0.5} floatingDelay={0.5} />
-                        <StatCard value="5x" label="Faster Creation" icon={ZapIcon} delay={0.6} floatingDelay={1} />
+                        <StatCard value="8x" label="Faster Creation" icon={ZapIcon} delay={0.6} floatingDelay={1} />
                         <StatCard value="98%" label="Satisfaction Rate" icon={Heart} delay={0.7} floatingDelay={1.5} />
                     </div>
                 </motion.div>
-            </div>
+            </Wrapper>
         </section>
     );
 }

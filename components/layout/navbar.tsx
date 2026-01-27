@@ -8,12 +8,7 @@ import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import MobileMenu from "./mobile-menu";
 
-const navItems = [
-    { name: "Features", href: "/#features" },
-    { name: "Pricing", href: "/#pricing" },
-    { name: "About", href: "/#about" },
-    { name: "Contact", href: "/#contact" },
-];
+import { navItems } from "@/constants/links";
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -37,12 +32,12 @@ export function Navbar() {
 
             <header
                 className={cn(
-                    "fixed top-4 inset-x-0 mx-auto max-w-6xl px-2 md:px-12 z-50 transition-all duration-300 ease-in-out",
-                    isOpen ? "h-[calc(100dvh-2rem)]" : "h-16 md:h-16"
+                    "fixed top-4 inset-x-0 mx-auto max-w-6xl px-2 md:px-0 z-50 transition-all duration-300 ease-in-out",
+                    isOpen ? "h-[calc(100dvh-2rem)]" : "h-14 md:h-16"
                 )}
             >
                 <div className="backdrop-blur-xl rounded-xl lg:rounded-full border-2 border-border/80 dark:border-border/50 h-full flex flex-col justify-center overflow-hidden relative bg-background/70 dark:bg-background/70">
-                    <div className="flex items-center justify-between w-full px-6 h-16 lg:h-full shrink-0">
+                    <div className="flex items-center justify-between w-full pl-6 pr-2 h-16 lg:h-full shrink-0">
                         {/* Logo */}
                         <div className="flex items-center flex-1 lg:flex-none">
                             <Link href="/" className="relative z-50 flex items-center gap-2 group">
