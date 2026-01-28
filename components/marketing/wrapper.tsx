@@ -10,7 +10,7 @@ export function Wrapper({ children, className, ...props }: WrapperProps) {
     return (
         <div
             className={cn(
-                "w-full max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-20",
+                "w-full max-w-7xl mx-auto px-4 md:px-8 py-12 md:py-24",
                 className
             )}
             {...props}
