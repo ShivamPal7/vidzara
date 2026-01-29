@@ -134,7 +134,7 @@ function FAQCard({ faq, isOpen, onToggle }: { faq: FAQItem, isOpen: boolean, onT
                 onClick={onToggle}
                 className="flex items-center justify-between w-full p-5 text-left"
             >
-                <span className="font-medium text-lg pr-4">{faq.question}</span>
+                <span className="font-medium text-lg pr-4 tracking-wide">{faq.question}</span>
                 <span className={cn(
                     "p-1 rounded-full bg-muted/50 text-muted-foreground transition-all duration-300 shrink-0",
                     isOpen && "bg-primary/10 text-primary rotate-180"
