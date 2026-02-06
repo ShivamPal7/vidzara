@@ -383,7 +383,7 @@ function GrowthPreview() {
                     <div className="w-full bg-primary/40 rounded-t-sm h-[60%]" />
                     <div className="w-full bg-primary/60 rounded-t-sm h-[50%]" />
                     <div className="w-full bg-primary/80 rounded-t-sm h-[85%]" />
-                    <div className="w-full bg-primary rounded-t-sm h-[100%] relative group">
+                    <div className="w-full bg-primary rounded-t-sm h-full relative group">
                         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                             +124%
                         </div>
