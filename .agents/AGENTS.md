@@ -126,7 +126,7 @@ Rules:
 ---
 
 ### Authentication
-- NextAuth (Auth.js)
+- Better Auth
 
 Rules:
 - Server-first authentication
@@ -138,7 +138,6 @@ Rules:
 Forbidden:
 - Supabase Auth
 - Clerk
-- Client-side auth enforcement
 
 ---
 
