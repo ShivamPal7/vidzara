@@ -90,13 +90,15 @@ export function StatCard({ value, label, icon: Icon, delay = 0, floatingDelay = 
         >
             {/* Visual card with floating animation */}
             <motion.div
-                className="bg-card/90 dark:bg-card/80 backdrop-blur-lg border border-border/30 dark:border-border/20 rounded-3xl p-4 md:p-6 shadow-md dark:shadow-lg hover:shadow-lg dark:hover:shadow-xl transition-shadow duration-300 w-full h-full flex flex-col items-start justify-center will-change-transform"
+                className="bg-card/95 dark:bg-card/70 backdrop-blur-3xl border border-white/20 dark:border-white/10 rounded-xl p-4 md:p-6 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.1)] hover:shadow-[0px_20px_40px_-12px_rgba(var(--primary-rgb),0.2)] dark:shadow-none dark:hover:shadow-[0px_0px_50px_-12px_var(--primary)] transition-all duration-500 w-full h-full flex flex-col items-start justify-center will-change-transform group"
                 animate={shouldFloat ? { y: [-4, 4, -4] } : { y: 0 }}
                 // If not floating, we strictly disable transition to prevent drift
                 transition={shouldFloat ? floatingTransition : { duration: 0 }}
             >
                 {Icon && (
-                    <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary mb-3 opacity-60" strokeWidth={2.5} />
+                    <div className="bg-primary/10 p-2 rounded-xl mb-3 group-hover:bg-primary/20 transition-colors duration-300">
+                        <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary group-hover:scale-110 transition-transform duration-300" strokeWidth={2.5} />
+                    </div>
                 )}
                 <div className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-2 tabular-nums text-left">
                     {isInView ? (

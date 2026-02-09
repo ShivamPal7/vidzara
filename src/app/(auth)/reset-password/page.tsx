@@ -6,7 +6,7 @@ export default function Page() {
     return (
         <div className="relative flex min-h-svh w-full items-center justify-center p-6 md:p-10 overflow-hidden bg-background">
             {/* Logo */}
-            <div className="flex items-center flex-1 lg:flex-none absolute top-8 md:left-8">
+            <div className="hidden md:flex items-center flex-1 lg:flex-none absolute top-8 md:left-8">
                 <Link href="/" className="relative z-50 flex items-center gap-2 group">
                     <div className="relative h-8 w-8 sm:h-10 sm:w-10">
                         <Image
