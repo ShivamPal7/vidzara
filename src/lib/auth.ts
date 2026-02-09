@@ -7,6 +7,12 @@ import { sendEmail } from "./email";
 console.log("[DEBUG] Initializing Better Auth with trustedProviders:", ["google"]);
 
 export const auth = betterAuth({
+    baseUrl: process.env.NEXT_PUBLIC_APP_URL,
+    trustedOrigins: [
+        "http://localhost:3000",
+        "https://vidzara.vercel.app",
+        "https://www.vidzara.vercel.app",
+],
     database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
