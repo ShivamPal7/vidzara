@@ -62,21 +62,21 @@ export function Testimonials() {
     return (
         <section className="bg-background relative overflow-hidden" id="testimonials">
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-3xl -translate-x-1/2" />
+                <div className="absolute top-1/4 right-0 w-52 h-52 md:w-[400px] md:h-[400px] bg-primary/5 rounded-full blur-3xl translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-40 h-40 md:w-[300px] md:h-[300px] bg-blue-500/5 rounded-full blur-3xl -translate-x-1/2" />
             </div>
 
             <Wrapper className="relative z-10">
-                <div className="text-center mx-auto mb-16">
-                    <h2 className="text-3xl md:text-5xl font-semibold mb-4 tracking-tight">
+                <div className="text-center mx-auto mb-10 md:mb-16">
+                    <h2 className="text-3xl md:text-5xl font-semibold mb-3 md:mb-4 tracking-tight">
                         Creators are already growing with Vidzara
                     </h2>
-                    <p className="text-muted-foreground text-lg md:text-xl">
+                    <p className="text-muted-foreground text-base md:text-xl">
                         Real creators. Real results. Here’s what people are saying after using Vidzara.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 md:mb-12">
                     {testimonials.map((testimonial, index) => (
                         <TestimonialCard key={index} testimonial={testimonial} index={index} />
                     ))}
@@ -109,11 +109,11 @@ function TestimonialCard({ testimonial, index }: { testimonial: Testimonial, ind
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ y: -5 }}
+
             className="h-full"
         >
             <Card className="h-full border-border/50 bg-card/40 backdrop-blur-sm hover:border-primary/20 hover:shadow-md transition-all duration-300">
-                <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                <CardHeader className="flex flex-row items-center gap-3 sm:gap-4 pb-2">
                     <Avatar className="h-10 w-10 border border-border/50">
                         <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${testimonial.name}`} alt={testimonial.name} />
                         <AvatarFallback>{testimonial.avatar}</AvatarFallback>
@@ -125,8 +125,8 @@ function TestimonialCard({ testimonial, index }: { testimonial: Testimonial, ind
                         </div>
                     </div>
                 </CardHeader>
-                <CardContent>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                <CardContent className="pt-0 sm:pt-0">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                         "{testimonial.content}"
                     </p>
                 </CardContent>

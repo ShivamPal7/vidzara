@@ -55,8 +55,8 @@ export function Workflows() {
         <section className="bg-background overflow-hidden relative pb-12" id="workflows">
             {/* Background Gradients */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-1/2 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2" />
-                <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2" />
+                <div className="absolute top-1/2 left-1/4 w-48 h-48 md:w-96 md:h-96 bg-primary/5 rounded-full blur-3xl -translate-y-1/2" />
+                <div className="absolute bottom-0 right-1/4 w-48 h-48 md:w-96 md:h-96 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2" />
             </div>
 
             <Wrapper className="relative z-30">
@@ -95,7 +95,7 @@ export function Workflows() {
                 </div>
 
                 <motion.div
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8"
+                    className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-8"
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -160,17 +160,17 @@ function StepCard({ step, title, description, mainContent }: { step: string, tit
     return (
         <motion.div variants={itemVariants} className="h-full">
             <Card className="h-full border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-primary/20 transition-colors duration-300 flex flex-col py-0">
-                <div className="h-64 bg-muted/30 border-b border-border/50 relative group overflow-hidden">
+                <div className="h-52 sm:h-64 bg-muted/30 border-b border-border/50 relative group overflow-hidden">
                     {mainContent}
                 </div>
-                <CardContent className="p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
+                <CardContent className="p-4 sm:p-6">
+                    <div className="flex items-center gap-2.5 sm:gap-3 mb-2">
+                        <div className="bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-sm shrink-0">
                             {step}
                         </div>
-                        <h3 className="text-xl font-semibold">{title}</h3>
+                        <h3 className="text-lg sm:text-xl font-semibold">{title}</h3>
                     </div>
-                    <p className="text-muted-foreground pl-9">{description}</p>
+                    <p className="text-sm sm:text-base text-muted-foreground pl-[2.125rem] sm:pl-9">{description}</p>
                 </CardContent>
             </Card>
         </motion.div>
@@ -181,11 +181,11 @@ function StepCard({ step, title, description, mainContent }: { step: string, tit
 
 function InputSim() {
     return (
-        <div className="w-full h-full p-6 flex flex-col justify-center items-center relative">
+        <div className="w-full h-full p-4 sm:p-6 flex flex-col justify-center items-center relative">
             <div className="absolute inset-0 bg-grid-white/5 mask-[linear-gradient(0deg,white,transparent)]" />
 
             <motion.div
-                className="w-full max-w-[240px] bg-background border border-border rounded-xl shadow-sm p-4 relative z-10"
+                className="w-full max-w-[220px] sm:max-w-[240px] bg-background border border-border rounded-xl shadow-sm p-3 sm:p-4 relative z-10"
                 whileHover={{ scale: 1.02 }}
                 transition={{ type: "spring", stiffness: 300 }}
             >
@@ -218,7 +218,7 @@ function InputSim() {
 
                 {/* Floating preview badge */}
                 <motion.div
-                    className="absolute -top-3 -right-8 bg-card border shadow-lg p-1.5 rounded-lg flex items-center gap-1.5"
+                    className="absolute -top-3 -right-2 sm:-right-8 bg-card border shadow-lg p-1.5 rounded-lg flex items-center gap-1.5"
                     animate={{ y: [0, -5, 0] }}
                     transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                 >
@@ -247,11 +247,11 @@ function AiToolsSelect() {
     };
 
     return (
-        <div className="w-full h-full p-6 flex flex-col justify-center items-center relative overflow-hidden">
+        <div className="w-full h-full p-4 sm:p-6 flex flex-col justify-center items-center relative overflow-hidden">
             {/* Subtle background glow */}
             <div className="absolute inset-0 bg-primary/5 opacity-50" />
 
-            <div className="grid grid-cols-2 gap-2 w-full max-w-[280px] relative z-10">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full max-w-[260px] sm:max-w-[280px] relative z-10">
                 {tools.map((tool, index) => (
                     <motion.div
                         key={index}
@@ -286,7 +286,7 @@ function OutputResult() {
     }, []);
 
     return (
-        <div className="w-full h-full flex flex-col justify-center items-center relative p-6">
+        <div className="w-full h-full flex flex-col justify-center items-center relative p-4 sm:p-6">
             {!complete ? (
                 <div className="flex flex-col items-center">
                     <div className="relative w-20 h-20 mb-4">
@@ -315,7 +315,7 @@ function OutputResult() {
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-[240px] bg-background border border-border rounded-xl shadow-lg p-4 relative"
+                    className="w-full max-w-[220px] sm:max-w-[240px] bg-background border border-border rounded-xl shadow-lg p-3 sm:p-4 relative"
                 >
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow flex items-center gap-1">
                         <CheckCircle2 className="w-3 h-3" /> Ready

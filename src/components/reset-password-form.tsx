@@ -6,13 +6,6 @@ import { toast } from "sonner"
 import { cn } from "../lib/utils"
 import { Button } from "./ui/button"
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "./ui/card"
-import {
     Field,
     FieldGroup,
     FieldLabel,
@@ -81,33 +74,53 @@ export function ResetPasswordForm({
 
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Set new password</CardTitle>
-                    <CardDescription>
-                        Enter your new password below.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+            {/* Card with glassmorphism */}
+            <div className="relative bg-card/60 backdrop-blur-xl border border-border/50 glass-2 rounded-2xl shadow-xl overflow-hidden">
+                {/* Top glow bar */}
+                <div className="absolute top-0 left-1/4 right-1/4 h-px bg-linear-to-r from-transparent via-primary/60 to-transparent" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-8 bg-primary/15 blur-2xl rounded-full" />
+
+                {/* Header */}
+                <div className="px-5 pt-6 pb-1 md:px-7 md:pt-7">
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">Set new password</h2>
+                    <p className="text-muted-foreground text-sm mt-1">
+                        Choose a strong password for your account
+                    </p>
+                </div>
+
+                {/* Content */}
+                <div className="px-5 pb-6 pt-3 md:px-7 md:pb-7">
                     <form onSubmit={handleSubmit}>
                         <FieldGroup>
                             <Field>
                                 <FieldLabel htmlFor="password">New Password</FieldLabel>
-                                <Input id="password" name="password" type="password" required />
+                                <Input
+                                    id="password"
+                                    name="password"
+                                    type="password"
+                                    required
+                                    className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                                />
                             </Field>
                             <Field>
                                 <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-                                <Input id="confirmPassword" name="confirmPassword" type="password" required />
+                                <Input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type="password"
+                                    required
+                                    className="bg-background/50 border-border/50 focus:border-primary/50 transition-colors"
+                                />
                             </Field>
                             <Field>
-                                <Button type="submit" variant={"cta"} disabled={loading}>
+                                <Button type="submit" variant={"cta"} disabled={loading} className="w-full h-10 md:h-11 text-sm md:text-base font-semibold mt-1">
                                     {loading ? "Resetting..." : "Reset Password"}
                                 </Button>
                             </Field>
                         </FieldGroup>
                     </form>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     )
 }

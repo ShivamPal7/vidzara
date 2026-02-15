@@ -61,17 +61,17 @@ export function FAQ() {
     return (
         <section className="bg-background" id="faq">
             <Wrapper>
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl md:text-5xl font-semibold mb-4">
+                <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16">
+                    <h2 className="text-3xl md:text-5xl font-semibold mb-3 md:mb-4">
                         Frequently Asked Questions
                     </h2>
-                    <p className="text-muted-foreground text-lg md:text-xl">
+                    <p className="text-muted-foreground text-base md:text-xl">
                         Everything you need to know about Vidzara, pricing, and usage.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-                    <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 md:mb-12">
+                    <div className="space-y-3 sm:space-y-4">
                         {leftColumnFaqs.map((faq, index) => (
                             <FAQCard
                                 key={`left-${index}`}
@@ -81,7 +81,7 @@ export function FAQ() {
                             />
                         ))}
                     </div>
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                         {rightColumnFaqs.map((faq, index) => (
                             <FAQCard
                                 key={`right-${index}`}
@@ -94,11 +94,11 @@ export function FAQ() {
                 </div>
 
                 <div className="">
-                    <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl px-8 py-6 md:py-10 md:px-12 text-center relative overflow-hidden flex flex-col items-center justify-center md:flex-row md:justify-between gap-4">
-                        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none" />
+                    <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl px-5 py-5 sm:px-8 sm:py-6 md:py-10 md:px-12 text-center relative overflow-hidden flex flex-col items-center justify-center md:flex-row md:justify-between gap-4">
+                        <div className="absolute top-0 right-0 w-40 h-40 md:w-[300px] md:h-[300px] bg-primary/5 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3 pointer-events-none" />
                         <div className="flex flex-col items-center justify-center md:items-start md:justify-start">
-                            <h3 className="text-2xl font-bold mb-2 relative z-10">Still have questions?</h3>
-                            <p className="text-muted-foreground relative z-10">
+                            <h3 className="text-xl sm:text-2xl font-bold mb-1 sm:mb-2 relative z-10">Still have questions?</h3>
+                            <p className="text-sm sm:text-base text-muted-foreground relative z-10">
                                 Contact our support team anytime and we’ll be happy to help.
                             </p>
                         </div>
@@ -132,9 +132,9 @@ function FAQCard({ faq, isOpen, onToggle }: { faq: FAQItem, isOpen: boolean, onT
         >
             <button
                 onClick={onToggle}
-                className="flex items-center justify-between w-full p-5 text-left"
+                className="flex items-center justify-between w-full p-4 sm:p-5 text-left"
             >
-                <span className="font-medium text-lg pr-4 tracking-wide">{faq.question}</span>
+                <span className="font-medium text-base sm:text-lg pr-3 sm:pr-4 tracking-wide">{faq.question}</span>
                 <span className={cn(
                     "p-1 rounded-full bg-muted/50 text-muted-foreground transition-all duration-300 shrink-0",
                     isOpen && "bg-primary/10 text-primary rotate-180"
@@ -150,7 +150,7 @@ function FAQCard({ faq, isOpen, onToggle }: { faq: FAQItem, isOpen: boolean, onT
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: "easeInOut" }}
                     >
-                        <div className="px-5 pb-5 text-muted-foreground leading-relaxed">
+                        <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-sm sm:text-base text-muted-foreground leading-relaxed">
                             {faq.answer}
                         </div>
                     </motion.div>

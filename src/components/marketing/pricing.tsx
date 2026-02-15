@@ -94,15 +94,15 @@ export function Pricing() {
     return (
         <section className="bg-background relative overflow-hidden" id="pricing">
             <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute bottom-1/4 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-x-1/2" />
+                <div className="absolute bottom-1/4 left-0 w-64 h-64 md:w-[500px] md:h-[500px] bg-primary/5 rounded-full blur-3xl -translate-x-1/2" />
             </div>
 
             <Wrapper className="relative z-10">
-                <div className="text-center max-w-3xl mx-auto mb-16">
-                    <h2 className="text-3xl md:text-5xl font-semibold mb-4 tracking-tight">
+                <div className="text-center max-w-3xl mx-auto mb-10 md:mb-16">
+                    <h2 className="text-3xl md:text-5xl font-semibold mb-3 md:mb-4 tracking-tight">
                         Simple pricing for every creator
                     </h2>
-                    <p className="text-muted-foreground text-lg md:text-xl mb-8">
+                    <p className="text-muted-foreground text-base md:text-xl mb-6 md:mb-8">
                         Start free. Upgrade when you’re ready to grow faster with Vidzara.
                     </p>
 
@@ -136,13 +136,13 @@ export function Pricing() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8 items-start">
                     {plans.map((plan, index) => (
                         <PricingCard key={index} plan={plan} billingCycle={billingCycle} />
                     ))}
                 </div>
 
-                <div className="mt-12 text-center text-sm text-muted-foreground space-y-2">
+                <div className="mt-8 md:mt-12 text-center text-xs sm:text-sm text-muted-foreground space-y-2">
                     <p>Fair usage policy applies • Secure payments via UPI, Cards & Net Banking • Cancel anytime</p>
                 </div>
             </Wrapper>
@@ -159,7 +159,7 @@ function PricingCard({ plan, billingCycle }: { plan: PricingPlan, billingCycle: 
             transition={{ duration: 0.5, delay: plan.highlight ? 0.2 : 0 }}
             className={cn(
                 "h-full relative",
-                plan.highlight && "md:-mt-4 md:mb-4"
+                plan.highlight && "md:-mt-4 md:mb-4 order-first md:order-none"
             )}
         >
             {plan.highlight && (
@@ -168,7 +168,7 @@ function PricingCard({ plan, billingCycle }: { plan: PricingPlan, billingCycle: 
 
             <Card className={cn(
                 "h-full flex flex-col border-muted transition-all duration-300",
-                plan.highlight ? "border-primary shadow-2xl scale-105 z-10 bg-card" : "bg-card/50 hover:border-primary/50 hover:shadow-lg"
+                plan.highlight ? "border-primary shadow-2xl md:scale-105 z-10 bg-card" : "bg-card/50 hover:border-primary/50 hover:shadow-lg"
             )}>
                 <CardHeader className="pb-4">
                     {plan.badge && (
@@ -176,9 +176,9 @@ function PricingCard({ plan, billingCycle }: { plan: PricingPlan, billingCycle: 
                             {plan.badge}
                         </Badge>
                     )}
-                    <h3 className="text-2xl font-bold">{plan.title}</h3>
+                    <h3 className="text-xl sm:text-2xl font-bold">{plan.title}</h3>
                     <div className="mt-2 flex items-baseline gap-1">
-                        <span className="text-4xl font-bold tracking-tight">
+                        <span className="text-3xl sm:text-4xl font-bold tracking-tight">
                             {billingCycle === "monthly" ? plan.price.monthly : plan.price.yearly}
                         </span>
                         <span className="text-muted-foreground text-sm font-medium">

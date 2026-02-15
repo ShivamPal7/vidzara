@@ -8,13 +8,6 @@ import { toast } from "sonner"
 import { cn } from "../lib/utils"
 import { Button } from "./ui/button"
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "./ui/card"
-import {
     Field,
     FieldDescription,
     FieldGroup,
@@ -93,26 +86,7 @@ export function OtpForm({
         }
 
         if (flow === "reset-password") {
-            // Usually we just want to collect the OTP and move to the reset page
-            // But we can optionally verify it here if the API allows checked verification without consuming
-            // For better UX, let's assume we pass it forward. 
-            // Better Auth docs say checkVerificationOtp is available.
-            /* @ts-ignore */
             try {
-                // Try to verify validity first
-                // If checkVerificationOtp is not available in your client version/plugin setup, this might fail unless typed.
-                // Assuming it works based on docs.
-                // For now, let's just pass it to the next page to avoid issues if checkVerificationOtp is strictly for other flows or consumes it (docs say optional).
-                // Actually, if we want to reuse this page, we must ensure the OTP is correct before redirecting.
-                /* 
-                await authClient.emailOtp.checkVerificationOtp({
-                    email,
-                    otp,
-                    type: "forget-password"
-                })
-                */
-                // Let's rely on the final step for definitive check to avoid double-consumption issues if any.
-                // Storing OTP.
                 localStorage.setItem("otpForReset", otp)
                 router.push("/reset-password")
                 toast.success("Code verified")
@@ -141,49 +115,63 @@ export function OtpForm({
 
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
-            <Card>
-                <CardHeader>
-                    <CardTitle>{flow === "reset-password" ? "Verify Code" : "Verify your email"}</CardTitle>
-                    <CardDescription>
-                        Enter the 4-digit code sent to your email address
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
+            {/* Card with glassmorphism */}
+            <div className="relative bg-card/60 backdrop-blur-xl border border-border/50 glass-2 rounded-2xl shadow-xl overflow-hidden">
+                {/* Top glow bar */}
+                <div className="absolute top-0 left-1/4 right-1/4 h-px bg-linear-to-r from-transparent via-primary/60 to-transparent" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-8 bg-primary/15 blur-2xl rounded-full" />
+
+                {/* Header */}
+                <div className="px-5 pt-6 pb-1 md:px-7 md:pt-7">
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">
+                        {flow === "reset-password" ? "Verify code" : "Verify your email"}
+                    </h2>
+                    <p className="text-muted-foreground text-sm mt-1">
+                        Enter the 4-digit code sent to your email
+                    </p>
+                </div>
+
+                {/* Content */}
+                <div className="px-5 pb-6 pt-3 md:px-7 md:pb-7">
                     <form onSubmit={handleVerify}>
                         <FieldGroup>
                             <Field>
                                 <div className="flex items-center justify-between">
                                     <FieldLabel htmlFor="otp">One-Time Password</FieldLabel>
-                                    <span className="text-sm text-muted-foreground">{formatTime(timeLeft)}</span>
+                                    <span className="text-xs text-muted-foreground font-mono bg-muted/50 px-2 py-0.5 rounded-md">
+                                        {formatTime(timeLeft)}
+                                    </span>
                                 </div>
                                 <div className="flex justify-center py-4">
                                     <InputOTP maxLength={4} value={otp} onChange={(value) => setOtp(value)}>
-                                        <InputOTPGroup className="gap-4">
-                                            <InputOTPSlot index={0} className="rounded-sm border shadow-sm size-12" />
-                                            <InputOTPSlot index={1} className="rounded-sm border shadow-sm size-12" />
-                                            <InputOTPSlot index={2} className="rounded-sm border shadow-sm size-12" />
-                                            <InputOTPSlot index={3} className="rounded-sm border shadow-sm size-12" />
+                                        <InputOTPGroup className="gap-3 md:gap-4">
+                                            <InputOTPSlot index={0} className="rounded-lg! border! border-border/50 bg-background/50 shadow-sm size-14 text-lg font-semibold" />
+                                            <InputOTPSlot index={1} className="rounded-lg! border! border-border/50 bg-background/50 shadow-sm size-14 text-lg font-semibold" />
+                                            <InputOTPSlot index={2} className="rounded-lg! border! border-border/50 bg-background/50 shadow-sm size-14 text-lg font-semibold" />
+                                            <InputOTPSlot index={3} className="rounded-lg! border! border-border/50 bg-background/50 shadow-sm size-14 text-lg font-semibold" />
                                         </InputOTPGroup>
                                     </InputOTP>
                                 </div>
                             </Field>
                             <Field>
-                                <Button type="submit" variant={"cta"} className="w-full" disabled={loading}>
+                                <Button type="submit" variant={"cta"} className="w-full h-10 md:h-11 text-sm md:text-base font-semibold" disabled={loading}>
                                     {loading ? "Verifying..." : "Verify Code"}
                                 </Button>
-                                <FieldDescription className="text-center mt-2">
-                                    Otp didn't arrive?{" "}
+                                <FieldDescription className="text-center text-sm mt-4">
+                                    Didn&apos;t receive the code?{" "}
                                     {isActive ? (
                                         <span className="text-muted-foreground cursor-not-allowed">Resend in {formatTime(timeLeft)}</span>
                                     ) : (
-                                        <a href="#" onClick={handleResend} className="font-medium text-primary hover:underline underline-offset-4">Resend</a>
+                                        <a href="#" onClick={handleResend} className="text-primary font-medium hover:text-primary/80 underline-offset-4 hover:underline transition-colors">
+                                            Resend
+                                        </a>
                                     )}
                                 </FieldDescription>
                             </Field>
                         </FieldGroup>
                     </form>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     )
 }

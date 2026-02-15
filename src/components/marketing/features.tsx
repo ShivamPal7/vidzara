@@ -51,13 +51,13 @@ export function Features() {
 
             {/* Background Gradients */}
             <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl translate-x-1/2" />
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl -translate-x-1/2" />
+                <div className="absolute top-1/4 right-0 w-64 h-64 md:w-[500px] md:h-[500px] bg-primary/5 rounded-full blur-3xl translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-64 h-64 md:w-[500px] md:h-[500px] bg-blue-500/5 rounded-full blur-3xl -translate-x-1/2" />
             </div>
 
             <Wrapper className="relative z-30">
                 {/* Header */}
-                <div className="grid md:grid-cols-[1fr_auto] gap-8 items-center mb-16">
+                <div className="grid md:grid-cols-[1fr_auto] gap-4 md:gap-8 items-center mb-10 md:mb-16">
                     <motion.div
                         initial={{ opacity: 0, x: -20 }}
                         whileInView={{ opacity: 1, x: 0 }}
@@ -93,7 +93,7 @@ export function Features() {
 
                 {/* 3x2 Grid (First 6 Features) */}
                 <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6"
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -133,7 +133,7 @@ export function Features() {
 
                 {/* 2x1 Grid (Wide Features) */}
                 <motion.div
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
                     variants={containerVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -183,12 +183,12 @@ function FeatureCard({ title, description, preview, className }: { title: string
     return (
         <motion.div variants={itemVariants} className={cn("h-full", className)}>
             <Card className="h-full border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden hover:border-primary/20 transition-all duration-300 hover:shadow-lg flex flex-col group py-0">
-                <div className="p-6 pb-2">
-                    <h3 className="text-xl font-semibold mb-1">{title}</h3>
-                    <p className="text-muted-foreground text-sm">{description}</p>
+                <div className="p-4 sm:p-6 pb-2">
+                    <h3 className="text-lg sm:text-xl font-semibold mb-1">{title}</h3>
+                    <p className="text-muted-foreground text-xs sm:text-sm">{description}</p>
                 </div>
-                <div className="flex-1 min-h-[200px] bg-muted/30 relative overflow-hidden mt-4 mx-4 mb-4 rounded-lg border border-border/50 group-hover:border-primary/10 transition-colors">
-                    <div className="absolute inset-0 p-4">
+                <div className="flex-1 min-h-[180px] sm:min-h-[200px] bg-muted/30 relative overflow-hidden mt-3 sm:mt-4 mx-3 sm:mx-4 mb-3 sm:mb-4 rounded-lg border border-border/50 group-hover:border-primary/10 transition-colors">
+                    <div className="absolute inset-0 p-3 sm:p-4">
                         {preview}
                     </div>
                 </div>
@@ -376,9 +376,9 @@ function CompetitorPreview() {
 
 function GrowthPreview() {
     return (
-        <div className="w-full h-full flex flex-row gap-4">
+        <div className="w-full h-full flex flex-row gap-3 sm:gap-4">
             <div className="flex-1 flex flex-col justify-end gap-1">
-                <div className="flex items-end justify-between gap-1 h-32">
+                <div className="flex items-end justify-between gap-1 h-24 sm:h-32">
                     <div className="w-full bg-primary/20 rounded-t-sm h-[40%]" />
                     <div className="w-full bg-primary/40 rounded-t-sm h-[60%]" />
                     <div className="w-full bg-primary/60 rounded-t-sm h-[50%]" />
@@ -391,7 +391,7 @@ function GrowthPreview() {
                 </div>
                 <div className="h-px bg-border w-full" />
             </div>
-            <div className="w-1/3 flex flex-col gap-2 justify-center">
+            <div className="w-1/3 flex flex-col gap-1.5 sm:gap-2 justify-center">
                 <div className="bg-background border border-border/50 p-2 rounded-md">
                     <p className="text-[9px] text-muted-foreground mb-0.5">Consistency</p>
                     <p className="text-sm font-bold text-green-500">A+</p>
