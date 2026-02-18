@@ -1,312 +1,611 @@
 # AGENTS.md — Vidzara
 
-This file defines **mandatory rules, context, and constraints** for all AI coding agents working on the Vidzara codebase.
+This file defines **mandatory rules, context, constraints, and detailed feature behavior** for all AI coding agents working on the Vidzara codebase.
 
 Agents MUST read and follow this file before making changes.
 
 ---
 
-## Global Rules (Must Follow)
+# 0. Source of Truth
 
-### Theme & Styling
-- **Always use `@global.css` for theme variables** (colors, radius, shadows, typography tokens).
-- **Never hardcode colors** (no hex, rgb, hsl in components).
-- Use **CSS variables from `@global.css` only**.
-- Respect light/dark modes via variables — **no conditional color hacks in components**.
+The official product requirements are defined in:
 
----
+**PROJECT BRIEF – vidzara.com** 
 
-### UI Components
-- **Always use shadcn/ui components** for UI.
-- If a required component does not exist, **add it to shadcn/ui** (do not recreate from scratch).
-- Prefer **composition over custom styling**.
-- Extend shadcn **variants** when customization is required.
+This AGENTS.md operationalizes that brief into enforceable engineering rules.
+
+If there is ever a conflict:
+
+* The Project Brief defines product intent
+* This file defines engineering execution standards
 
 ---
 
-### Package Manager
-- **Always use `pnpm`** for installs, scripts, and commands.
-- **Never use npm or yarn**.
+# 1. Global Rules (Must Follow)
+
+## Theme & Styling
+
+* Always use `@global.css` theme variables.
+* Never hardcode colors (no hex/rgb/hsl).
+* Use CSS variables only.
+* Respect light/dark mode via variables.
+* No conditional inline color hacks.
+* No ad-hoc spacing overrides.
 
 ---
 
-### UI Quality Bar
-- UI must be **modern, clean, and minimal**.
-- Prefer **spacing, hierarchy, and subtle motion** over heavy visuals.
-- Use **consistent radius, shadows, and typography** from the theme.
-- Avoid clutter.
-- Always provide **sensible empty states and loading states**.
+## UI Components
+
+* Always use `shadcn/ui`.
+* If missing → extend shadcn properly.
+* Prefer composition.
+* Extend variants instead of custom styling.
+* Use consistent radius: `medium`.
+* Icons: `tabler` only.
 
 ---
 
-### Code Structure & Organization
-- **Never write all code in a single file**.
-- Follow a **proper component-based architecture**.
-- Split logic into **reusable components, hooks, and utilities** where appropriate.
-- Maintain a **clear and scalable folder structure**  
-  (`components`, `features`, `hooks`, `lib`, `styles`, etc.).
-- Each component must have a **single clear responsibility**.
-- Avoid **deeply nested or monolithic components**.
+## Package Manager
+
+* Always use `pnpm`.
+* Never use npm or yarn.
 
 ---
 
-## 1. Project Identity
+## UI Quality Bar
 
-**Project Name:** Vidzara  
-**Type:** Web-based AI SaaS  
-**Domain:** Creator tools for YouTube, Shorts, Reels, and social media growth
-
-**Product Definition:**  
-Vidzara is a production-grade SaaS that helps creators generate, analyze, and optimize:
-- Video SEO (titles, descriptions, tags, hashtags)
-- Hooks and intros
-- Long-form and short-form scripts
-- Thumbnail concepts
-- Topic research and competitor analysis
-- Channel consistency and growth insights
-
-This is **not** a demo, prototype, or experimental project.
+* Clean.
+* Minimal.
+* Strong hierarchy.
+* Subtle motion.
+* Clear empty states.
+* Proper loading states (skeletons).
+* Error states must be human-readable.
 
 ---
 
-## 2. Core Product Principles (NON-NEGOTIABLE)
+## Code Structure
 
-- All features are visible to all users
-- UI must reduce cognitive load, not hide functionality
-- Consistency > cleverness
-- Server-side logic is authoritative
-- Client-side logic is never trusted
-- Business rules are enforced server-side
+Never:
 
-Agents MUST NOT introduce feature hiding or gated UI unless explicitly instructed.
+* Write monolithic components.
+* Mix business logic in UI.
+* Place AI prompts inside components.
 
----
+Structure:
 
-## 3. Final Technology Stack (DO NOT CHANGE)
-
-### Frontend
-- Next.js 
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-
-### shadcn Theme (from latest Create Web flow)
-- Style: `maia`
-- Base Color: `zinc`
-- Theme Accent: `indigo`
-- Font: `outfit`
-- Icon Library: `tabler`
-- Radius: `medium`
-- Menu Accent: `bold`
-- Menu Color: `inverted`
-- Dark mode enabled
-
-No other UI frameworks or component libraries are allowed.
+```
+/components → UI only
+/features → feature modules
+/lib → business logic & AI
+/hooks → client hooks
+/prisma → schema
+/app → routes
+```
 
 ---
 
-### Backend
-- Next.js Server Actions
-- Next.js Route Handlers
-- No separate backend service
+# 2. Project Identity
 
----
-
-### Database
-- PostgreSQL
-- Provider: Neon
-- ORM: Prisma
-
-Rules:
-- Prisma schema is the single source of truth
-- UUIDs preferred
-- Avoid raw SQL unless unavoidable
-- Never access the database directly from the client
-
----
-
-### Authentication
-- Better Auth
-
-Rules:
-- Server-first authentication
-- Session MUST include:
-  - userId
-  - plan
-  - role
-
-Forbidden:
-- Supabase Auth
-- Clerk
-
----
-
-### Storage
-- Supabase Storage (initial)
-- Private buckets only
-- Signed URLs generated server-side
-
-Used for:
-- User exports (PDF, CSV)
-- Generated thumbnails (future)
-- Admin assets
-
----
-
-### Payments
-- India: Razorpay
-- Global: Stripe
-
-Rules:
-- Monthly and yearly subscriptions only
-- Location-based pricing (INR / USD)
-- Coupon system supported
-- Subscription state driven by webhooks
-- Fair usage enforced server-side
-
----
-
-## 4. Feature Surface Area (ALL MUST REMAIN VISIBLE)
-
-### Creation & Optimization
-- Video SEO Generator
-- Script Writer (Long + Shorts)
-- Script Shortener
-- Hook Detector
-- Thumbnail Concept Generator
-- Content Safety Checker
-
-### Analysis & Growth
-- Topic Generator (competitor-based)
-- Outlier Detector
-- Niche Finder
-- Consistency Checker
-- Creator Growth Dashboard
-
-### Business
-- Subscription management
-- Usage limits (fair usage)
-- Affiliate system
-- Admin controls (future)
-
-Agents MUST NOT remove, rename, or hide features without approval.
-
----
-
-## 5. Routing & App Structure (App Router)
-
-app/
-├─ (marketing) // Public landing pages
-├─ (auth) // Login, register, onboarding
-├─ (dashboard) // Protected application
-
-
-This separation MUST be preserved.
-
----
-
-## 6. Dashboard UX Rules (MANDATORY)
-
-### Layout
-- Left sidebar: all features visible
-- Top bar: global search, Create New, profile
-- Main content: context-specific only
-
-### Sidebar Grouping (REQUIRED)
-
-Create
-Optimize
-Analyze
-Growth
-History
-Billing
-Affiliate
-Settings
-
-
-Agents MUST NOT present features as a flat list.
-
----
-
-## 7. Middleware & Security
-
-- All `/dashboard/*` routes are protected
-- Authentication is validated server-side
-- Plan, role, and usage checks are server-enforced
-- Client flags MUST NOT grant access
-
----
-
-## 8. AI Usage Rules
-
-- All AI calls happen server-side
-- Each feature must have:
-  - a dedicated prompt template
-  - usage logging
-  - plan-based limits
-- “Unlimited” plans still respect fair usage
-
-Agents MUST NOT hardcode prompts inside UI components.
-
----
-
-## 9. Code Organization Rules
-
-- `/components` → UI only
-- `/lib` → business logic, AI logic, utilities
-- `/hooks` → client-side hooks only
-- `/prisma` → schema and migrations
-
-Feature logic MUST NOT live inside UI components.
-
----
-
-## 10. Coding Standards
-
-- TypeScript everywhere
-- No `any`
-- No client-side DB access
-- No new frameworks without approval
-- Prefer readability and maintainability
-
----
-
-## 11. Explicitly Forbidden Actions
-
-Agents MUST NOT:
-- Introduce Firebase
-- Introduce Supabase Auth
-- Introduce Clerk
-- Bypass Prisma
-- Change architecture without approval
-- Add new UI libraries
-- Store secrets in client code
-
----
-
-## 12. Required Agent Behavior
-
-Agents SHOULD:
-- Follow this file strictly
-- Preserve existing structure
-- Keep UI consistent
-- Optimize for long-term SaaS maintainability
-- Ask before architectural changes
-
----
-
-## 13. Product Mindset
+**Project Name:** Vidzara
+**Type:** AI SaaS
+**Audience:** Global content creators
+**Business Model:** Subscription-based
 
 Vidzara is:
-- A real SaaS business
-- A long-term product
-- A creator operating system
 
-All contributions should reflect:
-- Stability
-- Scalability
-- Professional engineering standards
+* Production-grade
+* Revenue-driven
+* Long-term SaaS
+* Creator operating system
 
 ---
 
-END OF AGENTS.md
+# 3. Core Product Principles (NON-NEGOTIABLE)
+
+* All features visible in sidebar
+* No feature hiding
+* Server-side authority
+* Client never trusted
+* Plan logic enforced server-side
+* Usage limits enforced server-side
+* “Unlimited” = fair usage constrained
+
+---
+
+# 4. Final Technology Stack (DO NOT CHANGE)
+
+## Frontend
+
+* Next.js (App Router)
+* TypeScript
+* Tailwind
+* shadcn/ui
+
+Theme:
+
+* Style: maia
+* Base: zinc
+* Accent: indigo
+* Font: outfit
+* Radius: medium
+* Icons: tabler
+* Dark mode enabled
+
+---
+
+## Backend
+
+* Server Actions
+* Route Handlers
+
+No external backend service.
+
+---
+
+## Database
+
+* PostgreSQL (Neon)
+* Prisma ORM
+* UUID primary keys
+* No client DB access
+
+---
+
+## Auth
+
+* Better Auth
+* Session must include:
+
+  * userId
+  * plan
+  * role
+
+Forbidden:
+
+* Clerk
+* Supabase Auth
+* Firebase
+
+---
+
+## Storage
+
+* Supabase Storage
+* Private buckets
+* Signed URLs server-side
+
+Used for:
+
+* Exports
+* Generated assets
+* Admin uploads
+
+---
+
+## Payments
+
+India:
+
+* Razorpay
+
+Global:
+
+* Stripe
+
+Rules:
+
+* Monthly & Yearly only
+* Webhook-driven subscription state
+* Server-enforced plan update
+* Location-based pricing
+* Coupon support
+
+---
+
+# 5. Feature Surface (Detailed Functional Requirements)
+
+All features MUST remain visible in sidebar.
+
+---
+
+# CREATE
+
+---
+
+## 5.1 Video SEO Generator
+
+### Input
+
+* Topic OR
+* Key points OR
+* Full script
+
+### Output
+
+* Optimized Titles (multiple)
+* Description
+* Tags
+* Hashtags
+* Keywords
+* Caption
+* Thumbnail ideas
+
+### Engineering Rules
+
+* Dedicated prompt template
+* Log usage
+* Track daily limit
+* Save generation history
+
+---
+
+## 5.2 Script Writer
+
+### Inputs
+
+* Topic
+* Niche
+* Platform (YouTube / Shorts / Instagram)
+* Video type
+
+### Output
+
+* Strong hook
+* Structured flow
+* CTA
+* Platform-optimized tone
+* Adjustable length (future-ready)
+* Adjustable tone (future-ready)
+* Language selection (future-ready)
+
+### Plans
+
+* Free: ❌ Long scripts
+* Limited Pro: Shorts only
+* Unlimited: All
+
+---
+
+## 5.3 Script Shortener
+
+### Input
+
+* Long script
+* Select 1–5 short outputs
+
+### Output
+
+* Shorts-form scripts
+* Hook-first structure
+* Platform optimized
+
+Unlimited plan only.
+
+---
+
+## 5.4 Thumbnail Concept Generator
+
+### Input
+
+* Topic / Script / Intent
+
+### Output
+
+* Thumbnail idea
+* Text suggestion
+* Text placement
+* Visual focus
+* Color & contrast guidance
+* Emotion guidance
+
+Must be structured, not vague.
+
+---
+
+# OPTIMIZE
+
+---
+
+## 5.5 Hook Failure Detector
+
+### Input
+
+* First 3–5 seconds or intro
+
+### Output
+
+* ❌ Weak
+* ⚠️ Average
+* ✅ Strong
+* 3 improved hook suggestions
+
+Plans:
+
+* Free: ❌
+* Limited: Shorts only
+* Unlimited: All
+
+---
+
+## 5.6 Content Safety Checker
+
+### Input
+
+* Title
+* Description
+* Tags
+* Script
+
+### Output
+
+* Risk score
+* Highlight risky phrases
+* Policy issue detection
+* Safe rewrites
+
+Must:
+
+* Detect clickbait risk
+* Detect algorithm manipulation
+* Suggest optimized rewrite
+
+---
+
+# ANALYZE
+
+---
+
+## 5.7 Topic Generator (Competitor Based)
+
+### Input
+
+* Competitor channel link or name
+
+### Output
+
+* Top performing topics
+* Title patterns
+* What works
+* 5 improved viral topic ideas
+
+Must:
+
+* Analyze structure patterns
+* Provide actionable insight
+
+---
+
+## 5.8 Outlier Detector
+
+### Input
+
+* Channel link
+
+### Output
+
+* Videos performing above average
+* Performance delta
+* Pattern insights
+
+---
+
+## 5.9 Consistency Checker
+
+### Input
+
+* Channel link
+
+### Output
+
+* Consistency score
+* Posting frequency
+* Simple improvement plan
+
+Limited Pro: 5/day
+Unlimited: Unlimited
+
+---
+
+## 5.10 Niche Finder
+
+### Input
+
+* Interest
+* Skill level
+* Content type
+
+### Output
+
+* Beginner-friendly niche
+* Growth potential
+* Monetization probability
+* Content direction advice
+
+Limited: 5/day
+Unlimited: Unlimited
+
+---
+
+# GROWTH
+
+---
+
+## 5.11 Creator Growth Dashboard
+
+### Input
+
+* Channel link
+
+### Dashboard Must Show:
+
+* Consistency score
+* Content type mix
+* Growth direction (Up / Flat / Down)
+* Continue / Stop recommendations
+
+Free:
+
+* Basic
+
+Pro:
+
+* Full
+
+---
+
+# 6. Pricing & Plans (STRICT IMPLEMENTATION)
+
+As defined in the official brief 
+
+---
+
+## Location Detection
+
+* IP-based
+* India → INR
+* Global → USD
+* Manual override allowed
+
+---
+
+## India Pricing
+
+Free — 1 month
+Limited Pro — ₹599/month
+Unlimited Pro — ₹899/month
+Yearly Unlimited — ₹8,999/year
+
+---
+
+## Global Pricing
+
+Free — 48 hours
+Limited Pro — $9/month
+Unlimited Pro — $15/month
+Yearly Unlimited — $149/year
+
+---
+
+# 7. Coupon System (Mandatory)
+
+Must support:
+
+* Percentage discounts
+* Expiry
+* Usage limits
+* Per-user limits
+* Country-based restriction
+* Admin create/edit/disable
+
+Rules:
+
+* Works for INR & USD
+* Real-time recalculation
+* Server-side validation only
+
+---
+
+# 8. Affiliate System (Mandatory)
+
+As defined in brief 
+
+## Core Logic
+
+* Unique referral link:
+  `vidzara.com/?ref=username`
+* Commission ONLY on paid subscription
+* No commission on signup
+
+---
+
+## Admin Controls
+
+* Set commission rate
+* Enable/disable affiliates
+* Approve/reject earnings
+* Manage payout status
+
+---
+
+## Payout Rules
+
+* Minimum threshold
+
+  * ₹1000
+  * $20
+* Manual payout initially
+* Payout request flow
+
+---
+
+# 9. Fair Usage Policy
+
+* Unlimited ≠ abuse
+* Bot usage forbidden
+* Excess automation forbidden
+* Abuse detection triggers:
+
+  * Rate limiting
+  * Restriction
+  * Suspension
+
+Must log:
+
+* Generation frequency
+* IP anomalies
+* Burst usage patterns
+
+---
+
+# 10. Middleware & Security
+
+* Protect `/dashboard/*`
+* Validate session server-side
+* Validate plan server-side
+* Validate usage server-side
+* Never trust client flags
+
+---
+
+# 11. Explicitly Forbidden
+
+Agents MUST NOT:
+
+* Introduce Firebase
+* Introduce Clerk
+* Introduce Supabase Auth
+* Change stack
+* Add UI frameworks
+* Store secrets client-side
+* Hardcode AI prompts in UI
+* Bypass Prisma
+
+---
+
+# 12. Agent Behavior Rules
+
+Agents SHOULD:
+
+* Preserve architecture
+* Maintain clean folder structure
+* Avoid premature abstraction
+* Optimize for SaaS scale
+* Prioritize maintainability
+* Ask before structural changes
+
+---
+
+# 13. Engineering Standard
+
+All contributions must reflect:
+
+* Stability
+* Scalability
+* Security
+* Business readiness
+* Professional SaaS standards
+
+---
+
+# END OF AGENTS.md

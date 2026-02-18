@@ -7,7 +7,7 @@ import { sendEmail } from "./email";
 console.log("[DEBUG] Initializing Better Auth with trustedProviders:", ["google"]);
 
 export const auth = betterAuth({
-    baseUrl: process.env.NEXT_PUBLIC_APP_URL,
+    baseUrl: process.env.BETTER_AUTH_URL,
     trustedOrigins: [
         "http://localhost:3000",
         "https://vidzara.vercel.app",

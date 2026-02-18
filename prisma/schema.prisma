@@ -18,6 +18,15 @@ model User {
 
   sessions      Session[]
   accounts      Account[]
+  
+  // New Relations (M1.1)
+  userProfile   UserProfile?
+  subscription  Subscription?
+  usageRecords  UsageRecord[]
+  generations   Generation[]
+  affiliate     Affiliate?
+  referredBy    Referral?     @relation("ReferredUser")
+  abuseLogs     AbuseLog[]
 
   @@map("user")
 }
@@ -67,4 +76,173 @@ model Verification {
   updatedAt  DateTime?
 
   @@map("verification")
+}
+
+// --- New Models (M1.1) ---
+
+model UserProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName        String?
+  avatar             String?
+  niche              String?
+  youtubeChannelId   String?
+  onboardingComplete Boolean  @default(false)
+  country            String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("user_profile")
+}
+
+model Subscription {
+  id                    String             @id @default(cuid())
+  userId                String             @unique
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                  Plan               @default(FREE)
+  billingCycle          BillingCycle       @default(MONTHLY)
+  status                SubscriptionStatus @default(TRIALING)
+  gateway               Gateway?
+  gatewaySubscriptionId String?
+  trialEndsAt           DateTime?
+  currentPeriodEnd      DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@map("subscription")
+}
+
+model UsageRecord {
+  id      String   @id @default(cuid())
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feature Feature
+  date    DateTime @db.Date
+  count   Int      @default(0)
+
+  @@unique([userId, feature, date])
+  @@map("usage_record")
+}
+
+model Generation {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  feature    Feature
+  input      Json
+  output     Json
+  model      String?
+  tokensUsed Int?
+  createdAt  DateTime @default(now())
+
+  @@map("generation")
+}
+
+model Coupon {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  discountPercent Int
+  expiresAt       DateTime?
+  maxUses         Int?
+  usedCount       Int      @default(0)
+  perUserLimit    Int?
+  country         String?
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("coupon")
+}
+
+model Affiliate {
+  id             String     @id @default(cuid())
+  userId         String     @unique
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  referralCode   String     @unique
+  commissionRate Decimal    @default(0.1) @db.Decimal(10, 2)
+  enabled        Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  referrals      Referral[]
+
+  @@map("affiliate")
+}
+
+model Referral {
+  id               String         @id @default(cuid())
+  affiliateId      String
+  affiliate        Affiliate      @relation(fields: [affiliateId], references: [id])
+  referredUserId   String         @unique
+  referredUser     User           @relation("ReferredUser", fields: [referredUserId], references: [id])
+  convertedAt      DateTime?
+  commissionAmount Decimal?       @db.Decimal(10, 2)
+  status           ReferralStatus @default(PENDING)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("referral")
+}
+
+model AbuseLog {
+  id        String     @id @default(cuid())
+  userId    String?
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  event     AbuseEvent
+  metadata  Json?
+  createdAt DateTime   @default(now())
+
+  @@map("abuse_log")
+}
+
+// --- Enums ---
+
+enum Plan {
+  FREE
+  LIMITED_PRO
+  UNLIMITED_PRO
+}
+
+enum BillingCycle {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+  TRIALING
+  PAST_DUE
+}
+
+enum Gateway {
+  STRIPE
+  RAZORPAY
+}
+
+enum Feature {
+  VIDEO_SEO
+  SCRIPT_WRITER
+  SCRIPT_SHORTENER
+  HOOK_DETECTOR
+  CONTENT_SAFETY
+  TOPIC_GENERATOR
+  OUTLIER_DETECTOR
+  CONSISTENCY_CHECKER
+  NICHE_FINDER
+  THUMBNAIL_CONCEPT
+  GROWTH_DASHBOARD
+}
+
+enum AbuseEvent {
+  RATE_LIMIT
+  BURST
+  SUSPICIOUS_IP
+}
+
+enum ReferralStatus {
+  PENDING
+  CREDITED
+  PAID
 }

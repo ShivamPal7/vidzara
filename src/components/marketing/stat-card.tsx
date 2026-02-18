@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 import CountUp from "react-countup";
 
@@ -19,85 +19,37 @@ function extractNumber(value: string): number {
     return match ? parseFloat(match[0]) : 0;
 }
 
-export function StatCard({ value, label, icon: Icon, delay = 0, floatingDelay = 0 }: StatCardProps) {
+export function StatCard({ value, label, icon: Icon, delay = 0 }: StatCardProps) {
     const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: "-100px" });
-    const [isDragging, setIsDragging] = useState(false);
-    const [isMobile, setIsMobile] = useState(true);
-
-    useEffect(() => {
-        const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
-    }, []);
+    const isInView = useInView(ref, { once: true, margin: "-50px" });
 
     const numericValue = extractNumber(value);
     const suffix = value.replace(/[\d.]+/, '');
     const decimals = value.includes('.') ? 1 : 0;
 
-    // Motion values for drag
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-
-    // Smooth spring for return animation
-    const springConfig = { stiffness: 100, damping: 15, mass: 0.5 };
-    const springX = useSpring(x, springConfig);
-    const springY = useSpring(y, springConfig);
-
-    // Animation configuration
-    const shouldFloat = isInView && !isDragging && !isMobile;
-    const floatingTransition = {
-        duration: 4 + floatingDelay,
-        repeat: Infinity,
-        ease: "easeInOut" as const,
-        delay: floatingDelay * 0.3,
-    };
-
     return (
         <motion.div
             ref={ref}
-            style={{ x: springX, y: springY }}
-            drag={!isMobile} // Disable drag on mobile to allow scrolling
-            dragMomentum={false}
-            onDragStart={() => setIsDragging(true)}
-            onDragEnd={() => {
-                setIsDragging(false);
-                // Smoothly return to origin
-                x.set(0);
-                y.set(0);
-            }}
-            onDrag={(_, info) => {
-                x.set(info.offset.x);
-                y.set(info.offset.y);
-            }}
-            // 'touch-none' removed/replaced on mobile to allow scrolling
-            className={`cursor-grab active:cursor-grabbing select-none ${isMobile ? 'touch-auto' : 'touch-none'}`}
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{
                 opacity: isInView ? 1 : 0,
                 scale: isInView ? 1 : 0.9,
+                y: isInView ? 0 : 20,
             }}
             transition={{
-                opacity: { duration: 0.6, delay },
-                scale: { duration: 0.6, delay, ease: [0.25, 0.4, 0.25, 1] }
+                duration: 0.5,
+                delay,
+                ease: "easeOut"
             }}
-            whileHover={!isDragging && !isMobile ? {
-                scale: 1.03,
-                transition: { duration: 0.2, type: "spring", stiffness: 400, damping: 15 }
-            } : undefined}
-            whileTap={!isMobile ? { scale: 0.98, cursor: "grabbing" } : undefined}
+            className="w-full h-full"
         >
-            {/* Visual card with floating animation */}
-            <motion.div
-                className="bg-card/95 dark:bg-card/70 backdrop-blur-3xl border border-white/20 dark:border-white/10 rounded-xl p-4 md:p-6 shadow-[0px_8px_32px_-8px_rgba(0,0,0,0.1)] hover:shadow-[0px_20px_40px_-12px_rgba(var(--primary-rgb),0.2)] dark:shadow-none dark:hover:shadow-[0px_0px_50px_-12px_var(--primary)] transition-all duration-500 w-full h-full flex flex-col items-start justify-center will-change-transform group"
-                animate={shouldFloat ? { y: [-4, 4, -4] } : { y: 0 }}
-                // If not floating, we strictly disable transition to prevent drift
-                transition={shouldFloat ? floatingTransition : { duration: 0 }}
+            {/* Visual card - Static, no floating or drag */}
+            <div
+                className="bg-card/95 dark:bg-card/80 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-xl p-4 md:p-6 shadow-sm hover:shadow-md transition-all duration-300 w-full h-full flex flex-col items-start justify-center group"
             >
                 {Icon && (
                     <div className="bg-primary/10 p-2 rounded-xl mb-3 group-hover:bg-primary/20 transition-colors duration-300">
-                        <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary group-hover:scale-110 transition-transform duration-300" strokeWidth={2.5} />
+                        <Icon className="h-4 w-4 md:h-5 md:w-5 text-primary" strokeWidth={2.5} />
                     </div>
                 )}
                 <div className="text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-2 tabular-nums text-left">
@@ -110,10 +62,6 @@ export function StatCard({ value, label, icon: Icon, delay = 0, floatingDelay = 
                             decimal="."
                             suffix={suffix}
                             useEasing={true}
-                            easingFn={(t, b, c, d) => {
-                                // Ease out cubic
-                                return c * ((t = t / d - 1) * t * t + 1) + b;
-                            }}
                         />
                     ) : (
                         `0${suffix}`
@@ -122,7 +70,7 @@ export function StatCard({ value, label, icon: Icon, delay = 0, floatingDelay = 
                 <div className="text-xs md:text-sm text-muted-foreground font-medium leading-tight text-left">
                     {label}
                 </div>
-            </motion.div>
+            </div>
         </motion.div>
     );
 }

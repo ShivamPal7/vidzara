@@ -19,16 +19,6 @@ const pathData = [
     "M-226 -357C-226 -357 -158 48 306 175C770 302 838 707 838 707",
     "M-204 -381C-204 -381 -136 24 328 151C792 278 860 683 860 683",
     "M-182 -405C-182 -405 -114 0 350 127C814 254 882 659 882 659",
-    "M-160 -429C-160 -429 -92 -24 372 103C836 230 904 635 904 635",
-    "M-138 -453C-138 -453 -70 -48 394 79C858 206 926 611 926 611",
-    "M-116 -477C-116 -477 -48 -72 416 55C880 182 948 587 948 587",
-    "M-94 -501C-94 -501 -26 -96 438 31C902 158 970 563 970 563",
-    "M-72 -525C-72 -525 -4 -120 460 7C924 134 992 539 992 539",
-    "M-50 -549C-50 -549 18 -144 482 -17C946 110 1014 515 1014 515",
-    "M-28 -573C-28 -573 40 -168 504 -41C968 86 1036 491 1036 491",
-    "M-6 -597C-6 -597 62 -192 526 -65C990 62 1058 467 1058 467",
-    "M16 -621C16 -621 84 -216 548 -89C1012 38 1080 443 1080 443",
-    "M38 -645C38 -645 106 -240 570 -113C1034 14 1102 419 1102 419",
 ];
 
 // Pre-calculated animation values for each path
@@ -40,7 +30,7 @@ const animations = pathData.map((_, i) => ({
 
 export const BackgroundBeams = React.memo(({ className }: BackgroundBeamsProps) => {
     return (
-        <div className={cn("pointer-events-none absolute inset-0 h-full w-full [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]", className)}>
+        <div className={cn("pointer-events-none absolute inset-0 h-full w-full mask-[radial-gradient(ellipse_at_center,transparent_20%,black)]", className)}>
             <svg
                 className="absolute h-full w-full"
                 fill="none"

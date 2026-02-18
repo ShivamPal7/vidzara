@@ -41,8 +41,8 @@ export function Hero() {
             <BackgroundBeams />
 
             {/* Glow Effects */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] md:w-[500px] md:h-[500px] bg-primary/20 blur-[100px] rounded-full pointer-events-none z-0" />
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-accent/10 blur-[120px] rounded-full pointer-events-none z-0" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] md:w-[400px] md:h-[400px] bg-primary/15 blur-[60px] rounded-full pointer-events-none z-0 will-change-transform" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[250px] h-[250px] bg-accent/10 blur-[80px] rounded-full pointer-events-none z-0 will-change-transform" />
 
             {/* Floating Stats - Desktop Only */}
             <div className="hidden lg:block absolute inset-0 pointer-events-none z-20">
@@ -130,17 +130,17 @@ export function Hero() {
                     >
                         <div className="relative mx-auto max-w-6xl rounded-2xl md:rounded-[44px] border border-foreground/10 bg-foreground/5 backdrop-blur-lg p-2">
                             {/* Top Glow Effect */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-primary/25 blur-[4rem] rounded-full -z-10" />
-                            <div className="absolute -top-px left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-primary/20 blur-[3rem] rounded-full -z-10" />
+                            <div className="absolute -top-px left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-                            <div className="absolute top-1/4 left-1/2 -z-10 w-4/5 h-1/3 -translate-x-1/2 -translate-y-1/2 bg-primary/10 blur-[8rem] opacity-50" />
+                            <div className="absolute top-1/4 left-1/2 -z-10 w-4/5 h-1/3 -translate-x-1/2 -translate-y-1/2 bg-primary/10 blur-[5rem] opacity-40" />
 
                             <div className="rounded-lg md:rounded-[34px] border border-foreground/10 bg-background overflow-hidden aspect-video">
                                 <VideoPlayer videoId="aSte18D2_YE" />
                             </div>
                         </div>
 
-                        <div className="absolute top-0 inset-x-0 w-3/5 mx-auto h-1/10 rounded-full bg-primary blur-[4rem] opacity-40 -z-10"></div>
+                        <div className="absolute top-0 inset-x-0 w-3/5 mx-auto h-1/10 rounded-full bg-primary blur-[3rem] opacity-30 -z-10"></div>
                     </motion.div>
 
                     {/* Mobile/Tablet Stats - Hidden on Desktop */}
