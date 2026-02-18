@@ -58,6 +58,7 @@ If there is ever a conflict:
 * Minimal.
 * Strong hierarchy.
 * Subtle motion.
+* Glassmorphism.
 * Clear empty states.
 * Proper loading states (skeletons).
 * Error states must be human-readable.

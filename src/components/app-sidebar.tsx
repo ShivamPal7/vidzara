@@ -22,6 +22,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
 
@@ -34,11 +35,15 @@ const data = {
       items: [
         {
           title: "Script Writer",
-          url: "#",
+          url: "/dashboard/create/script-writer",
         },
         {
           title: "Thumbnail Generator",
-          url: "#",
+          url: "/dashboard/create/thumbnail",
+        },
+        {
+          title: "Video SEO Generator",
+          url: "/dashboard/create/video-seo",
         },
       ],
     },
@@ -48,20 +53,16 @@ const data = {
       icon: IconRocket,
       items: [
         {
-          title: "Video SEO Generator",
-          url: "#",
-        },
-        {
           title: "Script Shortener",
-          url: "#",
+          url: "/dashboard/optimize/script-shortener",
         },
         {
           title: "Hook Detector",
-          url: "#",
+          url: "/dashboard/optimize/hook-detector",
         },
         {
           title: "Content Safety Checker",
-          url: "#",
+          url: "/dashboard/optimize/content-safety",
         },
       ],
     },
@@ -72,65 +73,61 @@ const data = {
       items: [
         {
           title: "Topic Generator",
-          url: "#",
+          url: "/dashboard/analyze/topic-generator",
         },
         {
           title: "Outlier Detector",
-          url: "#",
+          url: "/dashboard/analyze/outlier-detector",
         },
         {
           title: "Niche Finder",
-          url: "#",
+          url: "/dashboard/analyze/niche-finder",
         },
         {
           title: "Consistency Checker",
-          url: "#",
+          url: "/dashboard/analyze/consistency-checker",
         },
       ],
     },
     {
       title: "Growth",
-      url: "#",
+      url: "/dashboard/growth",
       icon: IconTrendingUp,
-      items: [
-        {
-          title: "Creator Growth Dashboard",
-          url: "#",
-        },
-      ],
     },
     {
       title: "History",
-      url: "#",
+      url: "/dashboard/history",
       icon: IconHistory,
     },
     {
       title: "Billing",
-      url: "#",
+      url: "/dashboard/billing",
       icon: IconCreditCard,
     },
     {
       title: "Affiliate",
-      url: "#",
+      url: "/dashboard/affiliate",
       icon: IconUsers,
     },
     {
       title: "Settings",
-      url: "#",
+      url: "/dashboard/settings",
       icon: IconSettings,
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { isMobile } = useSidebar()
+  
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="offcanvas" side={isMobile ? "right" : "left"} {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <a href="#">
                 <Image src="/logo.png" alt="Logo" width={24} height={24} />

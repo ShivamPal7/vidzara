@@ -33,37 +33,37 @@
 
 ### M1.2 — Onboarding Flow
 
-- [ ] Create `/dashboard/onboarding/page.tsx`
-- [ ] Build multi-step wizard component (`components/dashboard/onboarding-wizard.tsx`)
-  - [ ] Step 1: Display name + avatar input
-  - [ ] Step 2: Niche selection (dropdown with search)
-  - [ ] Step 3: YouTube channel URL (optional, skip button)
-  - [ ] Step 4: Auto-assign Free plan + geo-detect trial duration
-- [ ] Create server action: `actions/onboarding.ts` (save profile, create subscription)
-- [ ] Add geo-detection utility: `lib/geo.ts` (IP → country → INR/USD)
-- [ ] Update middleware: check `onboardingComplete` — redirect to `/dashboard/onboarding` if false
+- [x] Create `/dashboard/onboarding/page.tsx`
+- [x] Build multi-step wizard component (`components/dashboard/onboarding-wizard.tsx`)
+  - [x] Step 1: Display name + avatar input
+  - [x] Step 2: Niche selection (dropdown with search)
+  - [x] Step 3: YouTube channel URL (optional, skip button)
+  - [x] Step 4: Auto-assign Free plan + geo-detect trial duration
+- [x] Create server action: `actions/onboarding.ts` (save profile, create subscription)
+- [x] Add geo-detection utility: `lib/geo.ts` (IP → country → INR/USD)
+- [x] Update middleware: check `onboardingComplete` — redirect to `/dashboard/onboarding` if false
 
 ### M1.3 — Dashboard Routing & Layout
 
-- [ ] Create shared dashboard layout: `/dashboard/layout.tsx` (sidebar + header + main area)
-- [ ] Update `app-sidebar.tsx` — replace all `#` links with real routes
-- [ ] Create placeholder pages with "Coming Soon" state for all routes:
-  - [ ] `/dashboard/create/video-seo/page.tsx`
-  - [ ] `/dashboard/create/script-writer/page.tsx`
-  - [ ] `/dashboard/create/thumbnail/page.tsx`
-  - [ ] `/dashboard/optimize/script-shortener/page.tsx`
-  - [ ] `/dashboard/optimize/hook-detector/page.tsx`
-  - [ ] `/dashboard/optimize/content-safety/page.tsx`
-  - [ ] `/dashboard/analyze/topic-generator/page.tsx`
-  - [ ] `/dashboard/analyze/outlier-detector/page.tsx`
-  - [ ] `/dashboard/analyze/niche-finder/page.tsx`
-  - [ ] `/dashboard/analyze/consistency-checker/page.tsx`
-  - [ ] `/dashboard/growth/page.tsx`
-  - [ ] `/dashboard/history/page.tsx`
-  - [ ] `/dashboard/billing/page.tsx`
-  - [ ] `/dashboard/affiliate/page.tsx`
-  - [ ] `/dashboard/settings/page.tsx`
-- [ ] Verify sidebar navigation works end-to-end
+- [x] Create shared dashboard layout: `/dashboard/layout.tsx` (sidebar + header + main area)
+- [x] Update `app-sidebar.tsx` — replace all `#` links with real routes
+- [x] Create placeholder pages with "Coming Soon" state for all routes:
+  - [x] `/dashboard/create/video-seo/page.tsx`
+  - [x] `/dashboard/create/script-writer/page.tsx`
+  - [x] `/dashboard/create/thumbnail/page.tsx`
+  - [x] `/dashboard/optimize/script-shortener/page.tsx`
+  - [x] `/dashboard/optimize/hook-detector/page.tsx`
+  - [x] `/dashboard/optimize/content-safety/page.tsx`
+  - [x] `/dashboard/analyze/topic-generator/page.tsx`
+  - [x] `/dashboard/analyze/outlier-detector/page.tsx`
+  - [x] `/dashboard/analyze/niche-finder/page.tsx`
+  - [x] `/dashboard/analyze/consistency-checker/page.tsx`
+  - [x] `/dashboard/growth/page.tsx`
+  - [x] `/dashboard/history/page.tsx`
+  - [x] `/dashboard/billing/page.tsx`
+  - [x] `/dashboard/affiliate/page.tsx`
+  - [x] `/dashboard/settings/page.tsx`
+- [x] Verify sidebar navigation works end-to-end
 
 ### M1.4 — Dashboard Home Page
 
