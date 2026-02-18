@@ -67,22 +67,22 @@
 
 ### M1.4 — Dashboard Home Page
 
-- [ ] Redesign `/dashboard/page.tsx` (replace boilerplate chart)
-- [ ] Welcome header with user name (from session/profile)
-- [ ] Usage summary cards (generations used today / daily limit)
-- [ ] Quick action buttons ("Write a Script", "Generate SEO", "Check Hook")
-- [ ] Recent generations list (last 5 from Generation table)
-- [ ] Plan status card (current plan + trial days remaining)
-- [ ] Empty state for new users (no generations yet)
+- [x] Redesign `/dashboard/page.tsx` (replace boilerplate chart)
+- [x] Welcome header with user name (from session/profile)
+- [x] Usage summary cards (generations used today / daily limit)
+- [x] Quick action buttons ("Write a Script", "Generate SEO", "Check Hook")
+- [x] Recent generations list (last 5 from Generation table)
+- [x] Plan status card (current plan + trial days remaining)
+- [x] Empty state for new users (no generations yet)
 
 ### M1.5 — Settings Page
 
-- [ ] Create `/dashboard/settings/page.tsx`
-- [ ] Profile section: edit name, avatar, niche
-- [ ] Connected accounts: Google status, YouTube channel link
-- [ ] Theme toggle (light/dark via `next-themes`)
-- [ ] Danger zone: delete account (with confirmation dialog)
-- [ ] Server action: `actions/settings.ts`
+- [x] Create `/dashboard/settings/page.tsx`
+- [x] Profile section: edit name, avatar, niche
+- [x] Connected accounts: Google status, YouTube channel link
+- [x] Theme toggle (light/dark via `next-themes`)
+- [x] Danger zone: delete account (with confirmation dialog)
+- [x] Server action: `actions/settings.ts`
 
 ### M1.6 — Usage Tracking System
 

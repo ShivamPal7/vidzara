@@ -26,7 +26,7 @@ export default async function SettingsPage() {
   const hasGoogle = accounts.some((a) => a.providerId === "google");
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto p-4 md:p-8 animate-fade-in">
+    <div className="space-y-6 max-w-5xl mx-auto pt-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-2">

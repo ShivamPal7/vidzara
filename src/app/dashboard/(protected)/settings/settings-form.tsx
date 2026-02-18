@@ -101,9 +101,9 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 lg:grid-cols-2">
       {/* Profile Section */}
-      <Card className="glass-1 border-primary/10 shadow-sm">
+      <Card className="glass-1 border-primary/10 shadow-sm lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2">
             <User className="w-5 h-5 text-primary" />
@@ -115,14 +115,14 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleUpdateProfile} className="space-y-6">
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
               <Avatar className="w-20 h-20 border-2 border-border">
                 <AvatarImage src={formData.avatar} />
                 <AvatarFallback className="text-lg bg-primary/10 text-primary">
                   {formData.displayName?.slice(0, 2).toUpperCase() || "ME"}
                 </AvatarFallback>
               </Avatar>
-              <div className="space-y-2 flex-1">
+              <div className="space-y-2 flex-1 w-full">
                 <Label>Avatar URL</Label>
                 <Input
                   value={formData.avatar || ""}
@@ -157,7 +157,7 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
                     setFormData({ ...formData, niche: val })
                   }
                 >
-                  <SelectTrigger className="bg-background/50">
+                  <SelectTrigger className="w-full bg-background/50">
                     <SelectValue placeholder="Select a niche" />
                   </SelectTrigger>
                   <SelectContent>
@@ -266,10 +266,10 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-             <div className="grid grid-cols-3 gap-4 max-w-md">
+             <div className="flex flex-row gap-4 w-full">
                  <button 
                     onClick={() => setTheme("light")}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
+                    className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${theme === 'light' ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
                  >
                     <div className="p-2 rounded-full bg-background border shadow-sm">
                        <Sun className="w-5 h-5" />
@@ -278,7 +278,7 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
                  </button>
                  <button 
                     onClick={() => setTheme("dark")}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${theme === 'dark' ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
+                    className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${theme === 'dark' ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
                  >
                     <div className="p-2 rounded-full bg-background border shadow-sm">
                        <Moon className="w-5 h-5" />
@@ -287,7 +287,7 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
                  </button>
                  <button 
                     onClick={() => setTheme("system")}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${theme === 'system' ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
+                    className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${theme === 'system' ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
                  >
                     <div className="p-2 rounded-full bg-background border shadow-sm">
                        <Laptop className="w-5 h-5" />
@@ -299,7 +299,7 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-red-500/20 bg-red-500/5 shadow-none">
+      <Card className="border-red-500/20 bg-red-500/5 shadow-none lg:col-span-2">
         <CardHeader>
           <CardTitle className="text-xl flex items-center gap-2 text-red-600 dark:text-red-400">
             <AlertTriangle className="w-5 h-5" />
@@ -310,16 +310,17 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="font-medium">Delete Account</div>
               <div className="text-sm text-muted-foreground">
                 Permanently remove your account and all data.
               </div>
             </div>
+            <div className="self-end md:self-auto">
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="destructive">
+                <Button variant="destructive" className="w-fit">
                    <Trash2 className="w-4 h-4 mr-2" />
                    Delete Account
                 </Button>
@@ -345,6 +346,7 @@ export function SettingsForm({ user, profile, hasGoogle }: SettingsFormProps) {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
         </CardContent>
       </Card>
