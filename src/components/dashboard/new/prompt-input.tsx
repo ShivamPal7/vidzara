@@ -4,50 +4,16 @@ import { useState, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Settings2,
   Paperclip,
   Sparkles,
   Mic,
   ArrowRight,
-  ChevronDown,
   Plus,
-  Image as ImageIcon,
-  Scissors,
-  FileText,
-  Clapperboard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { ToolsDropdown } from "./tools-dropdown"
 
 const MAX_CHARS = 4000
-
-const tools = [
-  {
-    icon: ImageIcon,
-    label: "Thumbnail Generator",
-    description: "Create eye-catching thumbnails",
-  },
-  {
-    icon: Scissors,
-    label: "Clipping",
-    description: "Create engaging shorts",
-  },
-  {
-    icon: FileText,
-    label: "Script Writer",
-    description: "Write compelling scripts",
-  },
-  {
-    icon: Clapperboard,
-    label: "Shorts Generator",
-    description: "Create viral shorts",
-  },
-]
 
 interface PromptInputProps {
   className?: string
@@ -112,43 +78,7 @@ export function PromptInput({ className, usage }: PromptInputProps) {
           {/* Left actions */}
           <div className="flex items-center gap-2">
             {/* Tools dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="h-9 gap-1.5 rounded-lg px-3 text-xs font-medium"
-                >
-                  <Settings2 className="size-4" />
-                  Tools
-                  <ChevronDown className="size-3 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                sideOffset={8}
-                className="w-72 rounded-xl p-2"
-              >
-                {tools.map((tool) => (
-                  <DropdownMenuItem
-                    key={tool.label}
-                    className="flex items-center gap-3 rounded-lg px-3 py-3 cursor-pointer"
-                  >
-                    <div className="flex items-center justify-center size-10 rounded-lg bg-muted/80">
-                      <tool.icon className="size-5 text-foreground" />
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-medium text-foreground">
-                        {tool.label}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {tool.description}
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <ToolsDropdown />
 
             {/* Attach */}
             <Button

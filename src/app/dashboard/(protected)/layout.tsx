@@ -9,8 +9,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-
-import Image from "next/image";
+import { PageTitle } from "@/components/dashboard/dashboard-breadcrumb";
 
 export default async function DashboardLayout({
   children,
@@ -49,10 +48,7 @@ export default async function DashboardLayout({
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
             </div>
-             <div className="flex items-center gap-2 font-semibold md:hidden">
-                <Image src="/logo.png" alt="Logo" width={24} height={24} />
-                <span>Vidzara</span>
-             </div>
+            <PageTitle />
           </div>
           <div className="md:hidden">
               <SidebarTrigger />

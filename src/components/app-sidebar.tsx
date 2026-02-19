@@ -39,7 +39,7 @@ const data = {
           url: "/dashboard/create/script-writer",
         },
         {
-          title: "Thumbnail Generator",
+          title: "Thumbnail Concepts",
           url: "/dashboard/create/thumbnail",
         },
         {
