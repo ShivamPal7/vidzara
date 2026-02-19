@@ -86,20 +86,20 @@
 
 ### M1.6 — Usage Tracking System
 
-- [ ] Create `lib/usage.ts`
-  - [ ] `checkUsage(userId, feature)` → `{ allowed, remaining, limit }`
-  - [ ] `incrementUsage(userId, feature)` → void
-  - [ ] `getUsageSummary(userId)` → `{ [feature]: { used, limit } }`
-- [ ] Create `constants/limits.ts` — daily limits per plan per feature
-- [ ] Write unit tests for usage logic
+- [x] Create `lib/usage.ts`
+  - [x] `checkUsage(userId, feature)` → `{ allowed, remaining, limit }`
+  - [x] `incrementUsage(userId, feature)` → void
+  - [x] `getUsageSummary(userId)` → `{ [feature]: { used, limit } }`
+- [x] Create `constants/limits.ts` — daily limits per plan per feature
+- [x] Write unit tests for usage logic
 
 ### M1.7 — Plan Guard Utility
 
-- [ ] Create `lib/plan-guard.ts`
-  - [ ] `checkFeatureAccess(plan, feature, context?)` → `{ allowed, reason? }`
-- [ ] Create `components/dashboard/feature-gate.tsx` — UI wrapper that shows upgrade prompt
-- [ ] Create `types/plans.ts` — Plan enum, feature access matrix type
-- [ ] Create `types/features.ts` — Feature enum, feature metadata
+- [x] Create `lib/plan-guard.ts`
+  - [x] `checkFeatureAccess(plan, feature, context?)` → `{ allowed, reason? }`
+- [x] Create `components/dashboard/feature-gate.tsx` — UI wrapper that shows upgrade prompt
+- [x] Create `types/plans.ts` — Plan enum, feature access matrix type
+- [x] Create `types/features.ts` — Feature enum, feature metadata
 
 ---
 
@@ -107,18 +107,18 @@
 
 ### M2.1 — AI Engine Core
 
-- [ ] Create `lib/ai/provider.ts` — AI provider abstraction (OpenAI / Gemini)
-- [ ] Create `lib/ai/engine.ts` — core `generateAI(feature, input, userId)` function
-  - [ ] Step 1: Validate session
-  - [ ] Step 2: Check plan access
-  - [ ] Step 3: Check usage quota
-  - [ ] Step 4: Load prompt template
-  - [ ] Step 5: Call AI provider
-  - [ ] Step 6: Increment usage
-  - [ ] Step 7: Save to Generation table
-  - [ ] Step 8: Return structured output
-- [ ] Create `lib/ai/types.ts` — shared AI types (AIRequest, AIResponse)
-- [ ] Create prompt template structure in `lib/ai/prompts/`
+- [x] Create `lib/ai/provider.ts` — AI provider abstraction (OpenAI / Gemini)
+- [x] Create `lib/ai/engine.ts` — core `generateAI(feature, input, userId)` function
+  - [x] Step 1: Validate session
+  - [x] Step 2: Check plan access
+  - [x] Step 3: Check usage quota
+  - [x] Step 4: Load prompt template
+  - [x] Step 5: Call AI provider
+  - [x] Step 6: Increment usage
+  - [x] Step 7: Save to Generation table
+  - [x] Step 8: Return structured output
+- [x] Create `lib/ai/types.ts` — shared AI types (AIRequest, AIResponse)
+- [x] Create prompt template structure in `lib/ai/prompts/`
 
 ### M2.2 — Video SEO Generator (Feature 5.1)
 
@@ -126,11 +126,11 @@
 - [ ] Create server action: `actions/video-seo.ts`
 - [ ] Create page: `/dashboard/create/video-seo/page.tsx` (replace placeholder)
 - [ ] Input form: tabbed input (Topic / Key Points / Full Script)
-- [ ] Output display: Titles, Description, Tags, Hashtags, Keywords, Caption, Thumbnail ideas
+- [ ] Output display: Titles, Description, Tags, Hashtags, Keywords
 - [ ] Copy-to-clipboard button per section
 - [ ] Loading state (skeleton)
 - [ ] Plan gate: All plans, daily limit for Free
-- [ ] Zod validation on input
+- [ ] Zod validation on input 
 
 ### M2.3 — Script Writer (Feature 5.2)
 

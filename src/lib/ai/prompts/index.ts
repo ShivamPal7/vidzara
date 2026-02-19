@@ -1,0 +1,74 @@
+import { Feature } from "../../../../prisma/generated/prisma/enums";
+import { VideoSEOPrompt } from "./video-seo";
+
+export interface PromptTemplate {
+  name: string;
+  feature: Feature;
+  description: string;
+  generatePrompt: (input: any, context?: any) => string;
+}
+
+export const PROMPTS: Record<Feature, PromptTemplate> = {
+  // To be populated with specific feature prompts
+  [Feature.VIDEO_SEO]: VideoSEOPrompt,
+  [Feature.SCRIPT_WRITER]: {
+    name: "Script Writer",
+    feature: 'SCRIPT_WRITER',
+    description: "Write video scripts",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.SCRIPT_SHORTENER]: {
+    name: "Script Shortener",
+    feature: 'SCRIPT_SHORTENER',
+    description: "Shorten scripts",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.HOOK_DETECTOR]: {
+    name: "Hook Detector",
+    feature: 'HOOK_DETECTOR',
+    description: "Analyze hooks",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.CONTENT_SAFETY]: {
+    name: "Content Safety",
+    feature: 'CONTENT_SAFETY',
+    description: "Check content safety",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.TOPIC_GENERATOR]: {
+    name: "Topic Generator",
+    feature: 'TOPIC_GENERATOR',
+    description: "Generate topics",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.OUTLIER_DETECTOR]: {
+    name: "Outlier Detector",
+    feature: 'OUTLIER_DETECTOR',
+    description: "Detect outliers",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.CONSISTENCY_CHECKER]: {
+    name: "Consistency Checker",
+    feature: 'CONSISTENCY_CHECKER',
+    description: "Check consistency",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.NICHE_FINDER]: {
+    name: "Niche Finder",
+    feature: 'NICHE_FINDER',
+    description: "Find niches",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.THUMBNAIL_CONCEPT]: {
+    name: "Thumbnail Concept",
+    feature: 'THUMBNAIL_CONCEPT',
+    description: "Generate thumbnail concepts",
+    generatePrompt: () => "Placeholder prompt",
+  },
+  [Feature.GROWTH_DASHBOARD]: {
+    name: "Growth Dashboard",
+    feature: 'GROWTH_DASHBOARD',
+    description: "Growth analysis",
+    generatePrompt: () => "Placeholder prompt",
+  },
+};

@@ -63,7 +63,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col p-2 md:p-8 pt-6 space-y-8">
+    <div className="flex flex-1 flex-col space-y-8">
       <div className="flex items-center justify-between space-y-2">
         <WelcomeHeader user={user} />
       </div>

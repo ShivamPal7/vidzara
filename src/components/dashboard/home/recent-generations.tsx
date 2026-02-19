@@ -20,7 +20,7 @@ import {
   IconFileText
 } from "@tabler/icons-react"
 
-import { Feature } from "@prisma/client"
+import { Feature } from "../../../../prisma/generated/prisma/enums"
 
 interface Generation {
   id: string
@@ -50,15 +50,15 @@ export function RecentGenerations({ generations }: RecentGenerationsProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold tracking-tight">Recent Activity</h2>
+        <h2 className="text-lg font-semibold">Recent Activity</h2>
       </div>
-      <div className="rounded-xl border glass-1 overflow-hidden">
+      <div className="rounded-md border glass-1 overflow-hidden">
         <Table>
           <TableHeader className="bg-muted/30">
             <TableRow>
-              <TableHead>Feature</TableHead>
-              <TableHead>Input Preview</TableHead>
-              <TableHead className="text-right">Time</TableHead>
+              <TableHead className="px-2 sm:px-4">Feature</TableHead>
+              <TableHead className="px-2 sm:px-4">Input <span className="hidden sm:inline">Preview</span></TableHead>
+              <TableHead className="text-right px-2 sm:px-4">Time</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -67,24 +67,36 @@ export function RecentGenerations({ generations }: RecentGenerationsProps) {
               
               return (
                 <TableRow key={gen.id} className="hover:bg-muted/20">
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium px-2 sm:px-4">
                     <div className="flex items-center gap-2">
                       <div className="p-1.5 rounded-md bg-primary/10 text-primary">
                         <Icon size={16} />
                       </div>
-                      <span className="capitalize">
+                      <span className="capitalize hidden sm:inline">
                         {gen.feature.replace(/_/g, " ").toLowerCase()}
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate text-muted-foreground">
+                  <TableCell className="max-w-[80px] sm:max-w-[200px] truncate text-muted-foreground px-2 sm:px-4">
                     {/* Assuming input is an object, try to find a relevant text field */}
                     {typeof gen.input === 'string' 
                       ? gen.input 
                       : (gen.input?.topic || gen.input?.title || gen.input?.query || "No preview")}
                   </TableCell>
-                  <TableCell className="text-right text-muted-foreground whitespace-nowrap">
-                    {formatDistanceToNow(new Date(gen.createdAt), { addSuffix: true })}
+                  <TableCell className="text-right text-muted-foreground whitespace-nowrap px-2 sm:px-4 text-xs sm:text-sm">
+                   {formatDistanceToNow(new Date(gen.createdAt), { addSuffix: false })
+                      .replace('about ', '')
+                      .replace('less than a minute', 'just now')
+                      .replace(' minute', 'm')
+                      .replace(' minutes', 'm')
+                      .replace(' hour', 'h')
+                      .replace(' hours', 'h')
+                      .replace(' day', 'd')
+                      .replace(' days', 'd')
+                      .replace(' month', 'mo')
+                      .replace(' months', 'mo')
+                      .replace(' year', 'y')
+                      .replace(' years', 'y')}
                   </TableCell>
                 </TableRow>
               )

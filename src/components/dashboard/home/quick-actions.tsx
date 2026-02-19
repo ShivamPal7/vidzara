@@ -39,7 +39,7 @@ export function QuickActions() {
         <Button
           key={action.title}
           variant="outline"
-          className="glass-1 h-auto flex-col items-start gap-4 p-4 hover:border-primary/50 hover:bg-muted/50 transition-all text-left"
+          className="glass-1 h-auto flex-col items-start gap-4 p-4 hover:border-primary/50 hover:bg-muted/50 transition-all text-left rounded-xl"
           asChild
         >
           <Link href={action.href}>

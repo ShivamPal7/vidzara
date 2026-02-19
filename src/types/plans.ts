@@ -1,10 +1,9 @@
 import { Feature } from './features';
 
-export enum Plan {
-  FREE = 'FREE',
-  LIMITED_PRO = 'LIMITED_PRO',
-  UNLIMITED_PRO = 'UNLIMITED_PRO',
-}
+import { Plan } from "../../prisma/generated/prisma/enums";
+
+export { Plan };
+
 
 export interface PlanMetadata {
   label: string;

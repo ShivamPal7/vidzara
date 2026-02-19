@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { IconCirclePlusFilled, IconMail, IconChevronRight, type Icon } from "@tabler/icons-react"
 
 import { Button } from "@/components/ui/button"
@@ -34,11 +35,14 @@ export function NavMain({
         <SidebarMenu>
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
+              asChild
               tooltip="Quick Create"
               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
             >
-              <IconCirclePlusFilled />
-              <span>Quick Create</span>
+              <Link href="/dashboard/new">
+                <IconCirclePlusFilled />
+                <span>Quick Create</span>
+              </Link>
             </SidebarMenuButton>
             <Button
               size="icon"
@@ -81,10 +85,10 @@ function CollapsibleMenuItem({
     return (
       <SidebarMenuItem>
         <SidebarMenuButton asChild tooltip={item.title}>
-          <a href={item.url}>
+          <Link href={item.url}>
             {Icon && <Icon />}
             <span>{item.title}</span>
-          </a>
+          </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
     )
@@ -109,9 +113,9 @@ function CollapsibleMenuItem({
           {item.items?.map((subItem) => (
             <SidebarMenuSubItem key={subItem.title}>
               <SidebarMenuSubButton asChild>
-                <a href={subItem.url}>
+                <Link href={subItem.url}>
                   <span>{subItem.title}</span>
-                </a>
+                </Link>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           ))}

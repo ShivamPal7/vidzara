@@ -1,16 +1,6 @@
-export enum Feature {
-  VIDEO_SEO = 'VIDEO_SEO',
-  SCRIPT_WRITER = 'SCRIPT_WRITER',
-  SCRIPT_SHORTENER = 'SCRIPT_SHORTENER',
-  HOOK_DETECTOR = 'HOOK_DETECTOR',
-  CONTENT_SAFETY = 'CONTENT_SAFETY',
-  TOPIC_GENERATOR = 'TOPIC_GENERATOR',
-  OUTLIER_DETECTOR = 'OUTLIER_DETECTOR',
-  CONSISTENCY_CHECKER = 'CONSISTENCY_CHECKER',
-  NICHE_FINDER = 'NICHE_FINDER',
-  THUMBNAIL_CONCEPT = 'THUMBNAIL_CONCEPT',
-  GROWTH_DASHBOARD = 'GROWTH_DASHBOARD',
-}
+import { Feature } from "../../prisma/generated/prisma/enums";
+
+export { Feature };
 
 export interface FeatureMetadata {
   label: string;
