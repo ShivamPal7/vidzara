@@ -2,11 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Heart, Eye, MoreHorizontal } from "lucide-react";
+import { Heart, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import type { VideoRowProps } from "./types";
 
-export function VideoRow({ video, onToggleFavorite, onView }: VideoRowProps) {
+export function VideoRow({ video, onToggleFavorite, onDelete }: VideoRowProps) {
+  const router = useRouter();
+
   return (
     <motion.div
       whileHover={{ scale: 1.005 }}
@@ -15,8 +18,9 @@ export function VideoRow({ video, onToggleFavorite, onView }: VideoRowProps) {
         "group flex items-center justify-between gap-4 px-5 py-4 rounded-xl",
         "border border-border/40 bg-card/50 backdrop-blur-sm",
         "hover:border-border/70 hover:bg-card/80",
-        "transition-all duration-200"
+        "transition-all duration-200 cursor-pointer"
       )}
+      onClick={() => router.push(`/dashboard/create/video-seo/${video.id}`)}
     >
       {/* Title */}
       <span className="text-sm sm:text-[15px] font-medium text-foreground leading-snug truncate">
@@ -29,7 +33,10 @@ export function VideoRow({ video, onToggleFavorite, onView }: VideoRowProps) {
           variant="ghost"
           size="icon"
           className="size-8 text-muted-foreground hover:text-foreground transition-colors duration-200"
-          onClick={() => onToggleFavorite?.(video.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite?.(video.id);
+          }}
         >
           <Heart
             className={cn(
@@ -43,7 +50,10 @@ export function VideoRow({ video, onToggleFavorite, onView }: VideoRowProps) {
           variant="ghost"
           size="icon"
           className="size-8 text-muted-foreground hover:text-foreground transition-colors duration-200"
-          onClick={() => onView?.(video.id)}
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/dashboard/create/video-seo/${video.id}`);
+          }}
         >
           <Eye className="size-4" />
         </Button>
@@ -51,9 +61,13 @@ export function VideoRow({ video, onToggleFavorite, onView }: VideoRowProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="size-8 text-muted-foreground hover:text-foreground transition-colors duration-200"
+          className="size-8 text-muted-foreground hover:text-destructive transition-colors duration-200"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete?.(video.id);
+          }}
         >
-          <MoreHorizontal className="size-4" />
+          <Trash2 className="size-4" />
         </Button>
       </div>
     </motion.div>

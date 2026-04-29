@@ -2,7 +2,7 @@ import { Feature } from './features';
 
 import { Plan } from "../../prisma/generated/prisma/enums";
 
-export { Plan };
+export { Plan, Feature };
 
 
 export interface PlanMetadata {

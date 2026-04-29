@@ -10,7 +10,7 @@ if (!apiKey) {
 const genAI = new GoogleGenerativeAI(apiKey || "");
 
 export const GeminiProvider: AIProvider = {
-  async generateText(prompt: string, modelId: string = "models/gemini-2.5-flash") {
+  async generateText(prompt: string, modelId: string = "gemini-flash-latest") {
     try {
       const model = genAI.getGenerativeModel({ model: modelId });
       const result = await model.generateContent(prompt);
@@ -27,7 +27,7 @@ export const GeminiProvider: AIProvider = {
     }
   },
 
-  async generateJSON<T>(prompt: string, schema?: any, modelId: string = "models/gemini-2.5-flash") {
+  async generateJSON<T>(prompt: string, schema?: any, modelId: string = "gemini-flash-latest") {
     try {
       const model = genAI.getGenerativeModel({ 
         model: modelId,

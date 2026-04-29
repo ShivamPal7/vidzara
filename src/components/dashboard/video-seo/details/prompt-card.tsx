@@ -1,20 +1,49 @@
 "use client";
 
-import { useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { useState, useTransition } from "react";
+import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KeywordPill } from "./keyword-pill";
 import { cn } from "@/lib/utils";
-import type { SuggestedKeyword } from "../types";
+import { regenerateVideoSeo } from "@/actions/video-seo";
+import type { SuggestedKeyword, VideoSeoDetails } from "../types";
 
 interface PromptCardProps {
   prompt: string;
   suggestedKeywords: SuggestedKeyword[];
+  generationId: string;
+  onRegenerated?: (data: VideoSeoDetails) => void;
   className?: string;
 }
 
-export function PromptCard({ prompt, suggestedKeywords, className }: PromptCardProps) {
+export function PromptCard({
+  prompt,
+  suggestedKeywords,
+  generationId,
+  onRegenerated,
+  className,
+}: PromptCardProps) {
   const [promptValue, setPromptValue] = useState(prompt);
+  const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+
+  const handleRegenerate = () => {
+    if (!promptValue.trim() || isPending) return;
+    setError(null);
+
+    startTransition(async () => {
+      const result = await regenerateVideoSeo({
+        generationId,
+        content: promptValue.trim(),
+      });
+
+      if (result.success && result.data) {
+        onRegenerated?.(result.data as VideoSeoDetails);
+      } else {
+        setError(result.error || "Regeneration failed.");
+      }
+    });
+  };
 
   return (
     <div
@@ -29,11 +58,13 @@ export function PromptCard({ prompt, suggestedKeywords, className }: PromptCardP
         value={promptValue}
         onChange={(e) => setPromptValue(e.target.value)}
         rows={2}
+        disabled={isPending}
         className={cn(
           "w-full rounded-xl bg-secondary/60 border border-border/40 px-4 py-3",
           "text-sm text-foreground/90 leading-relaxed resize-none",
           "outline-none focus:border-ring focus:ring-ring/50 focus:ring-[3px]",
-          "transition-all duration-200 placeholder:text-muted-foreground"
+          "transition-all duration-200 placeholder:text-muted-foreground",
+          "disabled:opacity-50"
         )}
         placeholder="Enter your video topic or prompt..."
       />
@@ -56,12 +87,24 @@ export function PromptCard({ prompt, suggestedKeywords, className }: PromptCardP
         Add Keyword
       </button>
 
-      {/* Regenerate button */}
-      <div>
-        <Button size="sm" className="gap-1.5">
-          <RefreshCw className="size-3.5" />
-          Regenerate
+      {/* Regenerate button + error */}
+      <div className="space-y-2">
+        <Button
+          size="sm"
+          className="gap-1.5"
+          onClick={handleRegenerate}
+          disabled={isPending || !promptValue.trim()}
+        >
+          {isPending ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <RefreshCw className="size-3.5" />
+          )}
+          {isPending ? "Regenerating..." : "Regenerate"}
         </Button>
+        {error && (
+          <p className="text-xs text-destructive">{error}</p>
+        )}
       </div>
     </div>
   );

@@ -7,10 +7,12 @@ import type { Video } from "./types";
 
 interface VideoSeoTabsProps {
   videos: Video[];
+  onToggleFavorite?: (id: string) => void;
+  onDelete?: (id: string) => void;
   className?: string;
 }
 
-export function VideoSeoTabs({ videos, className }: VideoSeoTabsProps) {
+export function VideoSeoTabs({ videos, onToggleFavorite, onDelete, className }: VideoSeoTabsProps) {
   const favorites = videos.filter((v) => v.isFavorite);
 
   return (
@@ -31,11 +33,19 @@ export function VideoSeoTabs({ videos, className }: VideoSeoTabsProps) {
         </TabsList>
 
         <TabsContent value="all">
-          <VideoList videos={videos} />
+          <VideoList
+            videos={videos}
+            onToggleFavorite={onToggleFavorite}
+            onDelete={onDelete}
+          />
         </TabsContent>
 
         <TabsContent value="favorites">
-          <VideoList videos={favorites} />
+          <VideoList
+            videos={favorites}
+            onToggleFavorite={onToggleFavorite}
+            onDelete={onDelete}
+          />
         </TabsContent>
       </Tabs>
     </motion.div>

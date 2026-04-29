@@ -24,7 +24,7 @@ const itemVariants = {
   },
 };
 
-export function VideoList({ videos, className }: VideoListProps) {
+export function VideoList({ videos, onToggleFavorite, onDelete, className }: VideoListProps) {
   if (videos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -43,8 +43,12 @@ export function VideoList({ videos, className }: VideoListProps) {
       className={cn("flex flex-col gap-3", className)}
     >
       {videos.map((video) => (
-        <motion.div key={video.id} variants={itemVariants}>
-          <VideoRow video={video} />
+        <motion.div key={video.id} variants={itemVariants as any}>
+          <VideoRow
+            video={video}
+            onToggleFavorite={onToggleFavorite}
+            onDelete={onDelete}
+          />
         </motion.div>
       ))}
     </motion.div>

@@ -6,8 +6,9 @@ export const VideoSEOPrompt: PromptTemplate = {
   feature: Feature.VIDEO_SEO,
   description: "Generate high-CTR titles, optimized descriptions, tags, and hashtags for YouTube videos.",
   generatePrompt: (input: any) => {
-    const { mode, content } = input;
+    const { mode, content, options } = input;
     // content can be topic, key points, or full script based on mode.
+    // options: { title, description, tags, hashtags } toggles from the frontend
 
     return `
 You are an expert YouTube Strategist and SEO Specialist. Your goal is to generate highly clickable, algorithm-optimized metadata for a YouTube video.
@@ -37,20 +38,22 @@ Generate the following metadata in strict JSON format.
 3.  **Tags (15-25):**
     -   Generate 15-25 separate tags.
     -   Mix broad niche tags and specific long-tail tags.
+    -   Each tag MUST include an estimated relevance/search-volume score from 0 to 100.
 
 4.  **Hashtags (10):**
     -   Generate 10 relevant hashtags (without the # symbol in the array, just the text).
 
-5.  **Keywords:**
+5.  **Keywords (10-15):**
     -   List 10-15 target keywords (mix of short-tail and long-tail) that this video should rank for.
+    -   Each keyword MUST include an estimated relevance/search-volume score from 0 to 100.
 
 **Output Format (Strict JSON):**
 {
   "titles": ["Title 1", "Title 2", ...],
   "description": "Full description text...",
-  "tags": ["tag1", "tag2", ...],
+  "tags": [{ "keyword": "tag1", "score": 85 }, { "keyword": "tag2", "score": 72 }, ...],
   "hashtags": ["hashtag1", "hashtag2", ...],
-  "keywords": ["keyword 1", "keyword 2", ...]
+  "keywords": [{ "keyword": "keyword 1", "score": 90 }, { "keyword": "keyword 2", "score": 78 }, ...]
 }
 `;
   },

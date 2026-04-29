@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 interface SectionHeaderProps {
   title: string;
   showRefine?: boolean;
+  generationId?: string;
+  sectionType?: "title" | "description";
+  sectionContent?: string;
+  onRefined?: (newContent: string) => void;
   onCopy?: () => void;
   className?: string;
 }
@@ -16,6 +20,10 @@ interface SectionHeaderProps {
 export function SectionHeader({
   title,
   showRefine = false,
+  generationId,
+  sectionType,
+  sectionContent,
+  onRefined,
   onCopy,
   className,
 }: SectionHeaderProps) {
@@ -31,7 +39,14 @@ export function SectionHeader({
     <div className={cn("flex items-center justify-between", className)}>
       <h3 className="text-base font-semibold text-foreground">{title}</h3>
       <div className="flex items-center gap-1">
-        {showRefine && <RefinePopover />}
+        {showRefine && generationId && sectionType && sectionContent && (
+          <RefinePopover
+            generationId={generationId}
+            section={sectionType}
+            content={sectionContent}
+            onRefined={onRefined}
+          />
+        )}
         {onCopy && (
           <Button
             variant="ghost"

@@ -53,7 +53,7 @@ export class AIEngine {
       // or default to JSON if the prompt implies it.
       
       // Let's use JSON generation by default for structured tools to ensure reliability
-      const modelId = "models/gemini-2.5-flash"; // Could be dynamic based on plan
+      const modelId = "gemini-flash-latest"; // Could be dynamic based on plan
       
       let aiOutput: any;
       let tokens = 0;

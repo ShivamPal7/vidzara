@@ -1,17 +1,48 @@
 "use client";
 
-import { ArrowLeft, Eye, Heart, MoreHorizontal } from "lucide-react";
+import { useState, useTransition } from "react";
+import { ArrowLeft, Heart, Trash2, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toggleFavorite, deleteGeneration } from "@/actions/video-seo";
 
 interface VideoSeoDetailsHeaderProps {
   title: string;
+  generationId: string;
+  isFavorite: boolean;
   className?: string;
 }
 
-export function VideoSeoDetailsHeader({ title, className }: VideoSeoDetailsHeaderProps) {
+export function VideoSeoDetailsHeader({
+  title,
+  generationId,
+  isFavorite: initialFavorite,
+  className,
+}: VideoSeoDetailsHeaderProps) {
   const router = useRouter();
+  const [isFavorite, setIsFavorite] = useState(initialFavorite);
+  const [isDeleting, startDeleteTransition] = useTransition();
+  const [isFaving, startFavTransition] = useTransition();
+
+  const handleToggleFavorite = () => {
+    setIsFavorite((prev) => !prev);
+    startFavTransition(async () => {
+      const result = await toggleFavorite(generationId);
+      if (!result.success) {
+        setIsFavorite((prev) => !prev); // revert
+      }
+    });
+  };
+
+  const handleDelete = () => {
+    startDeleteTransition(async () => {
+      const result = await deleteGeneration(generationId);
+      if (result.success) {
+        router.push("/dashboard/create/video-seo");
+      }
+    });
+  };
 
   return (
     <div
@@ -25,7 +56,7 @@ export function VideoSeoDetailsHeader({ title, className }: VideoSeoDetailsHeade
         <Button
           variant="ghost"
           size="icon-sm"
-          onClick={() => router.back()}
+          onClick={() => router.push("/dashboard/create/video-seo")}
           className="shrink-0 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
@@ -37,45 +68,50 @@ export function VideoSeoDetailsHeader({ title, className }: VideoSeoDetailsHeade
 
       {/* Right: Actions */}
       <div className="flex items-center gap-1">
-        {/* <Button
-          variant="ghost"
-          size="sm"
-          className="hidden sm:inline-flex text-muted-foreground hover:text-foreground gap-1.5 text-xs"
-        >
-          <Eye className="size-3.5" />
-          Preview
-        </Button> */}
         <Button
           variant="ghost"
           size="sm"
+          disabled={isFaving}
+          onClick={handleToggleFavorite}
           className="hidden sm:inline-flex text-muted-foreground hover:text-foreground gap-1.5 text-xs"
         >
-          <Heart className="size-3.5" />
-          Favorite
+          <Heart
+            className={cn(
+              "size-3.5",
+              isFavorite && "fill-primary text-primary"
+            )}
+          />
+          {isFavorite ? "Favorited" : "Favorite"}
         </Button>
 
-        {/* Mobile icon-only buttons */}
-        {/* <Button
-          variant="ghost"
-          size="icon-sm"
-          className="sm:hidden text-muted-foreground hover:text-foreground"
-        >
-          <Eye className="size-4" />
-        </Button> */}
+        {/* Mobile icon-only favorite button */}
         <Button
           variant="ghost"
           size="icon-sm"
+          disabled={isFaving}
+          onClick={handleToggleFavorite}
           className="sm:hidden text-muted-foreground hover:text-foreground"
         >
-          <Heart className="size-4" />
+          <Heart
+            className={cn(
+              "size-4",
+              isFavorite && "fill-primary text-primary"
+            )}
+          />
         </Button>
 
         <Button
           variant="ghost"
           size="icon-sm"
-          className="text-muted-foreground hover:text-foreground"
+          disabled={isDeleting}
+          onClick={handleDelete}
+          className="text-muted-foreground hover:text-destructive"
         >
-          <MoreHorizontal className="size-4" />
+          {isDeleting ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Trash2 className="size-4" />
+          )}
         </Button>
       </div>
     </div>

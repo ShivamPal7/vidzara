@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Copy, ChevronRight, Check } from "lucide-react";
+import { useState, useTransition } from "react";
+import { Sparkles, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { refineSection } from "@/actions/video-seo";
 
 // ── Tone/Translate sub-options ──────────────────────────────────────────
 const TONE_OPTIONS = ["Professional", "Casual", "Witty", "Interesting", "Educational"];
@@ -31,25 +32,48 @@ const REFINE_ITEMS = [
 
 // ── Props ───────────────────────────────────────────────────────────────
 interface RefinePopoverProps {
-  onRefine?: (action: string, value?: string) => void;
+  generationId: string;
+  section: "title" | "description";
+  content: string;
+  onRefined?: (newContent: string) => void;
   className?: string;
 }
 
-export function RefinePopover({ onRefine, className }: RefinePopoverProps) {
+export function RefinePopover({
+  generationId,
+  section,
+  content,
+  onRefined,
+  className,
+}: RefinePopoverProps) {
   const [open, setOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [customInstruction, setCustomInstruction] = useState("");
+  const [isPending, startTransition] = useTransition();
 
-  const handleAction = (label: string, value?: string) => {
-    onRefine?.(label, value);
+  const handleRefine = (action: string, value?: string) => {
     setOpen(false);
     setActiveSubmenu(null);
+
+    startTransition(async () => {
+      const result = await refineSection({
+        generationId,
+        section,
+        content,
+        action,
+        value,
+      });
+
+      if (result.success && result.data) {
+        onRefined?.(result.data);
+      }
+    });
   };
 
   const handleCustomSubmit = () => {
     if (customInstruction.trim()) {
-      onRefine?.("Custom Instruction", customInstruction);
+      handleRefine("Custom Instruction", customInstruction);
       setCustomInstruction("");
     }
     setModalOpen(false);
@@ -62,10 +86,15 @@ export function RefinePopover({ onRefine, className }: RefinePopoverProps) {
           <Button
             variant="ghost"
             size="sm"
+            disabled={isPending}
             className={cn("text-muted-foreground hover:text-foreground gap-1.5 text-xs", className)}
           >
-            <Sparkles className="size-3.5" />
-            Refine
+            {isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="size-3.5" />
+            )}
+            {isPending ? "Refining..." : "Refine"}
           </Button>
         </PopoverTrigger>
 
@@ -82,7 +111,7 @@ export function RefinePopover({ onRefine, className }: RefinePopoverProps) {
                   key={item.label}
                   type="button"
                   onClick={() => {
-                    if (item.type === "action") handleAction(item.label);
+                    if (item.type === "action") handleRefine(item.label);
                     else if (item.type === "submenu") setActiveSubmenu(item.label);
                     else if (item.type === "modal") {
                       setOpen(false);
@@ -114,11 +143,11 @@ export function RefinePopover({ onRefine, className }: RefinePopoverProps) {
                 <span>{activeSubmenu}</span>
               </button>
               <div className="h-px bg-border/40 my-1" />
-              {REFINE_ITEMS.find((i) => i.label === activeSubmenu)?.options?.map((opt) => (
+              {REFINE_ITEMS.find((i) =>   i.label === activeSubmenu)?.options?.map((opt) => (
                 <button
                   key={opt}
                   type="button"
-                  onClick={() => handleAction(activeSubmenu, opt)}
+                  onClick={() => handleRefine(activeSubmenu, opt)}
                   className={cn(
                     "flex items-center w-full px-3 py-2 rounded-lg text-sm",
                     "text-foreground/90 hover:bg-secondary/80 transition-colors duration-150",
