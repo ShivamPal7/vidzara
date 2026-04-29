@@ -1,59 +1,70 @@
 "use client"
 
-import { useState, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useRef, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
+import { ArrowRight, Mic, Sparkles, Youtube, Clock, Globe } from "lucide-react"
+import { ChipPopover } from "@/components/dashboard/shared/chip-popover"
+import { TonePopover } from "@/components/dashboard/shared/tone-popover"
 import {
-  Paperclip,
-  Sparkles,
-  Mic,
-  ArrowRight,
-  Plus,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ToolsDropdown } from "./tools-dropdown"
+  FORMAT_OPTIONS,
+  LONG_DURATION_OPTIONS,
+  SHORT_DURATION_OPTIONS,
+  LANGUAGE_OPTIONS,
+  DEFAULT_SCRIPT_WRITER_STATE,
+  type ScriptWriterState,
+} from "./constants"
 
 const MAX_CHARS = 4000
 
-interface PromptInputProps {
+interface ScriptPromptInputProps {
   className?: string
   usage: {
     used: number
     limit: number
     remaining: number
   }
-  value: string
-  onChange: (value: string) => void
-  selectedTool: string
-  onToolChange: (tool: string) => void
+  state: ScriptWriterState
+  onStateChange: (state: ScriptWriterState) => void
+  onSubmit?: (state: ScriptWriterState) => void
 }
 
-export function PromptInput({ className, usage, value, onChange, selectedTool, onToolChange }: PromptInputProps) {
-  const router = useRouter()
+export function ScriptPromptInput({ className, usage, state, onStateChange, onSubmit }: ScriptPromptInputProps) {
   const [isFocused, setIsFocused] = useState(false)
-  const [deepThinking, setDeepThinking] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const hasText = value.length > 0
+  const hasText = state.prompt.length > 0
 
   const handleSubmit = () => {
     if (!hasText) return
-    
-    let path = "/dashboard/create"
-    if (selectedTool === "script-writer") path += "/script-writer"
-    else if (selectedTool === "video-seo") path += "/video-seo"
-    else path += `/${selectedTool}` // Fallback for other tools
-
-    router.push(`${path}?prompt=${encodeURIComponent(value)}`)
+    onSubmit?.(state)
+    onStateChange({ ...state, prompt: "" })
   }
 
-  // SVG circular progress
+  // When format changes, reset duration to sensible default
+  useEffect(() => {
+    if (state.format === "short" && !SHORT_DURATION_OPTIONS.find((o) => o.value === state.duration)) {
+      onStateChange({ ...state, duration: "1" })
+    }
+    if (state.format === "long" && !LONG_DURATION_OPTIONS.find((o) => o.value === state.duration)) {
+      onStateChange({ ...state, duration: "10" })
+    }
+  }, [state.format, state.duration, state, onStateChange])
+
+  // SVG circular progress for usage
   const radius = 17
   const strokeWidth = 2.5
   const circumference = 2 * Math.PI * radius
   const progress = usage.limit > 0 ? usage.remaining / usage.limit : 0
   const strokeDashoffset = circumference * (1 - progress)
+
+  const durationOptions =
+    state.format === "short" ? SHORT_DURATION_OPTIONS : LONG_DURATION_OPTIONS
+
+  const update = <K extends keyof ScriptWriterState>(
+    key: K,
+    value: ScriptWriterState[K]
+  ) => onStateChange({ ...state, [key]: value })
 
   return (
     <motion.div
@@ -69,13 +80,13 @@ export function PromptInput({ className, usage, value, onChange, selectedTool, o
         )}
       >
         {/* Textarea */}
-        <div className="px-5 pt-5 pb-3">
+        <div className="px-3 sm:px-5 pt-4 sm:pt-5 pb-2 sm:pb-3">
           <textarea
             ref={textareaRef}
-            value={value}
+            value={state.prompt}
             onChange={(e) => {
               if (e.target.value.length <= MAX_CHARS) {
-                onChange(e.target.value)
+                update("prompt", e.target.value)
               }
             }}
             onFocus={() => setIsFocused(true)}
@@ -86,51 +97,54 @@ export function PromptInput({ className, usage, value, onChange, selectedTool, o
                 handleSubmit()
               }
             }}
-            placeholder="How can I help you grow?"
-            rows={2}
+            placeholder="What's your video about?"
+            rows={1}
             className={cn(
-              "w-full resize-none bg-transparent text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50",
+              "w-full resize-none bg-transparent text-sm sm:text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50",
               "focus:outline-none"
             )}
           />
         </div>
 
         {/* Bottom toolbar */}
-        <div className="flex items-center justify-between px-4 pb-4 pt-1">
-          {/* Left actions */}
-          <div className="flex items-center gap-2">
-            {/* Tools dropdown */}
-            <ToolsDropdown value={selectedTool} onChange={onToolChange} />
+        <div className="flex items-center justify-between px-2.5 sm:px-4 pb-3 sm:pb-4 pt-0.5 sm:pt-1">
+          {/* Left — option chips */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Format: Long / Short */}
+            <ChipPopover
+              icon={state.format === "short" ? FORMAT_OPTIONS[1].icon : Youtube}
+              options={FORMAT_OPTIONS}
+              value={state.format}
+              onChange={(v) => update("format", v)}
+            />
 
-            {/* Attach */}
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-9 gap-1.5 rounded-lg px-3 sm:px-3 text-xs font-medium"
-            >
-              <Plus className="size-4 sm:hidden" />
-              <Paperclip className="size-4 hidden sm:block" />
-              <span className="hidden sm:inline">Attach</span>
-            </Button>
+            {/* Duration */}
+            <ChipPopover
+              icon={Clock}
+              options={durationOptions}
+              value={state.duration}
+              onChange={(v) => update("duration", v)}
+            />
 
-            {/* Deep thinking toggle */}
-            <Button
-              variant={deepThinking ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setDeepThinking(!deepThinking)}
-              className={cn(
-                "h-9 gap-1.5 rounded-lg px-3 text-xs font-medium transition-all duration-200",
-                deepThinking && "bg-primary text-primary-foreground hover:bg-primary/90"
-              )}
-            >
-              <Sparkles className="size-4" />
-              <span className="hidden sm:inline">Deep thinking</span>
-            </Button>
+            {/* Tone */}
+            <TonePopover
+              value={state.tone}
+              onChange={(v) => update("tone", v)}
+            />
+
+            {/* Language */}
+            <ChipPopover
+              icon={Globe}
+              options={LANGUAGE_OPTIONS}
+              value={state.language}
+              onChange={(v) => update("language", v)}
+              popoverClassName="max-h-[280px] overflow-y-auto"
+            />
           </div>
 
-          {/* Right actions */}
-          <div className="flex items-center gap-2.5">
-            {/* Usage ring */}
+          {/* Right — usage + send */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
+            {/* Usage ring + count */}
             <div className="relative flex items-center justify-center size-9">
               <svg
                 className="-rotate-90"
@@ -163,9 +177,14 @@ export function PromptInput({ className, usage, value, onChange, selectedTool, o
                 />
               </svg>
               <span className="absolute inset-0 flex items-center justify-center text-[11px] font-medium tabular-nums text-muted-foreground">
-                {usage.remaining}
+                <Sparkles className="size-3.5" />
               </span>
             </div>
+
+            {/* Usage count */}
+            <span className="text-xs font-medium tabular-nums text-muted-foreground">
+              {usage.remaining}
+            </span>
 
             {/* Mic / Send button */}
             <AnimatePresence mode="wait">

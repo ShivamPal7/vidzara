@@ -7,7 +7,7 @@ import { SlidersHorizontal, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SeoOptions, type SeoOption } from "./seo-options";
 import { generateVideoSEO } from "@/actions/video-seo";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { VideoSeoSearchBarProps } from "./types";
 
 const DEFAULT_OPTIONS: SeoOption[] = [
@@ -18,7 +18,10 @@ const DEFAULT_OPTIONS: SeoOption[] = [
 ];
 
 export function VideoSeoSearchBar({ className, onGenerated }: VideoSeoSearchBarProps) {
-  const [value, setValue] = useState("");
+  const searchParams = useSearchParams();
+  const initialPrompt = searchParams.get("prompt") || "";
+  
+  const [value, setValue] = useState(initialPrompt);
   const [isFocused, setIsFocused] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [options, setOptions] = useState<SeoOption[]>(DEFAULT_OPTIONS);

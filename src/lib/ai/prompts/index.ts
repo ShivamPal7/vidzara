@@ -1,5 +1,6 @@
 import { Feature } from "../../../../prisma/generated/prisma/enums";
 import { VideoSEOPrompt } from "./video-seo";
+import { ScriptWriterPrompt } from "./script-writer";
 
 export interface PromptTemplate {
   name: string;
@@ -11,12 +12,7 @@ export interface PromptTemplate {
 export const PROMPTS: Record<Feature, PromptTemplate> = {
   // To be populated with specific feature prompts
   [Feature.VIDEO_SEO]: VideoSEOPrompt,
-  [Feature.SCRIPT_WRITER]: {
-    name: "Script Writer",
-    feature: 'SCRIPT_WRITER',
-    description: "Write video scripts",
-    generatePrompt: () => "Placeholder prompt",
-  },
+  [Feature.SCRIPT_WRITER]: ScriptWriterPrompt,
   [Feature.SCRIPT_SHORTENER]: {
     name: "Script Shortener",
     feature: 'SCRIPT_SHORTENER',

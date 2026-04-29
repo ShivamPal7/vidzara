@@ -122,26 +122,25 @@
 
 ### M2.2 — Video SEO Generator (Feature 5.1)
 
-- [ ] Create prompt: `lib/ai/prompts/video-seo.ts`
-- [ ] Create server action: `actions/video-seo.ts`
-- [ ] Create page: `/dashboard/create/video-seo/page.tsx` (replace placeholder)
-- [ ] Input form: tabbed input (Topic / Key Points / Full Script)
-- [ ] Output display: Titles, Description, Tags, Hashtags, Keywords
-- [ ] Copy-to-clipboard button per section
-- [ ] Loading state (skeleton)
-- [ ] Plan gate: All plans, daily limit for Free
-- [ ] Zod validation on input 
+- [x] Create prompt: `lib/ai/prompts/video-seo.ts`
+- [x] Create server action: `actions/video-seo.ts`
+- [x] Create page: `/dashboard/create/video-seo/page.tsx` (replace placeholder)
+- [x] Input form: tabbed input (Topic / Key Points / Full Script)
+- [x] Output display: Titles, Description, Tags, Hashtags, Keywords
+- [x] Copy-to-clipboard button per section
+- [x] Loading state (skeleton)
+- [x] Plan gate: All plans, daily limit for Free
+- [x] Zod validation on input 
 
 ### M2.3 — Script Writer (Feature 5.2)
 
 - [ ] Create prompt: `lib/ai/prompts/script-writer.ts`
 - [ ] Create server action: `actions/script-writer.ts`
 - [ ] Create page: `/dashboard/create/script-writer/page.tsx`
-- [ ] Input form: Topic, Niche selector, Platform selector (YouTube/Shorts/Instagram), Video type
-- [ ] Future-ready disabled UI: tone slider, length selector, language dropdown
+- [ ] Input form: Topic, Niche selector, Video type, Length of script
+- [ ] Future-ready disabled UI: tone slider, language dropdown
 - [ ] Output: Hook → Structured body → CTA
-- [ ] Plan gate: Free = no long scripts, Limited = Shorts only, Unlimited = all
-- [ ] Show upgrade prompt when Free user selects YouTube platform
+- [ ] Plan gate: (todo-decide plans)
 
 ### M2.4 — Hook Failure Detector (Feature 5.5)
 

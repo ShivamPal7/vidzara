@@ -1,33 +1,37 @@
 "use client"
 
 import { FeatureCard } from "./feature-card"
-import { Lightbulb, TrendingUp, ScanEye, MonitorPlay } from "lucide-react"
+import { FileText, Search, Lightbulb, Sparkles } from "lucide-react"
 import { motion } from "framer-motion"
 
 const features = [
   {
+    id: "script-writer",
+    icon: FileText,
+    label: "Script Writer",
+    title: "Script Writer",
+    description: "Write a viral YouTube script about a mystery",
+  },
+  {
+    id: "video-seo",
+    icon: Search,
+    label: "Video SEO",
+    title: "Video SEO",
+    description: "Optimize my video for search and discovery",
+  },
+  {
+    id: "topic-generator",
     icon: Lightbulb,
     label: "Video ideas",
     title: "Video ideas",
-    description: "Based on my channel, what video ideas do you have for me?",
+    description: "What trending video ideas do you have for my channel?",
   },
   {
-    icon: TrendingUp,
-    label: "More views",
-    title: "More views",
-    description: "How do I get more views?",
-  },
-  {
-    icon: ScanEye,
-    label: "Channel audit",
-    title: "Channel audit",
-    description: "Can you audit my channel?",
-  },
-  {
-    icon: MonitorPlay,
-    label: "Video review",
-    title: "Video review",
-    description: "Give me feedback on my latest video",
+    id: "hook-generator",
+    icon: Sparkles,
+    label: "Viral Hook",
+    title: "Viral Hook",
+    description: "Create a 3-second hook that keeps people watching",
   },
 ]
 
@@ -52,21 +56,22 @@ const itemVariants = {
   },
 }
 
-export function FeatureCardsGrid() {
+export function FeatureCardsGrid({ onSelect }: { onSelect?: (toolId: string, prompt?: string) => void }) {
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full"
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full"
     >
       {features.map((feature) => (
-        <motion.div key={feature.title} variants={itemVariants} className="h-full">
+        <motion.div key={feature.id} variants={itemVariants} className="h-full">
           <FeatureCard
             icon={feature.icon}
             label={feature.label}
             title={feature.title}
             description={feature.description}
+            onClick={() => onSelect?.(feature.id, feature.description)}
           />
         </motion.div>
       ))}
