@@ -71,10 +71,19 @@ export function ToolsDropdown({ value, onChange }: ToolsDropdownProps) {
         <Button
           variant="secondary"
           size="sm"
-          className="h-9 gap-1.5 rounded-lg px-3 text-xs font-medium"
+          className="h-9 gap-1.5 rounded-lg px-2.5 sm:px-3 text-xs font-medium"
         >
-          <Settings2 className="size-4" />
-          {selectedTool ? selectedTool.label : "Tools"}
+          {selectedTool ? (
+            <>
+              <selectedTool.icon className="size-4" />
+              <span className="hidden sm:inline">{selectedTool.label}</span>
+            </>
+          ) : (
+            <>
+              <Settings2 className="size-4" />
+              <span>Tools</span>
+            </>
+          )}
           <ChevronDown className="size-3 opacity-60" />
         </Button>
       </DropdownMenuTrigger>

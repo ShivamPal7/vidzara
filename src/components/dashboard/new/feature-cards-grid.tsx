@@ -62,7 +62,7 @@ export function FeatureCardsGrid({ onSelect }: { onSelect?: (toolId: string, pro
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full"
+      className="grid grid-cols-2 gap-3 w-full"
     >
       {features.map((feature) => (
         <motion.div key={feature.id} variants={itemVariants} className="h-full">
