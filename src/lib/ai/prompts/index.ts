@@ -1,6 +1,7 @@
 import { Feature } from "../../../../prisma/generated/prisma/enums";
 import { VideoSEOPrompt } from "./video-seo";
 import { ScriptWriterPrompt } from "./script-writer";
+import { ThumbnailConceptPrompt } from "./thumbnail";
 
 export interface PromptTemplate {
   name: string;
@@ -55,12 +56,7 @@ export const PROMPTS: Record<Feature, PromptTemplate> = {
     description: "Find niches",
     generatePrompt: () => "Placeholder prompt",
   },
-  [Feature.THUMBNAIL_CONCEPT]: {
-    name: "Thumbnail Concept",
-    feature: 'THUMBNAIL_CONCEPT',
-    description: "Generate thumbnail concepts",
-    generatePrompt: () => "Placeholder prompt",
-  },
+  [Feature.THUMBNAIL_CONCEPT]: ThumbnailConceptPrompt,
   [Feature.GROWTH_DASHBOARD]: {
     name: "Growth Dashboard",
     feature: 'GROWTH_DASHBOARD',
