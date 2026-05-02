@@ -2,6 +2,7 @@ import { Feature } from "../../../../prisma/generated/prisma/enums";
 import { VideoSEOPrompt } from "./video-seo";
 import { ScriptWriterPrompt } from "./script-writer";
 import { ThumbnailConceptPrompt } from "./thumbnail";
+import { ContentSafetyPrompt } from "./content-safety";
 
 export interface PromptTemplate {
   name: string;
@@ -26,12 +27,7 @@ export const PROMPTS: Record<Feature, PromptTemplate> = {
     description: "Analyze hooks",
     generatePrompt: () => "Placeholder prompt",
   },
-  [Feature.CONTENT_SAFETY]: {
-    name: "Content Safety",
-    feature: 'CONTENT_SAFETY',
-    description: "Check content safety",
-    generatePrompt: () => "Placeholder prompt",
-  },
+  [Feature.CONTENT_SAFETY]: ContentSafetyPrompt,
   [Feature.TOPIC_GENERATOR]: {
     name: "Topic Generator",
     feature: 'TOPIC_GENERATOR',

@@ -4,12 +4,19 @@ import * as React from "react"
 import Link from "next/link"
 import {
   IconChartBar,
-  IconCreditCard,
+  IconChecklist,
+  IconCompass,
+  IconEye,
+  IconFileText,
   IconHistory,
+  IconBulb,
+  IconPhoto,
   IconRocket,
-  IconSettings,
+  IconScissors,
+  IconSearch,
+  IconShieldCheck,
+  IconTarget,
   IconTrendingUp,
-  IconUsers,
   IconWand,
 } from "@tabler/icons-react"
 
@@ -30,65 +37,54 @@ import Image from "next/image"
 const data = {
   navMain: [
     {
-      title: "Create",
-      url: "#",
-      icon: IconWand,
-      items: [
-        {
-          title: "Script Writer",
-          url: "/dashboard/create/script-writer",
-        },
-        {
-          title: "Thumbnail Concepts",
-          url: "/dashboard/create/thumbnail",
-        },
-        {
-          title: "Video SEO Generator",
-          url: "/dashboard/create/video-seo",
-        },
-      ],
+      title: "Script Writer",
+      url: "/dashboard/create/script-writer",
+      icon: IconFileText,
     },
     {
-      title: "Optimize",
-      url: "#",
-      icon: IconRocket,
-      items: [
-        {
-          title: "Script Shortener",
-          url: "/dashboard/optimize/script-shortener",
-        },
-        {
-          title: "Hook Detector",
-          url: "/dashboard/optimize/hook-detector",
-        },
-        {
-          title: "Content Safety Checker",
-          url: "/dashboard/optimize/content-safety",
-        },
-      ],
+      title: "Video SEO Generator",
+      url: "/dashboard/create/video-seo",
+      icon: IconSearch,
     },
     {
-      title: "Analyze",
-      url: "#",
-      icon: IconChartBar,
-      items: [
-        {
-          title: "Topic Generator",
-          url: "/dashboard/analyze/topic-generator",
-        },
-        {
-          title: "Outlier Detector",
-          url: "/dashboard/analyze/outlier-detector",
-        },
-        {
-          title: "Niche Finder",
-          url: "/dashboard/analyze/niche-finder",
-        },
-        {
-          title: "Consistency Checker",
-          url: "/dashboard/analyze/consistency-checker",
-        },
-      ],
+      title: "Topic Generator",
+      url: "/dashboard/analyze/topic-generator",
+      icon: IconBulb,
+    },
+    {
+      title: "Thumbnail Concepts",
+      url: "/dashboard/create/thumbnail",
+      icon: IconPhoto,
+    },
+    {
+      title: "Script Shortener",
+      url: "/dashboard/optimize/script-shortener",
+      icon: IconScissors,
+    },
+    {
+      title: "Hook Detector",
+      url: "/dashboard/optimize/hook-detector",
+      icon: IconTarget,
+    },
+    {
+      title: "Content Safety",
+      url: "/dashboard/optimize/content-safety",
+      icon: IconShieldCheck,
+    },
+    {
+      title: "Outlier Detector",
+      url: "/dashboard/analyze/outlier-detector",
+      icon: IconEye,
+    },
+    {
+      title: "Niche Finder",
+      url: "/dashboard/analyze/niche-finder",
+      icon: IconCompass,
+    },
+    {
+      title: "Consistency Checker",
+      url: "/dashboard/analyze/consistency-checker",
+      icon: IconChecklist,
     },
     {
       title: "Growth",
@@ -99,21 +95,6 @@ const data = {
       title: "History",
       url: "/dashboard/history",
       icon: IconHistory,
-    },
-    {
-      title: "Billing",
-      url: "/dashboard/billing",
-      icon: IconCreditCard,
-    },
-    {
-      title: "Affiliate",
-      url: "/dashboard/affiliate",
-      icon: IconUsers,
-    },
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: IconSettings,
     },
   ],
 }
@@ -128,11 +109,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
+              className="data-[slot=sidebar-menu-button]:p-1.5! mt-2"
             >
               <Link href="/dashboard">
-                <Image src="/logo.png" alt="Logo" width={24} height={24} />
-                <span className="text-base font-semibold">Vidzara</span>
+                <Image src="/logo.png" alt="Logo" width={32} height={32} />
+                <span className="text-lg font-semibold">Vidzara</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

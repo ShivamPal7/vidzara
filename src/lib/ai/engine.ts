@@ -73,7 +73,8 @@ export class AIEngine {
         Feature.OUTLIER_DETECTOR,
         Feature.CONSISTENCY_CHECKER,
         Feature.NICHE_FINDER,
-        Feature.THUMBNAIL_CONCEPT
+        Feature.THUMBNAIL_CONCEPT,
+        Feature.CONTENT_SAFETY
       ];
 
       if (isStructured.includes(feature)) {
