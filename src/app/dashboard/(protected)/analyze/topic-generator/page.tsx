@@ -1,12 +1,5 @@
-import { ComingSoon } from "@/components/dashboard/coming-soon";
-import { IconBulb } from "@tabler/icons-react";
+import { TopicGeneratorClient } from "@/components/dashboard/topic-generator/topic-generator-client";
 
 export default function TopicGeneratorPage() {
-  return (
-    <ComingSoon 
-      title="Topic Generator" 
-      description="Discover high-potential video topics based on competitor analysis and trends."
-      icon={IconBulb}
-    />
-  );
+  return <TopicGeneratorClient />;
 }

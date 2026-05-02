@@ -13,6 +13,7 @@ export interface AIResponse<T = any> {
   error?: string;
   tokensUsed?: number;
   model?: string;
+  generationId?: string;
 }
 
 export interface AIProvider {

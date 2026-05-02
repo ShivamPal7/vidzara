@@ -91,7 +91,7 @@ export class AIEngine {
       await incrementUsage(userId, feature);
 
       // 7. Save to Generation Table
-      await prisma.generation.create({
+      const genRecord = await prisma.generation.create({
         data: {
           userId,
           feature,
@@ -107,7 +107,8 @@ export class AIEngine {
         success: true,
         data: aiOutput,
         tokensUsed: tokens,
-        model: modelId
+        model: modelId,
+        generationId: genRecord.id
       };
 
     } catch (error: any) {

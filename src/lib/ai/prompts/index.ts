@@ -3,6 +3,7 @@ import { VideoSEOPrompt } from "./video-seo";
 import { ScriptWriterPrompt } from "./script-writer";
 import { ThumbnailConceptPrompt } from "./thumbnail";
 import { ContentSafetyPrompt } from "./content-safety";
+import { TopicGeneratorPrompt } from "./topic-generator";
 
 export interface PromptTemplate {
   name: string;
@@ -28,12 +29,7 @@ export const PROMPTS: Record<Feature, PromptTemplate> = {
     generatePrompt: () => "Placeholder prompt",
   },
   [Feature.CONTENT_SAFETY]: ContentSafetyPrompt,
-  [Feature.TOPIC_GENERATOR]: {
-    name: "Topic Generator",
-    feature: 'TOPIC_GENERATOR',
-    description: "Generate topics",
-    generatePrompt: () => "Placeholder prompt",
-  },
+  [Feature.TOPIC_GENERATOR]: TopicGeneratorPrompt,
   [Feature.OUTLIER_DETECTOR]: {
     name: "Outlier Detector",
     feature: 'OUTLIER_DETECTOR',
