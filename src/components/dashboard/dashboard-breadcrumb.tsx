@@ -15,7 +15,7 @@ const segmentLabels: Record<string, string> = {
   "hook-detector": "Hook Detector",
   "content-safety": "Content Safety",
   "topic-generator": "Topic Generator",
-  "outlier-detector": "Outlier Detector",
+  "competitors": "Competitors",
   "niche-finder": "Niche Finder",
   "consistency-checker": "Consistency Checker",
   growth: "Growth",

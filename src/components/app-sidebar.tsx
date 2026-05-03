@@ -72,8 +72,8 @@ const data = {
       icon: IconShieldCheck,
     },
     {
-      title: "Outlier Detector",
-      url: "/dashboard/analyze/outlier-detector",
+      title: "Competitors",
+      url: "/dashboard/analyze/competitors",
       icon: IconEye,
     },
     {

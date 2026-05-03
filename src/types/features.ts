@@ -39,10 +39,10 @@ export const FEATURES: Record<Feature, FeatureMetadata> = {
     description: 'Find viral topic ideas based on competitor analysis.',
     route: '/dashboard/analyze/topic-generator',
   },
-  [Feature.OUTLIER_DETECTOR]: {
-    label: 'Outlier Detector',
-    description: 'Identify high-performing outlier videos in your niche.',
-    route: '/dashboard/analyze/outlier-detector',
+  [Feature.COMPETITORS]: {
+    label: 'Competitors',
+    description: 'Identify high-performing competitors in your niche.',
+    route: '/dashboard/analyze/competitors',
   },
   [Feature.CONSISTENCY_CHECKER]: {
     label: 'Consistency Checker',

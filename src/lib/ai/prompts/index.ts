@@ -4,6 +4,8 @@ import { ScriptWriterPrompt } from "./script-writer";
 import { ThumbnailConceptPrompt } from "./thumbnail";
 import { ContentSafetyPrompt } from "./content-safety";
 import { TopicGeneratorPrompt } from "./topic-generator";
+import { ScriptShortenerPrompt } from "./script-shortener";
+import { HookDetectorPrompt } from "./hook-detector";
 
 export interface PromptTemplate {
   name: string;
@@ -16,24 +18,14 @@ export const PROMPTS: Record<Feature, PromptTemplate> = {
   // To be populated with specific feature prompts
   [Feature.VIDEO_SEO]: VideoSEOPrompt,
   [Feature.SCRIPT_WRITER]: ScriptWriterPrompt,
-  [Feature.SCRIPT_SHORTENER]: {
-    name: "Script Shortener",
-    feature: 'SCRIPT_SHORTENER',
-    description: "Shorten scripts",
-    generatePrompt: () => "Placeholder prompt",
-  },
-  [Feature.HOOK_DETECTOR]: {
-    name: "Hook Detector",
-    feature: 'HOOK_DETECTOR',
-    description: "Analyze hooks",
-    generatePrompt: () => "Placeholder prompt",
-  },
+  [Feature.SCRIPT_SHORTENER]: ScriptShortenerPrompt,
+  [Feature.HOOK_DETECTOR]: HookDetectorPrompt,
   [Feature.CONTENT_SAFETY]: ContentSafetyPrompt,
   [Feature.TOPIC_GENERATOR]: TopicGeneratorPrompt,
-  [Feature.OUTLIER_DETECTOR]: {
-    name: "Outlier Detector",
-    feature: 'OUTLIER_DETECTOR',
-    description: "Detect outliers",
+  [Feature.COMPETITORS]: {
+    name: "Competitors",
+    feature: 'COMPETITORS',
+    description: "Analyze competitors",
     generatePrompt: () => "Placeholder prompt",
   },
   [Feature.CONSISTENCY_CHECKER]: {

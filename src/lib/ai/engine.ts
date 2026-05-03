@@ -70,7 +70,7 @@ export class AIEngine {
         Feature.SCRIPT_SHORTENER,
         Feature.HOOK_DETECTOR,
         Feature.TOPIC_GENERATOR,
-        Feature.OUTLIER_DETECTOR,
+        Feature.COMPETITORS,
         Feature.CONSISTENCY_CHECKER,
         Feature.NICHE_FINDER,
         Feature.THUMBNAIL_CONCEPT,

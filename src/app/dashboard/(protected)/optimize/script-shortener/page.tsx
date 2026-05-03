@@ -1,12 +1,10 @@
-import { ComingSoon } from "@/components/dashboard/coming-soon";
-import { IconScissors } from "@tabler/icons-react";
+import { ShortenerView } from "@/components/dashboard/script-shortener/shortener-view"
+
+export const metadata = {
+  title: "Script Shortener - Project Horizon",
+  description: "Extract engaging shorts from your long-form video scripts.",
+}
 
 export default function ScriptShortenerPage() {
-  return (
-    <ComingSoon 
-      title="Script Shortener" 
-      description="Turn long scripts into engaging short-form content automatically."
-      icon={IconScissors}
-    />
-  );
+  return <ShortenerView />;
 }

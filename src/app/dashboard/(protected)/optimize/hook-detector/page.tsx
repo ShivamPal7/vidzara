@@ -1,12 +1,5 @@
-import { ComingSoon } from "@/components/dashboard/coming-soon";
-import { IconFishHook } from "@tabler/icons-react";
+import { HookDetectorClient } from "@/components/dashboard/hook-detector/hook-detector-client";
 
 export default function HookDetectorPage() {
-  return (
-    <ComingSoon 
-      title="Hook Failure Detector" 
-      description="Analyze your video hooks to ensure maximum viewer retention."
-      icon={IconFishHook}
-    />
-  );
+  return <HookDetectorClient />;
 }

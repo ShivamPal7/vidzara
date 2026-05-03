@@ -125,8 +125,8 @@ export function Features() {
                         preview={<SafetyPreview />}
                     />
                     <FeatureCard
-                        title="Topic & Outlier Finder"
-                        description="Discover viral topics and unexpected high-performing content in your niche."
+                        title="Topic & Competitors Finder"
+                        description="Identify high-performing competitors and discover viral topics."
                         preview={<TopicPreview />}
                     />
                 </motion.div>

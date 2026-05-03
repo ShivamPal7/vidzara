@@ -38,7 +38,7 @@ const FEATURE_ICONS: Record<string, any> = {
   VIDEO_SEO: IconSearch,
   HOOK_DETECTOR: IconMagnet,
   TOPIC_GENERATOR: IconDeviceDesktopAnalytics,
-  OUTLIER_DETECTOR: IconChartBar,
+  COMPETITORS: IconChartBar,
   DEFAULT: IconFileText
 }
 
