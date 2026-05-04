@@ -1,12 +1,14 @@
-import { ComingSoon } from "@/components/dashboard/coming-soon";
-import { IconChartDots } from "@tabler/icons-react";
+import { CompetitorsView } from "@/components/dashboard/competitors/competitors-view";
+
+export const metadata = {
+  title: "Competitors | Vidzara",
+  description: "Track and analyze competitor performance",
+};
 
 export default function CompetitorsPage() {
   return (
-    <ComingSoon 
-      title="Competitors" 
-      description="Find competitors that perform significantly better than average to replicate their success."
-      icon={IconChartDots}
-    />
+    <div className="flex-1 space-y-4 px-2 md:px-4 pt-2 md:pt-0">
+      <CompetitorsView />
+    </div>
   );
 }

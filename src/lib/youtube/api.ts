@@ -79,7 +79,7 @@ export async function getChannelInfo(query: string): Promise<YouTubeChannel | nu
   }
 
   if (isChannelId) {
-    const res = await fetch(`${BASE_URL}/channels?part=snippet&id=${searchQuery}&key=${API_KEY}`);
+    const res = await fetch(`${BASE_URL}/channels?part=snippet,statistics&id=${searchQuery}&key=${API_KEY}`);
     const data = await res.json();
     
     if (!data.items || data.items.length === 0) return null;
@@ -89,9 +89,10 @@ export async function getChannelInfo(query: string): Promise<YouTubeChannel | nu
       title: item.snippet.title,
       handle: item.snippet.customUrl,
       thumbnailUrl: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
+      subscriberCount: parseInt(item.statistics?.subscriberCount || "0", 10),
     };
   } else if (isHandle) {
-    const res = await fetch(`${BASE_URL}/channels?part=snippet&forHandle=${encodeURIComponent(searchQuery)}&key=${API_KEY}`);
+    const res = await fetch(`${BASE_URL}/channels?part=snippet,statistics&forHandle=${encodeURIComponent(searchQuery)}&key=${API_KEY}`);
     const data = await res.json();
     
     if (data.items && data.items.length > 0) {
@@ -101,6 +102,7 @@ export async function getChannelInfo(query: string): Promise<YouTubeChannel | nu
         title: item.snippet.title,
         handle: item.snippet.customUrl,
         thumbnailUrl: item.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
+        subscriberCount: parseInt(item.statistics?.subscriberCount || "0", 10),
       };
     }
   }
@@ -118,7 +120,7 @@ export async function getChannelInfo(query: string): Promise<YouTubeChannel | nu
   
   const channelId = item.id.channelId;
   
-  const channelRes = await fetch(`${BASE_URL}/channels?part=snippet&id=${channelId}&key=${API_KEY}`);
+  const channelRes = await fetch(`${BASE_URL}/channels?part=snippet,statistics&id=${channelId}&key=${API_KEY}`);
   const channelData = await channelRes.json();
   const detailedItem = channelData.items?.[0];
 
@@ -127,51 +129,83 @@ export async function getChannelInfo(query: string): Promise<YouTubeChannel | nu
     title: detailedItem?.snippet.title || item.snippet.title,
     handle: detailedItem?.snippet.customUrl,
     thumbnailUrl: detailedItem?.snippet.thumbnails?.high?.url || item.snippet.thumbnails?.default?.url,
+    subscriberCount: parseInt(detailedItem?.statistics?.subscriberCount || "0", 10),
   };
 }
 
-export async function getRecentVideos(channelId: string, maxResults = 20): Promise<YouTubeVideo[]> {
+export async function getRecentVideos(
+  channelId: string,
+  maxResults = 10,
+  pageToken?: string
+): Promise<{ videos: YouTubeVideo[]; nextPageToken?: string }> {
   if (!API_KEY) throw new Error("YOUTUBE_API_KEY is not configured.");
 
-  // 1. Get recent videos from search endpoint (ordered by date)
-  const searchRes = await fetch(
-    `${BASE_URL}/search?part=snippet&channelId=${channelId}&order=date&type=video&maxResults=${maxResults}&key=${API_KEY}`
+  // Step 1: Get the channel's "uploads" playlist ID (costs 1 unit)
+  const channelRes = await fetch(
+    `${BASE_URL}/channels?part=contentDetails&id=${channelId}&key=${API_KEY}`
   );
-  const searchData = await searchRes.json();
-  
-  if (!searchData.items || searchData.items.length === 0) {
-    return [];
+  const channelData = await channelRes.json();
+
+  if (channelData.error) {
+    console.error(`[getRecentVideos] Channel lookup failed for ${channelId}:`, channelData.error?.reason);
+    return { videos: [] };
   }
 
-  const videoIds = searchData.items.map((item: any) => item.id.videoId).join(",");
+  const uploadsPlaylistId = channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+  if (!uploadsPlaylistId) {
+    console.warn(`[getRecentVideos] No uploads playlist found for channel: ${channelId}`);
+    return { videos: [] };
+  }
 
-  // 2. Get statistics for those videos
+  // Step 2: Fetch recent videos from the uploads playlist (costs 1 unit)
+  const pageTokenParam = pageToken ? `&pageToken=${pageToken}` : "";
+  const playlistRes = await fetch(
+    `${BASE_URL}/playlistItems?part=snippet&playlistId=${uploadsPlaylistId}&maxResults=${maxResults}${pageTokenParam}&key=${API_KEY}`
+  );
+  const playlistData = await playlistRes.json();
+
+  if (!playlistData.items || playlistData.items.length === 0) {
+    return { videos: [] };
+  }
+
+  const videoIds = playlistData.items
+    .map((item: any) => item.snippet?.resourceId?.videoId)
+    .filter(Boolean)
+    .join(",");
+
+  if (!videoIds) return { videos: [] };
+
+  // Step 3: Get statistics for those videos (costs 1 unit)
   const statsRes = await fetch(
     `${BASE_URL}/videos?part=statistics&id=${videoIds}&key=${API_KEY}`
   );
   const statsData = await statsRes.json();
   const statsMap = new Map<string, any>();
-  
+
   if (statsData.items) {
     for (const item of statsData.items) {
       statsMap.set(item.id, item.statistics);
     }
   }
 
-  // 3. Combine snippet and statistics
-  const videos: YouTubeVideo[] = searchData.items.map((item: any) => {
-    const stats = statsMap.get(item.id.videoId) || {};
-    return {
-      videoId: item.id.videoId,
-      title: item.snippet.title,
-      publishedAt: item.snippet.publishedAt,
-      viewCount: parseInt(stats.viewCount || "0", 10),
-      likeCount: parseInt(stats.likeCount || "0", 10),
-      commentCount: parseInt(stats.commentCount || "0", 10),
-    };
-  });
+  // Step 4: Combine snippet and statistics
+  const videos: YouTubeVideo[] = playlistData.items
+    .map((item: any) => {
+      const videoId = item.snippet?.resourceId?.videoId;
+      if (!videoId) return null;
+      const stats = statsMap.get(videoId) || {};
+      return {
+        videoId,
+        title: item.snippet.title,
+        publishedAt: item.snippet.publishedAt,
+        viewCount: parseInt(stats.viewCount || "0", 10),
+        likeCount: parseInt(stats.likeCount || "0", 10),
+        commentCount: parseInt(stats.commentCount || "0", 10),
+      };
+    })
+    .filter(Boolean) as YouTubeVideo[];
 
-  return videos;
+  return { videos, nextPageToken: playlistData.nextPageToken };
 }
 
 export function findOutliers(videos: YouTubeVideo[], thresholdMultiplier = 1.5): { outliers: YouTubeVideo[], averageViews: number } {
@@ -186,4 +220,32 @@ export function findOutliers(videos: YouTubeVideo[], thresholdMultiplier = 1.5):
     .sort((a, b) => b.viewCount - a.viewCount);
     
   return { outliers, averageViews };
+}
+
+export function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+  }
+  return num.toString();
+}
+
+export function getTimeAgo(date: string | Date): string {
+  const now = new Date();
+  const diff = now.getTime() - new Date(date).getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (years > 0) return years === 1 ? "1 year ago" : `${years} years ago`;
+  if (months > 0) return months === 1 ? "1 month ago" : `${months} months ago`;
+  if (days > 0) return days === 1 ? "1 day ago" : `${days} days ago`;
+  if (hours > 0) return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+  if (minutes > 0) return minutes === 1 ? "1 minute ago" : `${minutes} minutes ago`;
+  return "Just now";
 }
