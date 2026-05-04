@@ -5,6 +5,7 @@ import { MenuIcon, XIcon, Zap } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from 'react';
+import { usePathname } from "next/navigation";
 import { Button } from "../ui/button";
 import MobileMenu from "./mobile-menu";
 
@@ -12,6 +13,11 @@ import { navItems } from "../../constants/links";
 
 export function Navbar() {
     const [isOpen, setIsOpen] = useState<boolean>(false);
+    const pathname = usePathname();
+
+    useEffect(() => {
+        setIsOpen(false);
+    }, [pathname]);
 
     useEffect(() => {
         if (isOpen) {

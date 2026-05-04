@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CompetitorManagerModal } from "./competitor-manager-modal";
 
-import { Competitor } from "./topic-generator/types";
+import { Competitor } from "@/components/dashboard/topic-generator/types";
 
 export function TopVideosTable({ 
   selectedIds, 

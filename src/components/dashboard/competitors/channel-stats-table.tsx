@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getChannelStats } from "@/actions/competitors";
 import { motion, AnimatePresence } from "framer-motion";
 import { CompetitorManagerModal } from "./competitor-manager-modal";
-import { Competitor } from "./topic-generator/types";
+import { Competitor } from "@/components/dashboard/topic-generator/types";
 
 interface ChannelStatsTableProps {
   selectedIds: string[];

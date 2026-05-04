@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { getCompetitors } from "@/actions/competitors";
 
-import { Competitor } from "./topic-generator/types"; // Assuming types are here
+import { Competitor } from "@/components/dashboard/topic-generator/types";
 
 export function CompetitorsView() {
   const [competitors, setCompetitors] = useState<Competitor[]>([]);

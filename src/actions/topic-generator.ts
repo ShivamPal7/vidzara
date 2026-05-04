@@ -45,7 +45,7 @@ export async function generateTopicIdeas(input: z.infer<typeof generateSchema>) 
     for (const competitor of competitors) {
       const recent = await getRecentVideos(competitor.channelId, 25);
       // Append channelName to video for context
-      const recentWithChannel = recent.map((v) => ({ ...v, channelName: competitor.channelName }));
+      const recentWithChannel = recent.videos.map((v) => ({ ...v, channelName: competitor.channelName }));
       allRecentVideos = [...allRecentVideos, ...recentWithChannel];
     }
     

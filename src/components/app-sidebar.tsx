@@ -33,6 +33,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 
 const data = {
   navMain: [
@@ -100,7 +101,12 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { isMobile } = useSidebar()
+  const { setOpenMobile, isMobile } = useSidebar()
+  const pathname = usePathname()
+
+  React.useEffect(() => {
+    setOpenMobile(false)
+  }, [pathname, setOpenMobile])
   
   return (
     <Sidebar collapsible="offcanvas" side={isMobile ? "right" : "left"} {...props}>
