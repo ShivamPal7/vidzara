@@ -5,8 +5,6 @@ export const ThumbnailConceptPrompt = {
   feature: Feature.THUMBNAIL_CONCEPT,
   description: "Generate high-converting YouTube thumbnail concepts.",
   generatePrompt: (input: any) => `
-You are an expert YouTube strategist and graphic designer who specializes in creating ultra-high-converting, viral thumbnails. Your goal is to provide exactly 5 distinctive thumbnail concepts based on the following topic or script idea.
-
 Topic/Idea: "${input.content}"
 
 ${input.options?.text !== false ? "- Text Ideas: Provide short, punchy, high-contrast text that sparks curiosity (max 4 words)." : ""}

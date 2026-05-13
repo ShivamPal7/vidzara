@@ -24,9 +24,6 @@ export const ScriptWriterPrompt: PromptTemplate = {
       `;
 
     return `
-You are an elite, top 0.1% YouTube scriptwriter who works for the biggest creators on the platform (think MrBeast, Ali Abdaal, Vox, and documentary-style channels). 
-Your sole objective is to write a script that maximizes Average View Duration (AVD) and creates insanely viral retention graphs.
-
 Your assignment: Write a script based on the following topic.
 Topic/Prompt: "${prompt}"
 

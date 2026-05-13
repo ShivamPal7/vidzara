@@ -9,8 +9,6 @@ export const ContentSafetyPrompt: PromptTemplate = {
     const { content } = input;
     
     return `
-You are an expert YouTube Policy, Algorithm, and Safety Specialist. Your goal is to critically analyze the provided text (which could be a video title, description, tags, or a full script) and identify any potential risks.
-
 **Input Content:**
 "${content}"
 

@@ -7,8 +7,7 @@ export const ScriptShortenerPrompt = {
   generatePrompt: (input: string, context?: { count?: number }) => {
     const count = context?.count || 3;
 
-    return `You are an expert YouTube and TikTok short-form content strategist. 
-I am going to provide you with a long-form video script.
+    return `I am going to provide you with a long-form video script.
 Your task is to extract, condense, and rewrite the best, most engaging parts of this long script into exactly ${count} highly engaging short-form scripts (perfect for YouTube Shorts, Instagram Reels, or TikTok).
 
 Each short script should be designed to be under 60 seconds when spoken (roughly 120-150 words).

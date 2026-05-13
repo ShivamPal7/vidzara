@@ -22,8 +22,6 @@ export const TopicGeneratorPrompt: PromptTemplate = {
       : "No specific outliers identified.";
 
     return `
-You are an expert YouTube Strategist and Data Analyst. Your goal is to analyze the recent performance of a competitor channel, understand what makes their top videos successful, and generate 5 highly viral video ideas for the user to create based on those insights.
-
 **Competitor Channel:** ${channelName}
 
 **Recent Videos (Last 20+ uploads):**

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from "sonner"
 import { ArrowUp, Loader2 } from "lucide-react"
 import { refineScript } from "@/actions/script-writer"
 
@@ -24,12 +25,17 @@ export function MobileRefine({ generationId, currentContent }: MobileRefineProps
     
     setIsRefining(true)
     try {
-      await refineScript({
+      const res = await refineScript({
         generationId,
         content: currentContent,
         prompt: prompt.trim()
       })
-      setPrompt("")
+      if (res.success) {
+        setPrompt("")
+        toast.success("Script refined successfully!")
+      } else {
+        toast.error(res.error || "Failed to refine your script.")
+      }
     } catch (error) {
       console.error(error)
     } finally {

@@ -43,8 +43,6 @@ export function buildRefinePrompt(input: {
   }
 
   return `
-You are an expert YouTube SEO specialist and content editor.
-
 **Task:** Refine a video ${section}.
 
 **Instruction:** ${instruction}

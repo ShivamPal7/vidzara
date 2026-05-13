@@ -31,15 +31,81 @@ interface ScriptPromptInputProps {
 
 export function ScriptPromptInput({ className, usage, state, onStateChange, onSubmit }: ScriptPromptInputProps) {
   const [isFocused, setIsFocused] = useState(false)
+  const [isListening, setIsListening] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const recognitionRef = useRef<any>(null)
 
   const hasText = state.prompt.length > 0
 
   const handleSubmit = () => {
     if (!hasText) return
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+    }
     onSubmit?.(state)
     onStateChange({ ...state, prompt: "" })
   }
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop()
+      setIsListening(false)
+      return
+    }
+
+    if (typeof window !== "undefined") {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      if (!SpeechRecognition) {
+        alert("Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.")
+        return
+      }
+
+      try {
+        const recognition = new SpeechRecognition()
+        // Setting continuous to false ensures it automatically stops when the user finishes speaking
+        recognition.continuous = false
+        recognition.interimResults = true
+        recognition.lang = state.language === "hi" ? "hi-IN" : state.language === "es" ? "es-ES" : "en-US"
+
+        // Keep track of what prompt was before starting this speech session
+        const basePrompt = state.prompt ? state.prompt + " " : ""
+
+        recognition.onresult = (event: any) => {
+          let currentTranscript = ""
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            currentTranscript += event.results[i][0].transcript
+          }
+          onStateChange({ ...state, prompt: basePrompt + currentTranscript })
+        }
+
+        recognition.onerror = (event: any) => {
+          console.error("Speech recognition error", event.error)
+          setIsListening(false)
+        }
+
+        recognition.onend = () => {
+          setIsListening(false)
+        }
+
+        recognition.start()
+        recognitionRef.current = recognition
+        setIsListening(true)
+      } catch (err) {
+        console.error(err)
+        setIsListening(false)
+      }
+    }
+  }
+
+  // Cleanup speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+    }
+  }, [])
 
   // When format changes, reset duration to sensible default
   useEffect(() => {
@@ -51,13 +117,6 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
     }
   }, [state.format, state.duration, state, onStateChange])
 
-  // SVG circular progress for usage
-  const radius = 17
-  const strokeWidth = 2.5
-  const circumference = 2 * Math.PI * radius
-  const progress = usage.limit > 0 ? usage.remaining / usage.limit : 0
-  const strokeDashoffset = circumference * (1 - progress)
-
   const durationOptions =
     state.format === "short" ? SHORT_DURATION_OPTIONS : LONG_DURATION_OPTIONS
 
@@ -65,6 +124,8 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
     key: K,
     value: ScriptWriterState[K]
   ) => onStateChange({ ...state, [key]: value })
+
+  const isProPlan = usage.limit >= 50
 
   return (
     <motion.div
@@ -97,7 +158,7 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
                 handleSubmit()
               }
             }}
-            placeholder="What's your video about?"
+            placeholder={isListening ? "Listening... Speak now" : "What's your video about?"}
             rows={1}
             className={cn(
               "w-full resize-none bg-transparent text-sm sm:text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50",
@@ -144,51 +205,28 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
 
           {/* Right — usage + send */}
           <div className="flex items-center gap-1.5 sm:gap-2.5">
-            {/* Usage ring + count */}
-            <div className="relative flex items-center justify-center size-9">
-              <svg
-                className="-rotate-90"
-                width="38"
-                height="38"
-                viewBox="0 0 38 38"
+            {/* Generations Indicator */}
+            {isProPlan ? (
+              <div 
+                className="inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary px-3 py-1.5 gap-1.5 text-xs font-medium select-none"
+                title="Pro Plan Active"
               >
-                {/* Background track */}
-                <circle
-                  cx="19"
-                  cy="19"
-                  r={radius}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={strokeWidth}
-                  className="text-border/50"
-                />
-                {/* Progress arc */}
-                <circle
-                  cx="19"
-                  cy="19"
-                  r={radius}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={circumference}
-                  strokeDashoffset={strokeDashoffset}
-                  strokeLinecap="round"
-                  className="text-primary transition-all duration-500"
-                />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[11px] font-medium tabular-nums text-muted-foreground">
-                <Sparkles className="size-3.5" />
-              </span>
-            </div>
-
-            {/* Usage count */}
-            <span className="text-xs font-medium tabular-nums text-muted-foreground">
-              {usage.remaining}
-            </span>
+                <Sparkles className="size-3.5 shrink-0" strokeWidth={2} />
+                <span className="font-semibold">PRO</span>
+              </div>
+            ) : (
+              <div 
+                className="inline-flex items-center justify-center rounded-full border border-border/40 bg-muted/40 text-foreground/80 px-3 py-1.5 gap-1.5 text-xs font-medium select-none"
+                title={`${usage.remaining} generations remaining`}
+              >
+                <Sparkles className="size-3.5 text-primary shrink-0" strokeWidth={2} />
+                <span>{usage.remaining} left</span>
+              </div>
+            )}
 
             {/* Mic / Send button */}
             <AnimatePresence mode="wait">
-              {hasText ? (
+              {hasText && !isListening ? (
                 <motion.button
                   key="send"
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -196,11 +234,13 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ duration: 0.15 }}
                   onClick={handleSubmit}
+                  type="button"
                   className={cn(
-                    "flex items-center justify-center size-9 rounded-full",
+                    "flex items-center justify-center size-9 rounded-full shrink-0",
                     "bg-primary text-primary-foreground",
                     "hover:bg-primary/90 transition-colors duration-200"
                   )}
+                  title="Generate Script"
                 >
                   <ArrowRight className="size-4" />
                 </motion.button>
@@ -211,11 +251,15 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ duration: 0.15 }}
+                  onClick={toggleListening}
+                  type="button"
                   className={cn(
-                    "flex items-center justify-center size-9 rounded-full",
-                    "bg-muted/60 text-muted-foreground",
-                    "hover:bg-muted transition-colors duration-200"
+                    "flex items-center justify-center size-9 rounded-full transition-all duration-200 shrink-0",
+                    isListening
+                      ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
                   )}
+                  title={isListening ? "Listening... Click to stop" : "Start voice input"}
                 >
                   <Mic className="size-4" />
                 </motion.button>

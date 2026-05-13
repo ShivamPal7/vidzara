@@ -12,6 +12,7 @@ import {
   mapGenerationToVideoListItem,
 } from "@/lib/ai/mappers/video-seo";
 import { buildRefinePrompt } from "@/lib/ai/prompts/refine";
+import { OpenRouterEngine } from "@/lib/ai/openrouter";
 import { revalidatePath } from "next/cache";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -299,7 +300,11 @@ export async function refineSection(input: z.infer<typeof refineSchema>) {
       value: validated.value,
     });
 
-    const result = await GeminiProvider.generateText(prompt);
+    const result = await OpenRouterEngine.generateText({
+      feature: Feature.VIDEO_SEO,
+      prompt,
+      systemOverride: "You are an expert YouTube SEO specialist and content editor. Your task is to refine existing content based on specific instructions.",
+    });
     const refined = result.text.trim();
 
     return { success: true as const, data: refined };

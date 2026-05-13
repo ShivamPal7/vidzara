@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
-  Mic,
+  Smile,
   Search,
   ChevronRight,
   Check,
@@ -57,7 +57,7 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <PromptChip
-          icon={Mic}
+          icon={Smile}
           label={displayLabel}
           showChevron
           active={open || !!value}

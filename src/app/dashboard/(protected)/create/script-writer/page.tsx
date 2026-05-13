@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ScriptSuggestions } from "@/components/dashboard/script-writer/script-suggestions"
@@ -64,15 +65,15 @@ export default function ScriptWriterPage() {
     } else {
       console.error(res.error)
       setView("initial")
-      // In a real app, show a toast error here
+      toast.error(res.error || "Failed to generate your script.")
     }
   }
 
   return (
-    <div className="flex flex-col items-center justify-between min-h-full w-full">
+    <div className="flex-1 flex flex-col justify-between w-full relative">
       {/* Main content — centered when no recents/viewing initial, top-aligned otherwise */}
       <div
-        className={`flex-1 flex flex-col w-full gap-6 sm:gap-10 px-2 sm:px-4 md:px-8 max-w-4xl mx-auto ${
+        className={`flex-1 flex flex-col w-full gap-6 sm:gap-10 px-2 sm:px-4 md:px-8 max-w-4xl mx-auto pb-24 ${
           hasRecents || view !== "initial"
             ? "justify-start pt-4 sm:pt-8"
             : "items-center justify-center"
@@ -110,8 +111,8 @@ export default function ScriptWriterPage() {
         )}
       </div>
 
-      {/* Bottom input — flush to bottom */}
-      <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 md:px-8 pb-4 sm:pb-6 pt-6 sm:pt-8">
+      {/* Bottom input — floating at the bottom */}
+      <div className="w-full max-w-4xl mx-auto px-1 sm:px-4 md:px-8 pb-1 sm:pb-4 pt-2 sticky bottom-0 z-20">
         <ScriptPromptInput 
           usage={usage} 
           state={writerState}

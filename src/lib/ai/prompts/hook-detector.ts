@@ -9,8 +9,6 @@ export const HookDetectorPrompt: PromptTemplate = {
     const { script } = input;
     
     return `
-You are an expert YouTube Retention Specialist and Hook Writer. Your goal is to analyze the opening lines (the "hook") of a video script and evaluate its effectiveness at capturing and retaining viewer attention in the first 3-5 seconds.
-
 **Input Script / Intro:**
 "${script}"
 

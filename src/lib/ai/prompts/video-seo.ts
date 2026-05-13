@@ -11,8 +11,6 @@ export const VideoSEOPrompt: PromptTemplate = {
     // options: { title, description, tags, hashtags } toggles from the frontend
 
     return `
-You are an expert YouTube Strategist and SEO Specialist. Your goal is to generate highly clickable, algorithm-optimized metadata for a YouTube video.
-
 **Input Context:**
 - **Mode:** ${mode} (The user provided a ${mode})
 - **Content:** "${content}"
