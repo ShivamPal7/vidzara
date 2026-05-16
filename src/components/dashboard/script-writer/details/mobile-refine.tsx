@@ -8,17 +8,19 @@ import { refineScript } from "@/actions/script-writer"
 interface MobileRefineProps {
   generationId?: string
   currentContent?: string
+  suggestions?: string[]
 }
 
-export function MobileRefine({ generationId, currentContent }: MobileRefineProps) {
+export function MobileRefine({ generationId, currentContent, suggestions = [] }: MobileRefineProps) {
   const [prompt, setPrompt] = useState("")
   const [isRefining, setIsRefining] = useState(false)
 
-  const suggestions = [
+  const defaultSuggestions = [
     "Make it sound like MrBeast",
     "Shorten this script",
     "Use more analogies"
   ]
+  const displaySuggestions = suggestions?.length === 3 ? suggestions : defaultSuggestions;
 
   const handleRefine = async () => {
     if (!prompt.trim() || !generationId || !currentContent || isRefining) return
@@ -54,7 +56,7 @@ export function MobileRefine({ generationId, currentContent }: MobileRefineProps
     <div className="flex flex-col gap-2.5 w-full max-w-md mx-auto">
       {/* Suggestion chips */}
       <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide hide-scrollbar">
-        {suggestions.map((suggestion, i) => (
+        {displaySuggestions.map((suggestion, i) => (
           <button 
             key={i} 
             onClick={() => setPrompt(suggestion)}

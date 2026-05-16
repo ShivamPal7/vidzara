@@ -8,17 +8,19 @@ import { refineScript } from "@/actions/script-writer"
 interface ScriptRefineSidebarProps {
   generationId?: string
   currentContent?: string
+  suggestions?: string[]
 }
 
-export function ScriptRefineSidebar({ generationId, currentContent }: ScriptRefineSidebarProps) {
+export function ScriptRefineSidebar({ generationId, currentContent, suggestions = [] }: ScriptRefineSidebarProps) {
   const [prompt, setPrompt] = useState("")
   const [isRefining, setIsRefining] = useState(false)
 
-  const suggestions = [
-    "Make it sound like MrBeast",
-    "Shorten this script to under 3 minutes",
-    "Use more analogies to simplify complex parts"
+  const defaultSuggestions = [
+    "Make hook punchier",
+    "Add more drama",
+    "Summarize outro"
   ]
+  const displaySuggestions = suggestions?.length === 3 ? suggestions : defaultSuggestions;
 
   const handleRefine = async () => {
     if (!prompt.trim() || !generationId || !currentContent || isRefining) return
@@ -53,7 +55,7 @@ export function ScriptRefineSidebar({ generationId, currentContent }: ScriptRefi
       <div className="rounded-2xl border border-border/40 bg-card/30 backdrop-blur-sm p-4 sm:p-5 flex flex-col gap-3">
         <h3 className="font-semibold text-foreground text-sm">Suggestions</h3>
         <ul className="flex flex-col gap-2">
-          {suggestions.map((suggestion, i) => (
+          {displaySuggestions.map((suggestion, i) => (
             <li key={i}>
               <button 
                 onClick={() => handleSuggestionClick(suggestion)}

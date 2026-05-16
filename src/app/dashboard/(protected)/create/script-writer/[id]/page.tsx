@@ -17,7 +17,7 @@ export default async function ScriptDetailsPage({ params }: { params: Promise<{ 
     redirect("/dashboard/create/script-writer");
   }
 
-  const { title, content } = res.data;
+  const { title, content, refinementSuggestions } = res.data as any;
   
   return (
     <div className="flex flex-col flex-1 h-full max-h-full">
@@ -27,16 +27,16 @@ export default async function ScriptDetailsPage({ params }: { params: Promise<{ 
       
       <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 relative">
         <div className="flex-1 min-w-0 h-full pb-28 lg:pb-0">
-           <ScriptEditor content={content} />
+           <ScriptEditor content={content} title={title} />
         </div>
         <div className="hidden lg:block w-[320px] shrink-0">
-           <ScriptRefineSidebar generationId={resolvedParams.id} currentContent={content} />
+           <ScriptRefineSidebar generationId={resolvedParams.id} currentContent={content} suggestions={refinementSuggestions} />
         </div>
       </div>
 
       {/* Mobile Floating Refine */}
       <div className="lg:hidden fixed bottom-4 left-4 right-4 z-50">
-         <MobileRefine generationId={resolvedParams.id} currentContent={content} />
+         <MobileRefine generationId={resolvedParams.id} currentContent={content} suggestions={refinementSuggestions} />
       </div>
     </div>
   )

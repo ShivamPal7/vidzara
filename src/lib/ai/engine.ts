@@ -2,19 +2,51 @@ import { Feature } from "../../../prisma/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { checkUsage, incrementUsage, getUserPlan } from "@/lib/usage";
 import { checkFeatureAccess } from "@/lib/plan-guard";
+import { OpenRouterEngine } from "./openrouter";
 import { GeminiProvider } from "./provider";
 import { PROMPTS } from "./prompts";
+import { FEATURE_MODELS } from "./models";
 import { AIRequest, AIResponse } from "./types";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Provider Selection
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// Default: OpenRouter (multi-model routing with automatic fallbacks)
+//
+// To temporarily switch to the Gemini direct provider set this in your .env:
+//   AI_PROVIDER=gemini
+//
+// This is intentionally a manual escape hatch — do not rely on it in prod.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const USE_GEMINI_BACKUP = process.env.AI_PROVIDER === "gemini";
+
+// Features that produce structured JSON vs plain text
+const STRUCTURED_FEATURES = new Set<Feature>([
+  Feature.VIDEO_SEO,
+  Feature.SCRIPT_WRITER,
+  Feature.SCRIPT_SHORTENER,
+  Feature.HOOK_DETECTOR,
+  Feature.TOPIC_GENERATOR,
+  Feature.COMPETITORS,
+  Feature.CONSISTENCY_CHECKER,
+  Feature.NICHE_FINDER,
+  Feature.THUMBNAIL_CONCEPT,
+  Feature.CONTENT_SAFETY,
+  Feature.GROWTH_DASHBOARD,
+]);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AIEngine
+// ─────────────────────────────────────────────────────────────────────────────
 
 export class AIEngine {
   static async generate(request: AIRequest): Promise<AIResponse> {
     const { feature, input, userId, context } = request;
 
     try {
-      // 1. Validate Session & User (Implicitly handled by caller usually, but good to verify user exists if needed)
-      // For now, assuming userId is valid from session.
-
-      // 2. Check Plan Access
+      // 1. Check Plan Access
       const plan = await getUserPlan(userId);
       const access = checkFeatureAccess(plan, feature, context);
 
@@ -25,16 +57,16 @@ export class AIEngine {
         };
       }
 
-      // 3. Check Usage Quota
+      // 2. Check Usage Quota
       const usage = await checkUsage(userId, feature);
       if (!usage.allowed) {
         return {
           success: false,
-          error: `Daily limit reached for ${feature}. Upgrade to unlimited for more.`,
+          error: `Daily limit reached for ${feature}. Upgrade for unlimited access.`,
         };
       }
 
-      // 4. Load Prompt Template
+      // 3. Load Prompt Template
       const template = PROMPTS[feature];
       if (!template) {
         return {
@@ -44,79 +76,75 @@ export class AIEngine {
       }
 
       const prompt = template.generatePrompt(input, context);
+      const isStructured = STRUCTURED_FEATURES.has(feature);
 
-      // 5. Call AI Provider
-      // We can inspect input/feature to decide if we need JSON or Text. 
-      // For now, let's assume JSON for structured data features, Text for others.
-      // Or better, let the features define their output type expectation.
-      // For simplicity in this core engine, we'll start with text and parse if needed,
-      // or default to JSON if the prompt implies it.
-      
-      // Let's use JSON generation by default for structured tools to ensure reliability
-      const modelId = "gemini-flash-latest"; // Could be dynamic based on plan
-      
-      let aiOutput: any;
-      let tokens = 0;
+      // 4. Generate via selected provider
+      let aiOutput: unknown;
+      let tokensUsed = 0;
+      let modelUsed = "unknown";
 
-      // TODO: logic to determine if we want text or json. 
-      // For now, let's default to text unless we strictly check feature type.
-      // Actually, most Video SEO, Script logic requires structured JSON.
-      // Let's attempt JSON generation if the feature suggests structure.
-
-      // Quick switch for now (expand later)
-      const isStructured: Feature[] = [
-        Feature.VIDEO_SEO, 
-        Feature.SCRIPT_WRITER, 
-        Feature.SCRIPT_SHORTENER,
-        Feature.HOOK_DETECTOR,
-        Feature.TOPIC_GENERATOR,
-        Feature.COMPETITORS,
-        Feature.CONSISTENCY_CHECKER,
-        Feature.NICHE_FINDER,
-        Feature.THUMBNAIL_CONCEPT,
-        Feature.CONTENT_SAFETY
-      ];
-
-      if (isStructured.includes(feature)) {
-         const result = await GeminiProvider.generateJSON(prompt, undefined, modelId);
-         aiOutput = result.data;
-         tokens = result.tokens || 0;
+      if (USE_GEMINI_BACKUP) {
+        // ── Gemini backup path (direct SDK, no OpenRouter) ───────────────────
+        const geminiModelId = "gemini-flash-latest";
+        if (isStructured) {
+          const result = await GeminiProvider.generateJSON(prompt, undefined, geminiModelId);
+          aiOutput = result.data;
+        } else {
+          const result = await GeminiProvider.generateText(prompt, geminiModelId);
+          aiOutput = result.text;
+        }
+        modelUsed = geminiModelId;
       } else {
-         const result = await GeminiProvider.generateText(prompt, modelId);
-         aiOutput = result.text;
-         tokens = result.tokens || 0;
+        // ── OpenRouter primary path ───────────────────────────────────────────
+        if (isStructured) {
+          const result = await OpenRouterEngine.generateObject({
+            feature,
+            prompt,
+          });
+          aiOutput = result.data;
+          tokensUsed = result.tokensUsed;
+          modelUsed = result.modelUsed;
+        } else {
+          const result = await OpenRouterEngine.generateText({
+            feature,
+            prompt,
+          });
+          aiOutput = result.text;
+          tokensUsed = result.tokensUsed;
+          modelUsed = result.modelUsed;
+        }
       }
 
-      // 6. Increment Usage
+      // 5. Increment Usage
       await incrementUsage(userId, feature);
 
-      // 7. Save to Generation Table
+      // 6. Persist Generation Record
       const genRecord = await prisma.generation.create({
         data: {
           userId,
           feature,
-          input: input as any,
-          output: aiOutput as any,
-          model: modelId,
-          tokensUsed: tokens
-        }
+          input: input as never,
+          output: aiOutput as never,
+          model: modelUsed,
+          tokensUsed,
+        },
       });
 
-      // 8. Return Output
+      // 7. Return
       return {
         success: true,
         data: aiOutput,
-        tokensUsed: tokens,
-        model: modelId,
-        generationId: genRecord.id
+        tokensUsed,
+        model: modelUsed,
+        generationId: genRecord.id,
       };
-
-    } catch (error: any) {
-      console.error("AI Engine Error:", error);
-      return {
-        success: false,
-        error: error.message || "An unexpected error occurred during generation."
-      };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "An unexpected error occurred during generation.";
+      console.error(`[AIEngine] Error for feature "${feature}":`, error);
+      return { success: false, error: message };
     }
   }
 }
+
+// Re-export FEATURE_MODELS so callers don't need a separate import
+export { FEATURE_MODELS };

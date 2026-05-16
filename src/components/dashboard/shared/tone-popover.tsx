@@ -4,10 +4,10 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import {
   Smile,
-  Search,
   ChevronRight,
   Check,
   X,
+  Youtube,
 } from "lucide-react"
 import {
   Popover,
@@ -33,14 +33,24 @@ interface TonePopoverProps {
   className?: string
 }
 
-type View = "main" | "presets" | "custom"
+type View = "main" | "presets" | "custom" | "reference"
+
+const REFERENCE_PREFIX = "Reference: "
+
+function isReferenceValue(val: string) {
+  return val.startsWith(REFERENCE_PREFIX)
+}
 
 export function TonePopover({ value, onChange, className }: TonePopoverProps) {
   const [open, setOpen] = useState(false)
   const [view, setView] = useState<View>("main")
   const [customTone, setCustomTone] = useState("")
+  const [referenceUrl, setReferenceUrl] = useState("")
 
-  const displayLabel = value || "Tone"
+  // Derive display label
+  const displayLabel = isReferenceValue(value)
+    ? "Reference Video Tone"
+    : value || "Tone"
 
   const handleSelect = (tone: string) => {
     onChange(tone)
@@ -51,6 +61,13 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen)
     if (!isOpen) setView("main")
+  }
+
+  const handleApplyReference = () => {
+    const trimmed = referenceUrl.trim()
+    if (!trimmed) return
+    handleSelect(`${REFERENCE_PREFIX}${trimmed}`)
+    setReferenceUrl("")
   }
 
   return (
@@ -69,7 +86,7 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
         sideOffset={10}
         className="w-auto min-w-[240px] rounded-xl border border-border/50 bg-popover/95 backdrop-blur-xl p-1.5 shadow-xl"
       >
-        {/* Main view */}
+        {/* ── Main view ───────────────────────────────────────────── */}
         {view === "main" && (
           <div className="flex flex-col gap-0.5">
             {/* Clear selection if tone is set */}
@@ -86,10 +103,11 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
 
             <button
               type="button"
+              onClick={() => setView("reference")}
               className="flex items-center justify-between gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent/60"
             >
               <span>Match reference video</span>
-              <Search className="size-4 text-muted-foreground" strokeWidth={1.8} />
+              <Youtube className="size-4 text-muted-foreground" strokeWidth={1.8} />
             </button>
 
             <button
@@ -112,7 +130,7 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
           </div>
         )}
 
-        {/* Presets view */}
+        {/* ── Presets view ─────────────────────────────────────────── */}
         {view === "presets" && (
           <div className="flex flex-col gap-0.5">
             <button
@@ -143,7 +161,7 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
           </div>
         )}
 
-        {/* Custom tone view */}
+        {/* ── Custom tone view ─────────────────────────────────────── */}
         {view === "custom" && (
           <div className="flex flex-col gap-2 p-1.5">
             <button
@@ -177,6 +195,42 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
                 }
               }}
               disabled={!customTone.trim()}
+              className="self-end rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Apply
+            </button>
+          </div>
+        )}
+
+        {/* ── Reference video view ─────────────────────────────────── */}
+        {view === "reference" && (
+          <div className="flex flex-col gap-2 p-1.5">
+            <button
+              type="button"
+              onClick={() => setView("main")}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors self-start"
+            >
+              <ChevronRight className="size-3 rotate-180" />
+              Back
+            </button>
+            <div className="relative">
+              <Youtube className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground/60" strokeWidth={1.8} />
+              <input
+                type="url"
+                value={referenceUrl}
+                onChange={(e) => setReferenceUrl(e.target.value)}
+                placeholder="YouTube URL"
+                className="w-full rounded-lg border border-border/50 bg-muted/30 pl-8 pr-3 py-2 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 transition-colors"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleApplyReference()
+                }}
+                autoFocus
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleApplyReference}
+              disabled={!referenceUrl.trim()}
               className="self-end rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Apply

@@ -9,6 +9,7 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
   [Feature.SCRIPT_WRITER]: z.object({
     title: z.string().describe("Highly engaging clickable YouTube title"),
     content: z.string().describe("Rich script content formatted with semantic HTML tags like <h3> and <p>"),
+    refinementSuggestions: z.array(z.string()).length(3).describe("3 very short, actionable edit instructions for this specific script. Focus only on script improvements (e.g. 'Make hook punchier', 'Add more drama', 'Summarize outro'). No meta-suggestions."),
   }),
   
   [Feature.VIDEO_SEO]: z.object({

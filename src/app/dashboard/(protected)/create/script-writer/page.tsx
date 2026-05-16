@@ -33,6 +33,7 @@ export default function ScriptWriterPage() {
   const [view, setView] = useState<"initial" | "generating" | "result">("initial")
   const [generatedTitle, setGeneratedTitle] = useState("")
   const [generatedId, setGeneratedId] = useState<string | null>(null)
+  const [hasReferenceVideo, setHasReferenceVideo] = useState(false)
 
   const [recentScripts, setRecentScripts] = useState<RecentScript[]>([])
   const hasRecents = recentScripts.length > 0 && view === "initial"
@@ -48,24 +49,31 @@ export default function ScriptWriterPage() {
 
   const handleSubmit = async (state: ScriptWriterState) => {
     setGeneratedTitle(state.prompt || "Untitled Script")
+    setHasReferenceVideo(state.tone?.startsWith("Reference: ") ?? false)
     setView("generating")
     setGeneratedId(null)
 
-    const res = await generateScript({
-      prompt: state.prompt,
-      format: state.format,
-      duration: state.duration,
-      tone: state.tone,
-      language: state.language,
-    })
+    try {
+      const res = await generateScript({
+        prompt: state.prompt,
+        format: state.format,
+        duration: state.duration,
+        tone: state.tone,
+        language: state.language,
+      })
 
-    if (res.success && res.generationId) {
-      setGeneratedId(res.generationId)
-      setView("result")
-    } else {
-      console.error(res.error)
+      if (res.success && res.generationId) {
+        setGeneratedId(res.generationId)
+        setView("result")
+      } else {
+        console.error(res.error)
+        setView("initial")
+        toast.error(res.error || "Failed to generate your script.")
+      }
+    } catch (error) {
+      console.error("Failed to generate script:", error)
       setView("initial")
-      toast.error(res.error || "Failed to generate your script.")
+      toast.error("An unexpected error occurred. Please try again.")
     }
   }
 
@@ -102,6 +110,7 @@ export default function ScriptWriterPage() {
           <ScriptGenerationView
             isGenerating={view === "generating"}
             title={generatedTitle}
+            hasReferenceVideo={hasReferenceVideo}
             onViewScript={() => generatedId && router.push(`/dashboard/create/script-writer/${generatedId}`)}
           />
         ) : hasRecents ? (

@@ -5,11 +5,10 @@ import * as SystemPrompts from "./system-prompts";
  * Supported OpenRouter model identifiers.
  */
 export type OpenRouterModel =
-  | "google/gemini-2.5-flash"
-  | "google/gemini-2.5-pro"
-  | "anthropic/claude-4.5-sonnet"
-  | "deepseek/deepseek-v4-pro"
-  | "deepseek/deepseek-v4"
+  | "google/gemini-2.0-flash-001"
+  | "google/gemini-2.0-pro-exp-02-05"
+  | "anthropic/claude-3.5-sonnet"
+  | "deepseek/deepseek-chat"
   | "moonshotai/kimi-k2.6"
   | "openai/gpt-4o"
   | "google/gemini-2.0-flash-exp"
@@ -33,30 +32,30 @@ export interface FeatureRoutingConfig {
  */
 export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
 
-  // ── Script Writer → Claude Sonnet 4.5 ────────────────────────────────────
+  // ── Script Writer → Kimi K2.6 ────────────────────────────────────
   [Feature.SCRIPT_WRITER]: {
-    models: ["anthropic/claude-4.5-sonnet"],
+    models: ["moonshotai/kimi-k2.6"],
     temperature: 0.72,
     systemPrompt: SystemPrompts.SCRIPT_WRITER_SYSTEM,
   },
 
   // ── Video SEO Generator → DeepSeek V4 Pro ────────────────────────────────
   [Feature.VIDEO_SEO]: {
-    models: ["deepseek/deepseek-v4-pro"],
+    models: ["deepseek/deepseek-chat"],
     temperature: 0.38,
     systemPrompt: SystemPrompts.VIDEO_SEO_SYSTEM,
   },
 
   // ── Topic Generator → Gemini 2.5 Flash + DeepSeek V4 ────────────────────
   [Feature.TOPIC_GENERATOR]: {
-    models: ["google/gemini-2.5-flash", "deepseek/deepseek-v4"],
+    models: ["google/gemini-2.0-flash-001", "deepseek/deepseek-chat"],
     temperature: 0.82,
     systemPrompt: SystemPrompts.TOPIC_GENERATOR_SYSTEM,
   },
 
   // ── Thumbnail Concepts → Claude Sonnet 4.5 ───────────────────────────────
   [Feature.THUMBNAIL_CONCEPT]: {
-    models: ["anthropic/claude-4.5-sonnet"],
+    models: ["anthropic/claude-3.5-sonnet"],
     temperature: 0.65,
     systemPrompt: SystemPrompts.THUMBNAIL_CONCEPT_SYSTEM,
   },
@@ -70,35 +69,35 @@ export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
 
   // ── Hook Detector → Claude Sonnet 4.5 ────────────────────────────────────
   [Feature.HOOK_DETECTOR]: {
-    models: ["anthropic/claude-4.5-sonnet"],
+    models: ["anthropic/claude-3.5-sonnet"],
     temperature: 0.48,
     systemPrompt: SystemPrompts.HOOK_DETECTOR_SYSTEM,
   },
 
   // ── Content Safety → Gemini 2.5 Pro ──────────────────────────────────────
   [Feature.CONTENT_SAFETY]: {
-    models: ["google/gemini-2.5-pro"],
+    models: ["google/gemini-2.0-pro-exp-02-05"],
     temperature: 0.08,
     systemPrompt: SystemPrompts.CONTENT_SAFETY_SYSTEM,
   },
 
   // ── Competitors Analysis → Gemini 2.5 Pro ────────────────────────────────
   [Feature.COMPETITORS]: {
-    models: ["google/gemini-2.5-pro"],
+    models: ["google/gemini-2.0-pro-exp-02-05"],
     temperature: 0.45,
     systemPrompt: SystemPrompts.COMPETITORS_SYSTEM,
   },
 
   // ── Niche Finder → Claude Sonnet 4.5 ─────────────────────────────────────
   [Feature.NICHE_FINDER]: {
-    models: ["anthropic/claude-4.5-sonnet"],
+    models: ["anthropic/claude-3.5-sonnet"],
     temperature: 0.72,
     systemPrompt: SystemPrompts.NICHE_FINDER_SYSTEM,
   },
 
   // ── Consistency Checker → Gemini 2.5 Flash ───────────────────────────────
   [Feature.CONSISTENCY_CHECKER]: {
-    models: ["google/gemini-2.5-flash"],
+    models: ["google/gemini-2.0-flash-001"],
     temperature: 0.28,
     systemPrompt: SystemPrompts.CONSISTENCY_CHECKER_SYSTEM,
   },
@@ -115,5 +114,5 @@ export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
  * Supplementary model mappings for features not yet in the Prisma Feature enum.
  */
 export const SUPPLEMENTARY_MODELS = {
-  QuickCreate: "google/gemini-2.5-flash" as OpenRouterModel,
+  QuickCreate: "google/gemini-2.0-flash-001" as OpenRouterModel,
 };

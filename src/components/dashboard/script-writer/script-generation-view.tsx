@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FileText, Loader2, Check } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -9,6 +9,7 @@ interface ScriptGenerationViewProps {
   isGenerating: boolean
   title?: string
   className?: string
+  hasReferenceVideo?: boolean
   onViewScript?: () => void
 }
 
@@ -18,7 +19,7 @@ interface Step {
   completedMessage: string
 }
 
-const STEPS: Step[] = [
+const DEFAULT_STEPS: Step[] = [
   {
     id: 1,
     loadingMessages: ["Sourcing top ideas", "Analyzing trends", "Gathering data"],
@@ -39,6 +40,38 @@ const STEPS: Step[] = [
       "Writing the first draft",
       "Refining tone and flow",
       "Polishing final script",
+      "It will take some time, please wait...",
+    ],
+    completedMessage: "Script generation complete",
+  },
+]
+
+const REFERENCE_STEPS: Step[] = [
+  {
+    id: 1,
+    loadingMessages: [
+      "Extracting reference video transcript",
+      "Parsing audio captions",
+      "Processing transcript data",
+    ],
+    completedMessage: "Reference transcript extracted",
+  },
+  {
+    id: 2,
+    loadingMessages: [
+      "Analyzing creator's tone and style",
+      "Extracting pacing structures",
+      "Mapping hook techniques",
+    ],
+    completedMessage: "Style analysis complete",
+  },
+  {
+    id: 3,
+    loadingMessages: [
+      "Sourcing top ideas",
+      "Writing script in reference tone",
+      "Polishing to match creator's vibe",
+      "It will take some time, please wait...",
     ],
     completedMessage: "Script generation complete",
   },
@@ -48,19 +81,43 @@ export function ScriptGenerationView({
   isGenerating,
   title,
   className,
+  hasReferenceVideo = false,
   onViewScript,
 }: ScriptGenerationViewProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
+  const [isCompleted, setIsCompleted] = useState(false)
+  const wasGenerating = useRef(false)
 
+  const STEPS = hasReferenceVideo ? REFERENCE_STEPS : DEFAULT_STEPS
+
+  // Detect when generation finishes: isGenerating flips false after being true
   useEffect(() => {
-    if (!isGenerating) {
+    if (wasGenerating.current && !isGenerating) {
+      // Mark all steps as completed, then show the done UI
+      setCompletedSteps(STEPS.map((s) => s.id))
+      const finishTimer = setTimeout(() => {
+        setIsCompleted(true)
+      }, 600)
+      return () => clearTimeout(finishTimer)
+    }
+    wasGenerating.current = isGenerating
+  }, [isGenerating, STEPS])
+
+  // Reset everything when a new generation starts
+  useEffect(() => {
+    if (isGenerating) {
       setCurrentStepIndex(0)
       setCurrentMessageIndex(0)
       setCompletedSteps([])
-      return
+      setIsCompleted(false)
+      wasGenerating.current = true
     }
+  }, [isGenerating])
+
+  useEffect(() => {
+    if (!isGenerating) return
 
     const currentStep = STEPS[currentStepIndex]
     if (!currentStep) return
@@ -70,11 +127,13 @@ export function ScriptGenerationView({
         // Advance to next loading message in the same step
         setCurrentMessageIndex((prev) => prev + 1)
       } else {
-        // Finished all loading messages for this step
-        setCompletedSteps((prev) => [...prev, currentStep.id])
+        const isLastStep = currentStepIndex === STEPS.length - 1
 
-        // Advance to the next step if there is one
-        if (currentStepIndex < STEPS.length - 1) {
+        if (isLastStep) {
+          // Don't cycle back to 0. Just stay on the last message ("It will take some time, please wait...")
+        } else {
+          // Finished all loading messages for this step — mark it done
+          setCompletedSteps((prev) => [...prev, currentStep.id])
           setCurrentStepIndex((prev) => prev + 1)
           setCurrentMessageIndex(0)
         }
@@ -82,52 +141,11 @@ export function ScriptGenerationView({
     }, 1200) // 1.2s per message for a more natural pace
 
     return () => clearTimeout(timer)
-  }, [isGenerating, currentStepIndex, currentMessageIndex])
+  }, [isGenerating, currentStepIndex, currentMessageIndex, STEPS])
 
   return (
     <div className={cn("w-full space-y-6", className)}>
-      {isGenerating ? (
-        <div className="space-y-4 py-4">
-          <div className="flex flex-col gap-3">
-            {STEPS.map((step, idx) => {
-              const isCompleted = completedSteps.includes(step.id)
-              const isActive = idx === currentStepIndex && !isCompleted
-              const isPending = idx > currentStepIndex
-
-              if (isPending) return null
-
-              return (
-                <motion.div
-                  key={step.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-3"
-                >
-                  {isCompleted ? (
-                    <div className="flex items-center justify-center size-5 text-emerald-500">
-                      <Check className="size-4" strokeWidth={3} />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center size-5 text-muted-foreground">
-                      <Loader2 className="size-4 animate-spin" />
-                    </div>
-                  )}
-                  <span
-                    className={cn(
-                      "text-[15px] font-medium transition-colors duration-300",
-                      isCompleted ? "text-foreground/70" : "text-foreground"
-                    )}
-                  >
-                    {isCompleted
-                      ? step.completedMessage
-                      : step.loadingMessages[currentMessageIndex]}
-                  </span>
-                </motion.div>
-              )
-            })}
-          </div>
-        </div>
-      ) : (
+      {isCompleted ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -160,6 +178,47 @@ export function ScriptGenerationView({
             </div>
           </motion.div>
         </motion.div>
+      ) : (
+        <div className="space-y-4 py-4">
+          <div className="flex flex-col gap-3">
+            {STEPS.map((step, idx) => {
+              const isStepCompleted = completedSteps.includes(step.id)
+              const isActive = idx === currentStepIndex && !isStepCompleted
+              const isPending = idx > currentStepIndex && !isStepCompleted
+
+              if (isPending) return null
+
+              return (
+                <motion.div
+                  key={step.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-3"
+                >
+                  {isStepCompleted ? (
+                    <div className="flex items-center justify-center size-5 text-emerald-500">
+                      <Check className="size-4" strokeWidth={3} />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center size-5 text-muted-foreground">
+                      <Loader2 className="size-4 animate-spin" />
+                    </div>
+                  )}
+                  <span
+                    className={cn(
+                      "text-[15px] font-medium transition-colors duration-300",
+                      isStepCompleted ? "text-foreground/70" : "text-foreground"
+                    )}
+                  >
+                    {isStepCompleted
+                      ? step.completedMessage
+                      : step.loadingMessages[currentMessageIndex]}
+                  </span>
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
       )}
     </div>
   )

@@ -35,6 +35,8 @@ export class OpenRouterEngine {
         prompt: params.prompt,
         system: params.systemOverride || modelConfig.systemPrompt,
         temperature: modelConfig.temperature,
+        maxTokens: 8000,
+        maxRetries: 0,
       });
 
       return {
@@ -42,8 +44,29 @@ export class OpenRouterEngine {
         tokensUsed: usage?.totalTokens ?? 0,
         modelUsed: modelConfig.models[0], // Identifies the primary requested intelligence tier endpoint
       };
-    } catch (error) {
-      console.error(`OpenRouter Engine generation failure for [${params.feature}]:`, error);
+    } catch (error: any) {
+      // Improved error diagnostics for OpenRouter failures
+      const featureName = params.feature;
+      console.error(`[OpenRouterEngine] Generation failed for feature "${featureName}":`, error);
+      
+      if (error.name === 'AI_APICallError' || error.name === 'AI_TypeValidationError') {
+        const status = error.statusCode;
+        const body = error.responseBody;
+        console.error(`[OpenRouterEngine] Diagnostic Info - Status: ${status}, Body:`, body);
+        
+        // If it's a known OpenRouter failure format that the SDK misparsed
+        if (body && body.includes('"status":"failed"')) {
+           try {
+             const parsed = JSON.parse(body.trim());
+             if (parsed.error) {
+               throw new Error(`OpenRouter Error: ${parsed.error.message || parsed.error.code || 'Unknown failure'}`);
+             }
+           } catch (e) {
+             // Fall through if parsing failed
+           }
+        }
+      }
+
       throw error;
     }
   }
@@ -71,6 +94,8 @@ export class OpenRouterEngine {
         prompt: params.prompt,
         system: params.systemOverride || modelConfig.systemPrompt,
         temperature: modelConfig.temperature,
+        maxTokens: 8000,
+        maxRetries: 0,
       });
 
       return {
@@ -78,8 +103,21 @@ export class OpenRouterEngine {
         tokensUsed: usage?.totalTokens ?? 0,
         modelUsed: modelConfig.models[0],
       };
-    } catch (error) {
-      console.error(`OpenRouter Engine Text generation failure for [${params.feature}]:`, error);
+    } catch (error: any) {
+      const featureName = params.feature;
+      console.error(`[OpenRouterEngine] Text generation failure for feature "${featureName}":`, error);
+      
+      if (error.name === 'AI_APICallError' || error.name === 'AI_TypeValidationError') {
+        const body = error.responseBody;
+        if (body && body.includes('"status":"failed"')) {
+           try {
+             const parsed = JSON.parse(body.trim());
+             if (parsed.error) {
+               throw new Error(`OpenRouter Error: ${parsed.error.message || parsed.error.code || 'Unknown failure'}`);
+             }
+           } catch (e) {}
+        }
+      }
       throw error;
     }
   }

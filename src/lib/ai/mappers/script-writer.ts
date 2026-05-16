@@ -27,6 +27,7 @@ export function mapGenerationToScriptDetail(generation: {
     id: generation.id,
     title: output?.title || "Untitled Script",
     content: output?.content || "",
+    refinementSuggestions: output?.refinementSuggestions || [],
     createdAt: generation.createdAt,
     input: generation.input as any,
   };

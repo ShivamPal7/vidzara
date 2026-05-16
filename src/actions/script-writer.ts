@@ -11,6 +11,7 @@ import {
   mapGenerationToScriptDetail,
 } from "@/lib/ai/mappers/script-writer";
 import { revalidatePath } from "next/cache";
+import { analyzeVideoStyle } from "@/lib/ai/style-analyzer";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -50,9 +51,23 @@ export async function generateScript(
     const validated = generateSchema.parse(input);
     const userId = await getAuthenticatedUserId();
 
+    // ── Reference video tone interception ─────────────────────────────
+    let enrichedInput: typeof validated & { styleAnalysis?: any } = { ...validated };
+
+    if (validated.tone?.startsWith("Reference: ")) {
+      const referenceUrl = validated.tone.replace("Reference: ", "").trim();
+      const styleAnalysis = await analyzeVideoStyle(referenceUrl);
+      enrichedInput = {
+        ...validated,
+        tone: "Matched from reference video (see styleAnalysis for exact instructions)",
+        styleAnalysis,
+      };
+    }
+    // ──────────────────────────────────────────────────────────────────
+
     const result = await AIEngine.generate({
       feature: Feature.SCRIPT_WRITER,
-      input: validated,
+      input: enrichedInput,
       userId,
     });
 
@@ -60,19 +75,9 @@ export async function generateScript(
       return { success: false as const, error: result.error };
     }
 
-    // Find the generation that was just created (most recent for this user + feature)
-    const generation = await prisma.generation.findFirst({
-      where: { userId, feature: Feature.SCRIPT_WRITER },
-      orderBy: { createdAt: "desc" },
-      select: { id: true },
-    });
-
-    revalidatePath("/dashboard/create/script-writer");
-
     return {
       success: true as const,
-      data: result.data,
-      generationId: generation?.id,
+      generationId: result.generationId,
     };
   } catch (error) {
     return errorResponse(error);
