@@ -5,7 +5,7 @@ import { createOpenAI } from "@ai-sdk/openai";
  */
 export const openrouterClient = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY, // Dynamic fallback strategy
+  apiKey: process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY,
   headers: {
     "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL || "https://vidzara.com",
     "X-Title": "Vidzara Backend Engine",

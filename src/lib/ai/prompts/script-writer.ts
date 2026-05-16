@@ -73,6 +73,11 @@ HTML FORMATTING RULES FOR SCRIPT 'content':
 - DO NOT use <h1> or <h2> tags.
 - The script content must be valid HTML.
 
+REFINEMENT SUGGESTIONS RULES:
+- 'refinementSuggestions' must contain exactly 3 short follow-up prompts for editing the WRITTEN SCRIPT TEXT ONLY.
+- Each suggestion must be a direct command under 6 words. (e.g. "Make the hook shorter", "Add a cliffhanger ending", "Use simpler words", "Make outro punchier")
+- DO NOT suggest visuals, camera directions, audio cues, pacing notes, or anything outside the written text.
+
 Write the best script of your career.
 `;
   },
