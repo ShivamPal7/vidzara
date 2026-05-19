@@ -1,4 +1,4 @@
-import { YoutubeTranscript } from "youtube-transcript";
+import { fetchYouTubeTranscript } from "../youtube/transcript-fetcher";
 import { generateObject } from "ai";
 import { openrouterClient } from "./client";
 import { SUPPLEMENTARY_MODELS } from "./models";
@@ -47,15 +47,6 @@ const USE_GEMINI_BACKUP = process.env.AI_PROVIDER === "gemini";
 
 // ── Core function ─────────────────────────────────────────────────────────────
 
-/**
- * Fetches the transcript of a YouTube video and uses an LLM to analyze
- * the creator's signature storytelling style, returning a structured object.
- *
- * Uses OpenRouter (google/gemini-2.5-flash) by default.
- * Falls back to direct Gemini SDK if AI_PROVIDER=gemini is set.
- *
- * @throws Error with a user-facing message if captions are unavailable or analysis fails.
- */
 export async function analyzeVideoStyle(
   youtubeUrl: string
 ): Promise<VideoStyleAnalysis> {
@@ -70,10 +61,11 @@ export async function analyzeVideoStyle(
   // 2. Fetch transcript
   let transcriptSegments: { text: string }[];
   try {
-    transcriptSegments = await YoutubeTranscript.fetchTranscript(videoId);
-  } catch {
+    transcriptSegments = await fetchYouTubeTranscript(videoId);
+  } catch (error: any) {
+    console.error("Transcript Extraction Error:", error);
     throw new Error(
-      "Could not extract captions from this video. Make sure the video has subtitles/captions enabled and is publicly accessible."
+      "Could not extract captions from this video. This often happens because YouTube blocks server-side requests. Try providing a proxy or paste the transcript manually."
     );
   }
 
@@ -89,6 +81,15 @@ export async function analyzeVideoStyle(
     .join(" ")
     .slice(0, 8000);
 
+  return analyzeTranscriptStyle(rawTranscript);
+}
+
+/**
+ * Analyzes the style of a provided transcript text using an LLM.
+ */
+export async function analyzeTranscriptStyle(
+  rawTranscript: string
+): Promise<VideoStyleAnalysis> {
   // 3. Run LLM style analysis
   const analysisPrompt = buildStyleAnalysisPrompt(rawTranscript);
 

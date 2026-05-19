@@ -62,6 +62,16 @@ export async function generateScript(
         tone: "Matched from reference video (see styleAnalysis for exact instructions)",
         styleAnalysis,
       };
+    } else if (validated.tone?.startsWith("Transcript: ")) {
+      const transcriptText = validated.tone.replace("Transcript: ", "").trim();
+      // We can run the same analysis logic but skip the fetch step
+      const { analyzeTranscriptStyle } = await import("@/lib/ai/style-analyzer");
+      const styleAnalysis = await analyzeTranscriptStyle(transcriptText);
+      enrichedInput = {
+        ...validated,
+        tone: "Matched from manually provided transcript",
+        styleAnalysis,
+      };
     }
     // ──────────────────────────────────────────────────────────────────
 

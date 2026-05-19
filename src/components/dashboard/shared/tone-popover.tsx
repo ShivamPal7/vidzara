@@ -8,6 +8,7 @@ import {
   Check,
   X,
   Youtube,
+  FileText,
 } from "lucide-react"
 import {
   Popover,
@@ -33,12 +34,17 @@ interface TonePopoverProps {
   className?: string
 }
 
-type View = "main" | "presets" | "custom" | "reference"
+type View = "main" | "presets" | "custom" | "reference" | "manual"
 
 const REFERENCE_PREFIX = "Reference: "
+const MANUAL_PREFIX = "Transcript: "
 
 function isReferenceValue(val: string) {
   return val.startsWith(REFERENCE_PREFIX)
+}
+
+function isManualValue(val: string) {
+  return val.startsWith(MANUAL_PREFIX)
 }
 
 export function TonePopover({ value, onChange, className }: TonePopoverProps) {
@@ -46,10 +52,13 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
   const [view, setView] = useState<View>("main")
   const [customTone, setCustomTone] = useState("")
   const [referenceUrl, setReferenceUrl] = useState("")
+  const [manualTranscript, setManualTranscript] = useState("")
 
   // Derive display label
   const displayLabel = isReferenceValue(value)
     ? "Reference Video Tone"
+    : isManualValue(value)
+    ? "Custom Transcript Tone"
     : value || "Tone"
 
   const handleSelect = (tone: string) => {
@@ -68,6 +77,13 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
     if (!trimmed) return
     handleSelect(`${REFERENCE_PREFIX}${trimmed}`)
     setReferenceUrl("")
+  }
+
+  const handleApplyManual = () => {
+    const trimmed = manualTranscript.trim()
+    if (!trimmed) return
+    handleSelect(`${MANUAL_PREFIX}${trimmed}`)
+    setManualTranscript("")
   }
 
   return (
@@ -108,6 +124,15 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
             >
               <span>Match reference video</span>
               <Youtube className="size-4 text-muted-foreground" strokeWidth={1.8} />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setView("manual")}
+              className="flex items-center justify-between gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-accent/60"
+            >
+              <span>Paste transcript</span>
+              <FileText className="size-4 text-muted-foreground" strokeWidth={1.8} />
             </button>
 
             <button
@@ -231,6 +256,35 @@ export function TonePopover({ value, onChange, className }: TonePopoverProps) {
               type="button"
               onClick={handleApplyReference}
               disabled={!referenceUrl.trim()}
+              className="self-end rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Apply
+            </button>
+          </div>
+        )}
+
+        {/* ── Manual transcript view ─────────────────────────────── */}
+        {view === "manual" && (
+          <div className="flex flex-col gap-2 p-1.5 w-[280px]">
+            <button
+              type="button"
+              onClick={() => setView("main")}
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors self-start"
+            >
+              <ChevronRight className="size-3 rotate-180" />
+              Back
+            </button>
+            <textarea
+              value={manualTranscript}
+              onChange={(e) => setManualTranscript(e.target.value)}
+              placeholder="Paste the video transcript here..."
+              className="w-full h-32 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 resize-none"
+              autoFocus
+            />
+            <button
+              type="button"
+              onClick={handleApplyManual}
+              disabled={!manualTranscript.trim()}
               className="self-end rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Apply
