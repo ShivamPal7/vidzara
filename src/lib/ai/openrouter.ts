@@ -36,7 +36,7 @@ export class OpenRouterEngine {
         system: params.systemOverride || modelConfig.systemPrompt,
         temperature: modelConfig.temperature,
         maxOutputTokens: 8000,
-        maxRetries: 0,
+        maxRetries: 2,
       });
 
       return {
@@ -95,7 +95,7 @@ export class OpenRouterEngine {
         system: params.systemOverride || modelConfig.systemPrompt,
         temperature: modelConfig.temperature,
         maxOutputTokens: 8000,
-        maxRetries: 0,
+        maxRetries: 2,
       });
 
       return {

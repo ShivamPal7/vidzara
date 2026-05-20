@@ -73,6 +73,9 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
     niches: z.array(z.object({
       name: z.string(),
       competitionLevel: z.enum(["Low", "Medium", "High"]),
+      viralScore: z.number().min(1).max(100),
+      revenueScore: z.number().min(1).max(100),
+      competitionScore: z.number().min(1).max(100),
       monetizationPotential: z.string(),
       contentStrategy: z.string(),
     })),

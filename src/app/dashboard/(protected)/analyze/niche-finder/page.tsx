@@ -1,12 +1,5 @@
-import { ComingSoon } from "@/components/dashboard/coming-soon";
-import { IconCompass } from "@tabler/icons-react";
+import { NicheFinderClient } from "@/components/dashboard/niche-finder/niche-finder-client";
 
 export default function NicheFinderPage() {
-  return (
-    <ComingSoon 
-      title="Niche Finder" 
-      description="Discover the perfect content niche based on your interests and market gaps."
-      icon={IconCompass}
-    />
-  );
+  return <NicheFinderClient />;
 }

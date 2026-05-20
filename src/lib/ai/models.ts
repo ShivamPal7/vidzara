@@ -88,9 +88,9 @@ export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
     systemPrompt: SystemPrompts.COMPETITORS_SYSTEM,
   },
 
-  // ── Niche Finder → Claude Sonnet 4.5 ─────────────────────────────────────
+  // ── Niche Finder → Gemini 2.5 Flash ──────────────────────────────────────
   [Feature.NICHE_FINDER]: {
-    models: ["anthropic/claude-3.5-sonnet"],
+    models: ["google/gemini-2.0-flash-001"],
     temperature: 0.72,
     systemPrompt: SystemPrompts.NICHE_FINDER_SYSTEM,
   },

@@ -6,6 +6,7 @@ import { ContentSafetyPrompt } from "./content-safety";
 import { TopicGeneratorPrompt } from "./topic-generator";
 import { ScriptShortenerPrompt } from "./script-shortener";
 import { HookDetectorPrompt } from "./hook-detector";
+import { NicheFinderPrompt } from "./niche-finder";
 
 export interface PromptTemplate {
   name: string;
@@ -34,12 +35,7 @@ export const PROMPTS: Record<Feature, PromptTemplate> = {
     description: "Check consistency",
     generatePrompt: () => "Placeholder prompt",
   },
-  [Feature.NICHE_FINDER]: {
-    name: "Niche Finder",
-    feature: 'NICHE_FINDER',
-    description: "Find niches",
-    generatePrompt: () => "Placeholder prompt",
-  },
+  [Feature.NICHE_FINDER]: NicheFinderPrompt,
   [Feature.THUMBNAIL_CONCEPT]: ThumbnailConceptPrompt,
   [Feature.GROWTH_DASHBOARD]: {
     name: "Growth Dashboard",
