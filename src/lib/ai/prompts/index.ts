@@ -7,6 +7,7 @@ import { TopicGeneratorPrompt } from "./topic-generator";
 import { ScriptShortenerPrompt } from "./script-shortener";
 import { HookDetectorPrompt } from "./hook-detector";
 import { NicheFinderPrompt } from "./niche-finder";
+// ConsistencyCheckerPrompt removed — feature now uses pure YouTube API math, no AI.
 
 export interface PromptTemplate {
   name: string;
@@ -32,8 +33,8 @@ export const PROMPTS: Record<Feature, PromptTemplate> = {
   [Feature.CONSISTENCY_CHECKER]: {
     name: "Consistency Checker",
     feature: 'CONSISTENCY_CHECKER',
-    description: "Check consistency",
-    generatePrompt: () => "Placeholder prompt",
+    description: "No AI — uses pure YouTube API stats",
+    generatePrompt: () => "",
   },
   [Feature.NICHE_FINDER]: NicheFinderPrompt,
   [Feature.THUMBNAIL_CONCEPT]: ThumbnailConceptPrompt,

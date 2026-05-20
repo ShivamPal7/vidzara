@@ -64,9 +64,14 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
   }),
   
   [Feature.CONSISTENCY_CHECKER]: z.object({
-    isConsistent: z.boolean(),
-    deviations: z.array(z.string()),
-    score: z.number().min(0).max(100),
+    score: z.number().min(0).max(100).describe("Overall consistency score reflecting posting regularity and brand alignment"),
+    isConsistent: z.boolean().describe("Whether the channel meets acceptable consistency standards"),
+    postingFrequency: z.string().describe("Human readable posting frequency summary, e.g. '1 video every 3 days' or 'Irregular posting schedule'"),
+    deviations: z.array(z.string()).describe("Specific brand, content format, or scheduling deviations"),
+    improvementPlan: z.array(z.string()).describe("Actionable list of steps to optimize posting consistency and brand alignment"),
+    growthDirection: z.enum(["up", "flat", "down"]).describe("Algorithmic growth velocity based on recent trends"),
+    continueDoing: z.array(z.string()).describe("Strong elements that are aligned with the brand and driving engagement"),
+    stopDoing: z.array(z.string()).describe("Ineffective elements, topical drifts, or bad habits to stop"),
   }),
   
   [Feature.NICHE_FINDER]: z.object({
