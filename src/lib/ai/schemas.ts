@@ -20,39 +20,61 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
   
   [Feature.THUMBNAIL_CONCEPT]: z.object({
     concepts: z.array(z.object({
-      title: z.string(),
-      visualDescription: z.string(),
-      colorPsychology: z.string(),
-      textOverlay: z.string(),
-    })).length(3),
+      textIdea: z.string().describe("Engaging short click-optimized text on the thumbnail (max 4 words)"),
+      emotion: z.string().describe("Suggested facial expression or emotion"),
+      layout: z.string().describe("Detailed description of composition layout"),
+      colors: z.array(z.string()).describe("Suggested high-contrast hex color codes"),
+      imagePrompt: z.string().optional().describe("A highly detailed AI image generator prompt for Midjourney/Stable Diffusion (if enabled)"),
+    })),
   }),
   
   [Feature.HOOK_DETECTOR]: z.object({
-    rating: z.enum(["weak", "average", "strong"]),
-    analysis: z.string(),
-    improvedHooks: z.array(z.string()).length(3),
+    status: z.enum(["WEAK", "AVERAGE", "STRONG"]).describe("Grade classification of the hook strength"),
+    explanation: z.string().describe("A professional explanation of the strength/weakness of the current hook"),
+    suggestions: z.array(
+      z.object({
+        rewrite: z.string().describe("The rewritten hook text optimized for maximum engagement"),
+        reason: z.string().describe("Explanation of why this specific rewrite is effective"),
+      })
+    ).length(3).describe("Exactly 3 rewritten, highly optimized hook suggestions"),
   }),
   
   [Feature.SCRIPT_SHORTENER]: z.object({
-    shortenedScript: z.string(),
-    originalWordCount: z.number(),
-    newWordCount: z.number(),
-    retentionScore: z.number().min(1).max(10),
+    shorts: z.array(z.object({
+      title: z.string().describe("Catchy internal title for the short"),
+      hook: z.string().describe("Punchy, attention grabbing opening (first 3 seconds)"),
+      body: z.string().describe("Core value or story content"),
+      cta: z.string().describe("Quick natural call to action"),
+      visuals: z.string().describe("Brief suggestion for visual composition/b-roll"),
+    })),
   }),
   
   [Feature.CONTENT_SAFETY]: z.object({
-    isSafe: z.boolean(),
-    flaggedCategories: z.array(z.string()),
-    confidenceScore: z.number(),
-    reasoning: z.string(),
+    score: z.number().min(0).max(100).describe("Overall safety score from 0 (very risky) to 100 (perfectly safe)"),
+    summary: z.string().describe("A professional 1-2 sentence summary of the safety analysis"),
+    highlights: z.array(
+      z.object({
+        text: z.string().describe("The exact risky phrase or segment from the input text"),
+        type: z.enum(["clickbait", "policy", "algorithm"]).describe("The category classification of the issue"),
+        reason: z.string().describe("A professional explanation of why this phrase is risky"),
+      })
+    ).describe("List of policy issues, clickbait phrasing, or algorithmic risks found in the text"),
+    suggestions: z.array(
+      z.object({
+        original: z.string().describe("The original risky phrase/segment"),
+        rewrite: z.string().describe("A safe, optimized rewrite that preserves intent"),
+        reason: z.string().describe("Explanation of why the rewrite is safer or better"),
+      })
+    ).describe("List of safe, compliant suggested rewrites for flagged issues"),
   }),
   
   [Feature.TOPIC_GENERATOR]: z.object({
-    topics: z.array(z.object({
-      title: z.string(),
-      angle: z.string(),
-      targetAudience: z.string(),
-      viralPotential: z.enum(["High", "Very High", "Extreme"]),
+    topContentAnalysis: z.string().describe("A 2-3 sentence analysis of what formats or topics are currently working for this channel based on their outliers."),
+    improvements: z.array(z.string()).describe("List of specific, actionable improvements"),
+    viralIdeas: z.array(z.object({
+      title: z.string().describe("A highly clickable, optimized title for the idea"),
+      topic: z.string().describe("The general topic category"),
+      reason: z.string().describe("Why this specific idea will perform well"),
     })).min(3),
   }),
   

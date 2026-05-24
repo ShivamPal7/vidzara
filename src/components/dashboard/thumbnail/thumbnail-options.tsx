@@ -17,6 +17,8 @@ interface ThumbnailOptionsProps {
   onClose: () => void;
   options: ThumbnailOption[];
   onToggle: (id: string) => void;
+  count: number;
+  onCountChange: (count: number) => void;
   className?: string;
 }
 
@@ -25,6 +27,8 @@ export function ThumbnailOptions({
   onClose,
   options,
   onToggle,
+  count,
+  onCountChange,
   className,
 }: ThumbnailOptionsProps) {
   return (
@@ -71,7 +75,7 @@ export function ThumbnailOptions({
             </div>
 
             {/* Toggle rows */}
-            <div className="px-4 pb-4 space-y-1.5">
+            <div className="px-4 pb-3 space-y-1.5">
               {options.map((opt) => (
                 <div
                   key={opt.id}
@@ -95,6 +99,22 @@ export function ThumbnailOptions({
                   />
                 </div>
               ))}
+            </div>
+
+            {/* Number of Concepts */}
+            <div className="px-5 pb-5 space-y-2 border-t border-border/30 pt-3 mt-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Number of Ideas</span>
+                <span className="text-sm font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full">{count}</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={count}
+                onChange={(e) => onCountChange(parseInt(e.target.value))}
+                className="w-full h-1 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+              />
             </div>
           </motion.div>
         </>

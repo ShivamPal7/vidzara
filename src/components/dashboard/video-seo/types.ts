@@ -8,6 +8,8 @@ export interface Video {
 export interface VideoSeoSearchBarProps {
   className?: string;
   onGenerated?: (generationId: string) => void;
+  initialPrompt?: string;
+  initialOptions?: Record<string, boolean>;
 }
 
 export interface VideoListProps {

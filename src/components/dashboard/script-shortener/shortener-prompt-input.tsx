@@ -17,21 +17,28 @@ interface ShortenerPromptInputProps {
   className?: string;
   onAnalyze: (content: string, count: number) => void;
   isAnalyzing: boolean;
+  initialPrompt?: string;
 }
 
-export function ShortenerPromptInput({ className, onAnalyze, isAnalyzing }: ShortenerPromptInputProps) {
-  const [value, setValue] = useState("");
+export function ShortenerPromptInput({ className, onAnalyze, isAnalyzing, initialPrompt = "" }: ShortenerPromptInputProps) {
+  const [value, setValue] = useState(initialPrompt);
   const [count, setCount] = useState("3");
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea
+  // Auto-resize textarea with maximum height limit
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.max(160, el.scrollHeight)}px`;
+    el.style.height = `${Math.min(350, Math.max(160, el.scrollHeight))}px`;
   }, [value]);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setValue(initialPrompt);
+    }
+  }, [initialPrompt]);
 
   const handleAnalyze = () => {
     if (!value.trim() || isAnalyzing) return;
@@ -68,7 +75,7 @@ export function ShortenerPromptInput({ className, onAnalyze, isAnalyzing }: Shor
           onKeyDown={handleKeyDown}
           placeholder="Paste your long-form video script here... We'll extract the best moments and turn them into engaging shorts."
           disabled={isAnalyzing}
-          className="w-full min-h-[160px] bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none resize-none leading-relaxed disabled:opacity-50"
+          className="w-full min-h-[160px] bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none resize-none leading-relaxed disabled:opacity-50 overflow-y-auto"
         />
 
         <div className="flex flex-wrap items-center justify-between pt-3 border-t border-border/50 gap-3">

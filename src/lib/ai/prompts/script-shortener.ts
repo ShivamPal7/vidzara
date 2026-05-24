@@ -25,14 +25,17 @@ ${input}
 """
 
 OUTPUT FORMAT:
-Provide the output strictly as a JSON array of objects. Do not include markdown formatting like \`\`\`json.
-Each object in the array should have the following structure:
+Provide the output strictly as a JSON object with a single key "shorts" containing the array of short scripts. Do not include markdown formatting like \`\`\`json.
 {
-  "title": "string",
-  "hook": "string",
-  "body": "string",
-  "cta": "string",
-  "visuals": "string"
+  "shorts": [
+    {
+      "title": "string",
+      "hook": "string",
+      "body": "string",
+      "cta": "string",
+      "visuals": "string"
+    }
+  ]
 }
 
 Ensure exactly ${count} items in the array.`;

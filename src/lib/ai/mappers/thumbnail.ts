@@ -20,10 +20,11 @@ export function mapGenerationToThumbnailDetails(generation: any): ThumbnailMappe
 
   const mappedConcepts = concepts.map((c: any, i: number) => ({
     id: c.id || `${generation.id}-c${i}`,
-    textIdea: c.textIdea || "Untitled",
-    emotion: c.emotion || "Neutral",
-    layout: c.layout || "Standard layout",
-    colors: Array.isArray(c.colors) ? c.colors : []
+    textIdea: c.textIdea || c.textOverlay || c.title || "Untitled",
+    emotion: c.emotion || c.visualDescription || "Neutral",
+    layout: c.layout || c.colorPsychology || "Standard layout",
+    colors: Array.isArray(c.colors) ? c.colors : [],
+    imagePrompt: c.imagePrompt || undefined
   }));
 
   return {
@@ -42,7 +43,7 @@ export function mapGenerationToThumbnailListItem(generation: any) {
   
   return {
     id: generation.id,
-    title: concepts[0]?.textIdea || "Thumbnail Generation",
+    title: concepts[0]?.textIdea || concepts[0]?.textOverlay || concepts[0]?.title || "Thumbnail Generation",
     createdAt: generation.createdAt.toISOString(),
     isFavorite: generation.isFavorite,
   };

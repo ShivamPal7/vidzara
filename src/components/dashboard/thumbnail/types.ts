@@ -31,6 +31,7 @@ export interface ThumbnailConceptDetail {
   emotion: string;
   layout: string;
   colors: string[];
+  imagePrompt?: string;
 }
 
 export interface ThumbnailDetails {

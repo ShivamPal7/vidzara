@@ -10,10 +10,11 @@ interface HookDetectorInputProps {
   className?: string;
   onAnalyze: (content: string) => void;
   isAnalyzing: boolean;
+  initialPrompt?: string;
 }
 
-export function HookDetectorInput({ className, onAnalyze, isAnalyzing }: HookDetectorInputProps) {
-  const [value, setValue] = useState("");
+export function HookDetectorInput({ className, onAnalyze, isAnalyzing, initialPrompt = "" }: HookDetectorInputProps) {
+  const [value, setValue] = useState(initialPrompt);
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -24,6 +25,12 @@ export function HookDetectorInput({ className, onAnalyze, isAnalyzing }: HookDet
     el.style.height = "auto";
     el.style.height = `${Math.max(120, el.scrollHeight)}px`;
   }, [value]);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setValue(initialPrompt);
+    }
+  }, [initialPrompt]);
 
   const handleAnalyze = () => {
     if (!value.trim() || isAnalyzing) return;

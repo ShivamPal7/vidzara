@@ -24,9 +24,17 @@ export class OpenRouterEngine {
       throw new Error(`Structured schema configuration missing for feature: ${params.feature}`);
     }
 
-    // Join target routing array into native comma-delimited fallback routing syntax
-    const fallbackModelString = modelConfig.models.join(",");
-    const targetLanguageModel = openrouterClient(fallbackModelString);
+    // Vercel AI SDK expects a single model ID as the primary, and we pass native OpenRouter fallback array via metadata
+    const primaryModel = modelConfig.models[0];
+    const targetLanguageModel = openrouterClient(primaryModel);
+    
+    const providerOptions = modelConfig.models.length > 1 ? {
+      openai: {
+        extraBody: {
+          models: modelConfig.models,
+        }
+      }
+    } : undefined;
 
     try {
       const { object, usage } = await aiGenerateObject({
@@ -37,12 +45,13 @@ export class OpenRouterEngine {
         temperature: modelConfig.temperature,
         maxOutputTokens: 8000,
         maxRetries: 2,
+        providerOptions: providerOptions,
       });
 
       return {
         data: object as T,
         tokensUsed: usage?.totalTokens ?? 0,
-        modelUsed: modelConfig.models[0], // Identifies the primary requested intelligence tier endpoint
+        modelUsed: primaryModel, // Identifies the primary requested intelligence tier endpoint
       };
     } catch (error: any) {
       // Improved error diagnostics for OpenRouter failures
@@ -64,45 +73,54 @@ export class OpenRouterEngine {
            } catch (e) {
              // Fall through if parsing failed
            }
-        }
-      }
-
-      throw error;
-    }
-  }
-
-  /**
-   * Generates standard plain-text strings natively leveraging OpenRouter Fallbacks.
-   */
-  static async generateText(params: {
-    feature: Feature;
-    prompt: string;
-    systemOverride?: string;
-  }): Promise<{ text: string; tokensUsed: number; modelUsed: string }> {
-    const modelConfig = FEATURE_MODELS[params.feature];
-
-    if (!modelConfig) {
-      throw new Error(`Model routing profile missing for feature: ${params.feature}`);
-    }
-
-    const fallbackModelString = modelConfig.models.join(",");
-    const targetLanguageModel = openrouterClient(fallbackModelString);
-
-    try {
-      const { text, usage } = await aiGenerateText({
-        model: targetLanguageModel,
-        prompt: params.prompt,
-        system: params.systemOverride || modelConfig.systemPrompt,
-        temperature: modelConfig.temperature,
-        maxOutputTokens: 8000,
-        maxRetries: 2,
-      });
-
-      return {
-        text,
-        tokensUsed: usage?.totalTokens ?? 0,
-        modelUsed: modelConfig.models[0],
-      };
+         }
+       }
+ 
+       throw error;
+     }
+   }
+ 
+   /**
+    * Generates standard plain-text strings natively leveraging OpenRouter Fallbacks.
+    */
+   static async generateText(params: {
+     feature: Feature;
+     prompt: string;
+     systemOverride?: string;
+   }): Promise<{ text: string; tokensUsed: number; modelUsed: string }> {
+     const modelConfig = FEATURE_MODELS[params.feature];
+ 
+     if (!modelConfig) {
+       throw new Error(`Model routing profile missing for feature: ${params.feature}`);
+     }
+ 
+     const primaryTextModel = modelConfig.models[0];
+     const targetLanguageModel = openrouterClient(primaryTextModel);
+     
+     const providerOptions = modelConfig.models.length > 1 ? {
+       openai: {
+         extraBody: {
+           models: modelConfig.models,
+         }
+       }
+     } : undefined;
+ 
+     try {
+       const { text, usage } = await aiGenerateText({
+         model: targetLanguageModel,
+         prompt: params.prompt,
+         system: params.systemOverride || modelConfig.systemPrompt,
+         temperature: modelConfig.temperature,
+         maxOutputTokens: 8000,
+         maxRetries: 2,
+         providerOptions: providerOptions,
+       });
+ 
+       return {
+         text,
+         tokensUsed: usage?.totalTokens ?? 0,
+         modelUsed: primaryTextModel,
+       };
     } catch (error: any) {
       const featureName = params.feature;
       console.error(`[OpenRouterEngine] Text generation failure for feature "${featureName}":`, error);

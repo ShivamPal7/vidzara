@@ -20,7 +20,7 @@ const generateSchema = z.object({
   content: z
     .string()
     .min(3, "Content must be at least 3 characters long")
-    .max(10000, "Content cannot exceed 10000 chars"),
+    .max(100000, "Content cannot exceed 100000 chars"),
 });
 
 export async function generateContentSafety(input: z.infer<typeof generateSchema>) {
@@ -43,6 +43,9 @@ export async function generateContentSafety(input: z.infer<typeof generateSchema
       data: result.data,
     };
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false as const, error: error.issues[0]?.message || "Invalid input data." };
+    }
     const message = error instanceof Error ? error.message : "Something went wrong.";
     console.error("Content Safety Action Error:", error);
     return { success: false as const, error: message };

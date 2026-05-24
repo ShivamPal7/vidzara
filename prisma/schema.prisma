@@ -29,6 +29,7 @@ model User {
   affiliate     Affiliate?
   referredBy    Referral?     @relation("ReferredUser")
   abuseLogs     AbuseLog[]
+  youtubeConnection YoutubeConnection?
 
   @@map("user")
 }
@@ -212,6 +213,24 @@ model AbuseLog {
   createdAt DateTime   @default(now())
 
   @@map("abuse_log")
+}
+
+model YoutubeConnection {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channelId       String
+  channelTitle    String
+  channelHandle   String?
+  thumbnailUrl    String?
+  subscriberCount BigInt   @default(0)
+  accessToken     String   @db.Text
+  refreshToken    String   @db.Text
+  tokenExpiresAt  DateTime
+  connectedAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("youtube_connection")
 }
 
 // --- Enums ---

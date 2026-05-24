@@ -10,20 +10,28 @@ interface ContentSafetyInputProps {
   className?: string;
   onAnalyze: (content: string) => void;
   isAnalyzing: boolean;
+  initialPrompt?: string;
 }
 
-export function ContentSafetyInput({ className, onAnalyze, isAnalyzing }: ContentSafetyInputProps) {
-  const [value, setValue] = useState("");
+export function ContentSafetyInput({ className, onAnalyze, isAnalyzing, initialPrompt = "" }: ContentSafetyInputProps) {
+  const [value, setValue] = useState(initialPrompt);
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea
+  // Auto-resize textarea with max-height constraint
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.max(120, el.scrollHeight)}px`;
+    const nextHeight = Math.min(320, el.scrollHeight);
+    el.style.height = `${Math.max(120, nextHeight)}px`;
   }, [value]);
+
+  useEffect(() => {
+    if (initialPrompt) {
+      setValue(initialPrompt);
+    }
+  }, [initialPrompt]);
 
   const handleAnalyze = () => {
     if (!value.trim() || isAnalyzing) return;
@@ -60,7 +68,7 @@ export function ContentSafetyInput({ className, onAnalyze, isAnalyzing }: Conten
           onKeyDown={handleKeyDown}
           placeholder="Paste your video title, description, tags, or full script here..."
           disabled={isAnalyzing}
-          className="w-full min-h-[120px] bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none resize-none leading-relaxed disabled:opacity-50"
+          className="w-full min-h-[120px] max-h-[320px] overflow-y-auto bg-transparent text-[15px] text-foreground placeholder:text-muted-foreground/50 focus:outline-none resize-none leading-relaxed disabled:opacity-50"
         />
 
         <div className="flex items-center justify-between pt-2 border-t border-border/50">

@@ -45,6 +45,8 @@ const generateSchema = z.object({
       emotions: z.boolean().default(true),
       layout: z.boolean().default(true),
       colors: z.boolean().default(true),
+      generateImagePrompt: z.boolean().default(false),
+      count: z.number().min(1).max(10).default(3),
     })
     .optional(),
 });

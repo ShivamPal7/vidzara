@@ -10,9 +10,42 @@ import { cn } from "@/lib/utils";
 interface HookDetectorResultsProps {
   results: HookDetectorResult | null;
   isVisible: boolean;
+  isLoading?: boolean;
 }
 
-export function HookDetectorResults({ results, isVisible }: HookDetectorResultsProps) {
+export function HookDetectorResults({ results, isVisible, isLoading }: HookDetectorResultsProps) {
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto space-y-6 animate-pulse">
+        {/* Grade Card Skeleton */}
+        <div className="p-6 rounded-2xl border border-border/50 bg-card/20 backdrop-blur-sm flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="h-14 w-14 rounded-xl bg-muted shrink-0" />
+          <div className="space-y-2 flex-1 w-full">
+            <div className="h-5 w-32 bg-muted rounded" />
+            <div className="h-4 w-full bg-muted rounded" />
+            <div className="h-4 w-3/4 bg-muted rounded" />
+          </div>
+        </div>
+        
+        {/* Suggestions Skeleton */}
+        <div className="space-y-4">
+          <div className="h-5 w-48 bg-muted rounded animate-pulse" />
+          <div className="grid gap-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-border/50 bg-card/20 p-5 space-y-4">
+                <div className="space-y-2">
+                  <div className="h-3 w-20 bg-muted rounded" />
+                  <div className="h-4 w-5/6 bg-muted rounded" />
+                </div>
+                <div className="h-10 w-full bg-muted rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!isVisible || !results) return null;
 
   const copyToClipboard = (text: string) => {

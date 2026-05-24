@@ -87,8 +87,8 @@ export function ScriptGenerationView({
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
-  const [isCompleted, setIsCompleted] = useState(false)
-  const wasGenerating = useRef(false)
+  const [isCompleted, setIsCompleted] = useState(!isGenerating)
+  const wasGenerating = useRef(isGenerating)
 
   const STEPS = hasReferenceVideo ? REFERENCE_STEPS : DEFAULT_STEPS
 

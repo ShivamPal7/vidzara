@@ -15,6 +15,7 @@ const DEFAULT_OPTIONS: ThumbnailOption[] = [
   { id: "emotions", label: "Emotions", description: "Suggest facial expressions and emotions", enabled: true },
   { id: "layout", label: "Layouts", description: "Provide visual composition guides", enabled: true },
   { id: "colors", label: "Color Palette", description: "Suggest high-contrast color themes", enabled: true },
+  { id: "generateImagePrompt", label: "Detailed Prompts", description: "Generate AI image prompts for Gemini/Chatgpt", enabled: true },
 ];
 
 export function ThumbnailSearchBar({ className, onGenerated }: ThumbnailSearchBarProps) {
@@ -25,6 +26,7 @@ export function ThumbnailSearchBar({ className, onGenerated }: ThumbnailSearchBa
   const [isFocused, setIsFocused] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [options, setOptions] = useState<ThumbnailOption[]>(DEFAULT_OPTIONS);
+  const [count, setCount] = useState<number>(3);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -53,6 +55,8 @@ export function ThumbnailSearchBar({ className, onGenerated }: ThumbnailSearchBa
       emotions: options.find((o) => o.id === "emotions")?.enabled ?? true,
       layout: options.find((o) => o.id === "layout")?.enabled ?? true,
       colors: options.find((o) => o.id === "colors")?.enabled ?? true,
+      generateImagePrompt: options.find((o) => o.id === "generateImagePrompt")?.enabled ?? false,
+      count,
     };
 
     startTransition(async () => {
@@ -171,6 +175,8 @@ export function ThumbnailSearchBar({ className, onGenerated }: ThumbnailSearchBa
         onClose={() => setOptionsOpen(false)}
         options={options}
         onToggle={handleToggle}
+        count={count}
+        onCountChange={setCount}
       />
     </motion.div>
   );

@@ -17,14 +17,22 @@ const DEFAULT_OPTIONS: SeoOption[] = [
   { id: "hashtags", label: "Hashtags", description: "Generate trending hashtags", enabled: true },
 ];
 
-export function VideoSeoSearchBar({ className, onGenerated }: VideoSeoSearchBarProps) {
+export function VideoSeoSearchBar({ className, onGenerated, initialPrompt: propPrompt, initialOptions }: VideoSeoSearchBarProps) {
   const searchParams = useSearchParams();
-  const initialPrompt = searchParams.get("prompt") || "";
+  const initialPrompt = propPrompt || searchParams.get("prompt") || "";
   
   const [value, setValue] = useState(initialPrompt);
   const [isFocused, setIsFocused] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
-  const [options, setOptions] = useState<SeoOption[]>(DEFAULT_OPTIONS);
+  const [options, setOptions] = useState<SeoOption[]>(() => {
+    if (initialOptions) {
+      return DEFAULT_OPTIONS.map(opt => ({
+        ...opt,
+        enabled: initialOptions[opt.id] ?? opt.enabled
+      }));
+    }
+    return DEFAULT_OPTIONS;
+  });
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);

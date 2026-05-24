@@ -9,9 +9,72 @@ import { toast } from "sonner";
 import { IconFishHook } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 
-export function   HookDetectorClient() {
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { getGenerationById } from "@/actions/get-generation";
+import { safeJsonParse } from "@/components/dashboard/history/history-utils";
+
+function normalizeHookResult(parsedOutput: any): HookDetectorResult | null {
+  if (!parsedOutput) return null;
+  if (typeof parsedOutput !== "object") return null;
+
+  const legacyRating = parsedOutput.rating;
+  const legacyAnalysis = parsedOutput.analysis;
+  const legacyImprovedHooks = parsedOutput.improvedHooks;
+
+  const status = (parsedOutput.status || (legacyRating ? String(legacyRating).toUpperCase() : "WEAK")) as "WEAK" | "AVERAGE" | "STRONG";
+  const explanation = parsedOutput.explanation || legacyAnalysis || "";
+  let suggestions = parsedOutput.suggestions || [];
+
+  if (suggestions.length === 0 && Array.isArray(legacyImprovedHooks)) {
+    suggestions = legacyImprovedHooks.map((h: any) => {
+      if (typeof h === "string") {
+        return { rewrite: h, reason: "Alternative improved hook." };
+      }
+      return h;
+    });
+  }
+
+  return {
+    status,
+    explanation,
+    suggestions,
+  };
+}
+
+export function HookDetectorClient({ initialData }: { initialData?: any }) {
+  const searchParams = useSearchParams();
+  const generationId = searchParams.get("generationId");
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [initialPrompt, setInitialPrompt] = useState("");
   const [results, setResults] = useState<HookDetectorResult | null>(null);
+
+  useEffect(() => {
+    async function loadHistoryData() {
+      if (!generationId) return;
+      setIsLoadingHistory(true);
+      try {
+        const res = await getGenerationById(generationId);
+        if (res.success && res.data) {
+          const parsedInput = safeJsonParse(res.data.input);
+          const parsedOutput = safeJsonParse(res.data.output);
+          
+          setInitialPrompt(parsedInput?.script || "");
+          setResults(normalizeHookResult(parsedOutput));
+        } else {
+          toast.error("Failed to load historical generation details.");
+        }
+      } catch (err) {
+        console.error("Error loading historical generation", err);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    }
+
+    loadHistoryData();
+  }, [generationId]);
 
   const handleAnalyze = async (content: string) => {
     setIsAnalyzing(true);
@@ -25,7 +88,7 @@ export function   HookDetectorClient() {
         return;
       }
 
-      setResults(result.data as HookDetectorResult);
+      setResults(normalizeHookResult(result.data));
       toast.success("Analysis complete!");
       
     } catch (error) {
@@ -61,7 +124,8 @@ export function   HookDetectorClient() {
       <div className="px-2 md:px-0">
         <HookDetectorInput 
           onAnalyze={handleAnalyze} 
-          isAnalyzing={isAnalyzing} 
+          isAnalyzing={isAnalyzing}
+          initialPrompt={initialPrompt}
         />
       </div>
 
@@ -69,7 +133,8 @@ export function   HookDetectorClient() {
       <div className="px-2 md:px-0">
         <HookDetectorResults 
           results={results} 
-          isVisible={!!results} 
+          isVisible={!!results || isLoadingHistory} 
+          isLoading={isLoadingHistory}
         />
       </div>
     </div>

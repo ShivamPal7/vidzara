@@ -17,11 +17,39 @@ interface ShortScript {
 interface ShortenerResultsProps {
   shorts: ShortScript[]
   isVisible: boolean
+  isLoading?: boolean
 }
 
-export function ShortenerResults({ shorts, isVisible }: ShortenerResultsProps) {
+export function ShortenerResults({ shorts, isVisible, isLoading }: ShortenerResultsProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto space-y-6 animate-pulse">
+        <div className="flex items-center gap-2 px-1">
+          <div className="h-5 w-5 bg-muted rounded shrink-0" />
+          <div className="h-5 w-48 bg-muted rounded" />
+        </div>
+        <div className="grid gap-6">
+          {[1, 2].map((i) => (
+            <div key={i} className="rounded-2xl border border-border/50 bg-card/20 p-6 space-y-5">
+              <div className="space-y-2">
+                <div className="h-3 w-16 bg-muted rounded" />
+                <div className="h-5 w-64 bg-muted rounded" />
+              </div>
+              <div className="h-24 w-full bg-muted rounded-xl" />
+              <div className="h-32 w-full bg-muted rounded-xl" />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="h-20 w-full bg-muted rounded-xl" />
+                <div className="h-20 w-full bg-muted rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (!isVisible || !shorts || shorts.length === 0) return null
 
   const handleCopy = (short: ShortScript, index: number) => {

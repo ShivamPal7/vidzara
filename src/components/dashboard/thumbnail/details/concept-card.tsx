@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Type, Smile, LayoutTemplate, Palette, Copy, Check } from "lucide-react";
+import { Type, Smile, LayoutTemplate, Palette, Copy, Check, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import type { ThumbnailConceptDetail } from "../types";
@@ -13,6 +13,7 @@ interface ConceptCardProps {
 
 export function ConceptCard({ concept, index }: ConceptCardProps) {
   const [copiedText, setCopiedText] = useState(false);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
 
   const copyToClipboard = (text: string, setter: (val: boolean) => void) => {
     navigator.clipboard.writeText(text);
@@ -103,6 +104,28 @@ export function ConceptCard({ concept, index }: ConceptCardProps) {
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {/* AI Image Generation Prompt */}
+        {concept.imagePrompt && (
+          <div className="space-y-2 sm:space-y-3 sm:col-span-2">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Sparkles className="size-3.5 sm:size-4 text-amber-500" />
+              <span className="text-xs sm:text-sm font-medium text-amber-500/90 dark:text-amber-400">AI Image Generator Prompt</span>
+            </div>
+            <div className="relative flex items-start justify-between gap-3 p-3 sm:p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 group/prompt">
+              <p className="text-foreground/90 text-xs sm:text-sm leading-relaxed pr-8 select-all font-mono font-medium whitespace-pre-wrap">
+                {concept.imagePrompt}
+              </p>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="absolute right-2 top-2 size-7 sm:size-8 text-amber-500 hover:text-amber-600 hover:bg-amber-500/10 shrink-0"
+                onClick={() => copyToClipboard(concept.imagePrompt || "", setCopiedPrompt)}
+              >
+                {copiedPrompt ? <Check className="size-3.5 sm:size-4 text-green-500" /> : <Copy className="size-3.5 sm:size-4" />}
+              </Button>
             </div>
           </div>
         )}
