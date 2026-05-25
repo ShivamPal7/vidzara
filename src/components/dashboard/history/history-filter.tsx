@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { formatFeatureName } from "./history-utils";
 
-// Make sure these match exactly what's in Prisma Enum
 const AVAILABLE_FEATURES = [
   "VIDEO_SEO",
   "SCRIPT_WRITER",
@@ -25,6 +24,7 @@ const AVAILABLE_FEATURES = [
   "NICHE_FINDER",
   "THUMBNAIL_CONCEPT",
   "GROWTH_DASHBOARD",
+  "CHAT",
 ];
 
 const DATE_RANGES = [

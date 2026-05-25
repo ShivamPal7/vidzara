@@ -2,6 +2,8 @@
 
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { Feature } from "../../prisma/generated/prisma/enums";
+import { deductCreditsAction } from "./credits";
 import { searchChannels, getRecentVideos, getChannelInfo } from "@/lib/youtube/api";
 import type {
   ChannelSearchResult,
@@ -79,6 +81,12 @@ export async function analyzeChannelConsistency(
 ): Promise<{ success: boolean; data?: ConsistencyData; error?: string }> {
   try {
     await requireSession();
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.CONSISTENCY_CHECKER);
+    if (!creditRes.success) {
+      return { success: false, error: creditRes.error };
+    }
 
     // Paginate the uploads playlist until we have at least 90 days of history
     // (or 300 videos max = 6 pages of 50, to protect API quota).

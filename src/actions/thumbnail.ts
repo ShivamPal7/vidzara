@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { AIEngine } from "@/lib/ai/engine";
 import { Feature } from "../../prisma/generated/prisma/enums";
+import { deductCreditsAction } from "./credits";
 import {
   mapGenerationToThumbnailDetails,
   mapGenerationToThumbnailListItem,
@@ -77,6 +78,12 @@ export async function generateThumbnailConcepts(
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.THUMBNAIL_CONCEPT);
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     // Find the generation that was just created
@@ -251,6 +258,12 @@ export async function regenerateThumbnail(
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.THUMBNAIL_CONCEPT);
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     // Update the existing generation with new output

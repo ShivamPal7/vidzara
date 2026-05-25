@@ -14,6 +14,7 @@ import {
 import { buildRefinePrompt } from "@/lib/ai/prompts/refine";
 import { OpenRouterEngine } from "@/lib/ai/openrouter";
 import { revalidatePath } from "next/cache";
+import { deductCreditsAction } from "./credits";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -86,6 +87,15 @@ export async function generateVideoSEO(
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.VIDEO_SEO, { 
+      options: validated.options 
+    });
+    
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     // Find the generation that was just created (most recent for this user + feature)
@@ -232,6 +242,15 @@ export async function regenerateVideoSeo(
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits (Regenerating defaults to full SEO package)
+    const creditRes = await deductCreditsAction(Feature.VIDEO_SEO, { 
+      options: { title: true, description: true, tags: true, hashtags: true } 
+    });
+    
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     // Update the existing generation with new output

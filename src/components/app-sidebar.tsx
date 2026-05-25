@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sidebar"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import { CreditsIndicator } from "@/components/dashboard/credits-indicator"
 
 const data = {
   navMain: [
@@ -128,7 +129,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="gap-4 px-4 pb-4">
+        <CreditsIndicator />
         <NavUser />
       </SidebarFooter>
     </Sidebar>

@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { AIEngine } from "@/lib/ai/engine";
+import { Feature } from "../../prisma/generated/prisma/enums";
+import { deductCreditsAction } from "./credits";
 import { getRecentVideos, formatNumber, findOutliers, getTimeAgo, searchChannels } from "@/lib/youtube/api";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -221,6 +224,12 @@ export async function addCompetitorDirectly(channelInfo: any) {
     
     if (existing) {
       return { success: false, error: "Competitor already added." };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.COMPETITORS);
+    if (!creditRes.success) {
+      return { success: false, error: creditRes.error };
     }
 
     const competitor = await prisma.competitor.create({

@@ -22,6 +22,7 @@ model User {
   
   // New Relations (M1.1)
   userProfile   UserProfile?
+  credits       Int       @default(100)
   subscription  Subscription?
   usageRecords  UsageRecord[]
   generations   Generation[]
@@ -30,6 +31,7 @@ model User {
   referredBy    Referral?     @relation("ReferredUser")
   abuseLogs     AbuseLog[]
   youtubeConnection YoutubeConnection?
+  chatSessions  ChatSession[]
 
   @@map("user")
 }
@@ -231,6 +233,32 @@ model YoutubeConnection {
   updatedAt       DateTime @updatedAt
 
   @@map("youtube_connection")
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String        @default("New Coaching Session")
+  summary   String?       @db.Text
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+
+  @@map("chat_session")
+}
+
+model ChatMessage {
+  id              String       @id @default(cuid())
+  sessionId       String
+  session         ChatSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role            String       // "user" or "assistant" or "system"
+  content         String       @db.Text
+  isDeepThinking  Boolean      @default(false)
+  deepThinkingLog String?      @db.Text
+  createdAt       DateTime     @default(now())
+
+  @@map("chat_message")
 }
 
 // --- Enums ---

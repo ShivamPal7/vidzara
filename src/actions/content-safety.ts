@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { AIEngine } from "@/lib/ai/engine";
 import { Feature } from "../../prisma/generated/prisma/enums";
+import { deductCreditsAction } from "./credits";
 
 async function getAuthenticatedUserId(): Promise<string> {
   const session = await auth.api.getSession({
@@ -36,6 +37,15 @@ export async function generateContentSafety(input: z.infer<typeof generateSchema
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.CONTENT_SAFETY, { 
+      format: validated.content.length > 2000 ? "long" : "shorts" 
+    });
+    
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     return {

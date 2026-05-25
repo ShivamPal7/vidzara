@@ -5,6 +5,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { AIEngine } from "@/lib/ai/engine";
 import { Feature } from "../../prisma/generated/prisma/enums";
+import { revalidatePath } from "next/cache";
+import { deductCreditsAction } from "./credits";
 
 async function getAuthenticatedUserId(): Promise<string> {
   const session = await auth.api.getSession({
@@ -36,6 +38,15 @@ export async function generateHookAnalysis(input: z.infer<typeof generateSchema>
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.HOOK_DETECTOR, { 
+      format: validated.script.length > 500 ? "long" : "shorts" 
+    });
+    
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     return {

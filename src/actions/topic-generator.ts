@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { AIEngine } from "@/lib/ai/engine";
 import { Feature } from "../../prisma/generated/prisma/enums";
+import { deductCreditsAction } from "./credits";
 import { getRecentVideos, findOutliers } from "@/lib/youtube/api";
 import { revalidatePath } from "next/cache";
 
@@ -71,6 +72,15 @@ export async function generateTopicIdeas(input: z.infer<typeof generateSchema>) 
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.TOPIC_GENERATOR, { 
+      channelsCount: 1 // Single channel initially in MVP, update logic later if bulk input is supported
+    });
+    
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     revalidatePath("/dashboard/analyze/topic-generator");

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { AIEngine } from "@/lib/ai/engine"
 import { Feature } from "../../../../prisma/generated/prisma/enums"
+import { deductCreditsAction } from "@/actions/credits"
 
 export async function generateShorts(script: string, count: number) {
   try {
@@ -24,6 +25,12 @@ export async function generateShorts(script: string, count: number) {
 
     if (!response.success) {
       return { success: false, error: response.error }
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.SCRIPT_SHORTENER, { count });
+    if (!creditRes.success) {
+      return { success: false, error: creditRes.error };
     }
 
     // Try parsing the JSON string output if it wasn't returned as an object

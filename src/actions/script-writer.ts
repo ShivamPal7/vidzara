@@ -12,6 +12,7 @@ import {
 } from "@/lib/ai/mappers/script-writer";
 import { revalidatePath } from "next/cache";
 import { analyzeVideoStyle } from "@/lib/ai/style-analyzer";
+import { deductCreditsAction } from "./credits";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -83,6 +84,16 @@ export async function generateScript(
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.SCRIPT_WRITER, { 
+      format: validated.format, 
+      duration: validated.duration 
+    });
+    
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     return {

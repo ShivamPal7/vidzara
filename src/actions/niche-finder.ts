@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { AIEngine } from "@/lib/ai/engine";
 import { Feature } from "../../prisma/generated/prisma/enums";
+import { deductCreditsAction } from "./credits";
 import { revalidatePath } from "next/cache";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
@@ -59,6 +60,12 @@ export async function generateNicheIdeas(
 
     if (!result.success) {
       return { success: false as const, error: result.error };
+    }
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.NICHE_FINDER);
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
     }
 
     revalidatePath("/dashboard/analyze/niche-finder");

@@ -77,11 +77,12 @@ export function ToolsDropdown({ value, onChange }: ToolsDropdownProps) {
             <>
               <selectedTool.icon className="size-4" />
               <span className="hidden sm:inline">{selectedTool.label}</span>
+              {/* X to clear tool selection */}
             </>
           ) : (
             <>
               <Settings2 className="size-4" />
-              <span>Tools</span>
+              <span className="hidden sm:inline">Tools</span>
             </>
           )}
           <ChevronDown className="size-3 opacity-60" />
@@ -92,6 +93,22 @@ export function ToolsDropdown({ value, onChange }: ToolsDropdownProps) {
         sideOffset={8}
         className="w-72 rounded-xl p-2"
       >
+        {/* Clear selection option */}
+        {value && (
+          <DropdownMenuItem
+            onClick={() => onChange("")}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 cursor-pointer mb-1"
+          >
+            <div className="flex items-center justify-center size-10 rounded-lg bg-muted/80">
+              <Settings2 className="size-5 text-muted-foreground" />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium text-foreground">YouTube Coach (Default)</span>
+              <span className="text-xs text-muted-foreground">Chat with your AI coach</span>
+            </div>
+          </DropdownMenuItem>
+        )}
+
         {tools.map((tool) => (
           <DropdownMenuItem
             key={tool.id}
@@ -102,12 +119,8 @@ export function ToolsDropdown({ value, onChange }: ToolsDropdownProps) {
               <tool.icon className="size-5 text-foreground" />
             </div>
             <div className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium text-foreground">
-                {tool.label}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {tool.description}
-              </span>
+              <span className="text-sm font-medium text-foreground">{tool.label}</span>
+              <span className="text-xs text-muted-foreground">{tool.description}</span>
             </div>
           </DropdownMenuItem>
         ))}

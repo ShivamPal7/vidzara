@@ -42,7 +42,12 @@ export function getGenerationDisplayData(feature: Feature, output: any): { headi
   // Safely parse output if it's a stringified JSON
   const data = safeJsonParse(output);
 
-  switch (feature) {
+  switch (feature as string) {
+    case "CHAT":
+      heading = data.title || "AI Coaching Session";
+      description = data.summary ? truncate(data.summary, 100) : "AI Coach chat history.";
+      href = "/dashboard/new";
+      break;
     case Feature.SCRIPT_WRITER:
       heading = data.title || "Script Writer";
       description = data.content ? truncate(data.content, 100) : "Script generated successfully.";
@@ -119,6 +124,7 @@ function truncate(str: string, length: number) {
 }
 
 export function formatFeatureName(feature: Feature): string {
+  if ((feature as string) === "CHAT") return "AI Coach Chat";
   return feature
     .replace(/_/g, " ")
     .toLowerCase()
@@ -140,6 +146,7 @@ import {
 } from "@tabler/icons-react";
 
 export function getFeatureIcon(feature: Feature) {
+  if ((feature as string) === "CHAT") return IconSparkles;
   switch (feature) {
     case Feature.SCRIPT_WRITER: return IconScript;
     case Feature.VIDEO_SEO: return IconSearch;

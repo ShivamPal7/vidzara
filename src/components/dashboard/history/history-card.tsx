@@ -28,7 +28,9 @@ export function HistoryCard({ generation }: HistoryCardProps) {
   const featureName = formatFeatureName(generation.feature);
   const timeAgo = formatDistanceToNow(new Date(generation.createdAt), { addSuffix: true });
   const hasIdPage = FEATURES_WITH_ID_PAGES.has(generation.feature);
-  const targetUrl = hasIdPage ? `${href}/${generation.id}` : `${href}?generationId=${generation.id}`;
+  const targetUrl = (generation.feature as string) === "CHAT"
+    ? `/dashboard/new?sessionId=${generation.id}`
+    : hasIdPage ? `${href}/${generation.id}` : `${href}?generationId=${generation.id}`;
   const Icon = getFeatureIcon(generation.feature);
 
   return (
