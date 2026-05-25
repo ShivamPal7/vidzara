@@ -44,8 +44,9 @@ export function SignupForm({
                 },
                 onSuccess: () => {
                     setLoading(false)
-                    toast.success("Account created successfully.")
-                    window.location.href = "/dashboard"
+                    localStorage.setItem("emailForVerification", email)
+                    toast.success("Verification code sent to your email. Please verify.")
+                    router.push("/otp?flow=email-verification")
                 }
             }
         })

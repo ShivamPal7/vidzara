@@ -54,14 +54,14 @@ export function NavUser({
       return {
         name: session.user.name,
         email: session.user.email,
-        avatar: session.user.image || "/avatars/shadcn.jpg"
+        avatar: session.user.image || undefined
       }
     }
     if (user) return user;
     return {
       name: "Guest",
       email: "guest@example.com",
-      avatar: "/avatars/shadcn.jpg",
+      avatar: undefined,
     }
   }, [session, user])
 
