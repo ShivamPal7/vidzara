@@ -133,6 +133,97 @@ export async function POST(req: NextRequest) {
         })
       ]);
 
+      // 2. Handle Referral Commission Credit
+      try {
+        const referral = await prisma.referral.findUnique({
+          where: { referredUserId: userId },
+          include: { affiliate: true }
+        });
+
+        if (referral && referral.status !== "PAID") {
+          let amountPaid = 0;
+          let currency = "INR";
+
+          try {
+            const planDetails = (await razorpay.plans.fetch(subscription.plan_id)) as any;
+            if (planDetails) {
+              currency = planDetails.currency === "USD" ? "USD" : "INR";
+              if (typeof planDetails.amount === "number") {
+                amountPaid = planDetails.amount / 100;
+              } else if (planDetails.amount) {
+                amountPaid = Number(planDetails.amount) / 100;
+              }
+            }
+
+            if (isNaN(amountPaid) || amountPaid <= 0) {
+              throw new Error("Plan amount could not be parsed as a valid number");
+            }
+          } catch (fetchErr) {
+            console.error("Razorpay plan fetch failed, falling back to local pricing:", fetchErr);
+            
+            // Detect currency from plan ID or default to INR
+            const planIdLower = (subscription.plan_id || "").toLowerCase();
+            if (planIdLower.includes("usd") || planIdLower.includes("global")) {
+              currency = "USD";
+            } else {
+              currency = "INR";
+            }
+
+            if (currency === "USD") {
+              if (dbPlan === Plan.LIMITED_PRO) {
+                amountPaid = dbCycle === BillingCycle.MONTHLY ? 19 : 190;
+              } else if (dbPlan === Plan.UNLIMITED_PRO) {
+                amountPaid = dbCycle === BillingCycle.MONTHLY ? 59 : 590;
+              }
+            } else {
+              if (dbPlan === Plan.LIMITED_PRO) {
+                amountPaid = dbCycle === BillingCycle.MONTHLY ? 999 : 7999;
+              } else if (dbPlan === Plan.UNLIMITED_PRO) {
+                amountPaid = dbCycle === BillingCycle.MONTHLY ? 3499 : 27999;
+              }
+            }
+          }
+
+          if (amountPaid > 0) {
+            const commissionRate = Number(referral.affiliate.commissionRate);
+            const commissionAmount = amountPaid * commissionRate;
+
+            // Convert commission amount into credits
+            // INR: 20 credits per ₹1.00 (5 credits = ₹0.25)
+            // USD: 1000 credits per $1.00 (1 credit = $0.001)
+            const commissionCredits = currency === "USD" 
+              ? Math.round(commissionAmount * 1000) 
+              : Math.round(commissionAmount * 20);
+
+            let signupCredits = 0;
+            if (referral.status === "PENDING") {
+              signupCredits = 5; // signup reward
+            }
+
+            // Update referral status to PAID
+            await prisma.referral.update({
+              where: { id: referral.id },
+              data: {
+                status: "PAID",
+                convertedAt: new Date(),
+                commissionAmount: commissionAmount,
+              }
+            });
+
+            // Update affiliate's balance
+            await prisma.affiliate.update({
+              where: { id: referral.affiliateId },
+              data: {
+                affiliateCredits: { increment: signupCredits + commissionCredits },
+                totalEarningsDecimal: { increment: commissionAmount },
+              }
+            });
+          }
+        }
+      } catch (refError) {
+        console.error("Referral Commission Processing Error:", refError);
+      }
+
       return NextResponse.json({ success: true, message: "Subscription activated." }, { status: 200 });
     }
 

@@ -8,7 +8,8 @@ import {
   IconCreditCard,
   IconAffiliate,
   IconSettings,
-  IconArrowLeft
+  IconArrowLeft,
+  IconCash
 } from "@tabler/icons-react"
 
 import {
@@ -48,6 +49,11 @@ const data = {
       title: "Affiliates",
       url: "/admin/affiliates",
       icon: IconAffiliate,
+    },
+    {
+      title: "Payouts",
+      url: "/admin/payouts",
+      icon: IconCash,
     },
   ],
 }

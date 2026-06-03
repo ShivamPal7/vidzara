@@ -5,8 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { getGeoInfo } from "@/lib/geo";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache"; // Removed Unused import: z
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { cookies } from "next/headers";
+import { isGoogleProvider, isTempEmail, AFFILIATE_CREDITS_PER_SIGNUP } from "@/lib/affiliate-fraud";
 
 const onboardingSchema = z.object({
   displayName: z.string().min(2).max(50),
@@ -82,6 +84,61 @@ export async function completeOnboarding(data: OnboardingData) {
         });
       }
     });
+
+    // Process referral cookie (separate try/catch - must NOT fail onboarding if this errors)
+    try {
+      const cookieStore = await cookies();
+      const refCode = cookieStore.get('vidzara_ref')?.value;
+      
+      if (refCode) {
+        const affiliate = await prisma.affiliate.findUnique({
+          where: { referralCode: decodeURIComponent(refCode) },
+        });
+        
+        if (affiliate) {
+          // Anti-fraud: no self-referral
+          const isSelf = affiliate.userId === user.id;
+          // Anti-fraud: no existing referral for this user
+          const existingReferral = await prisma.referral.findUnique({
+            where: { referredUserId: user.id },
+          });
+          // Anti-fraud: no temp email
+          const hasTemp = isTempEmail(user.email);
+          
+          if (!isSelf && !existingReferral && !hasTemp) {
+            // Check if new user signed up via Google
+            const userAccounts = await prisma.account.findMany({
+              where: { userId: user.id },
+              select: { providerId: true },
+            });
+            const isGoogleSignup = isGoogleProvider(userAccounts);
+            
+            // Create referral record
+            await prisma.referral.create({
+              data: {
+                affiliateId: affiliate.id,
+                referredUserId: user.id,
+                status: isGoogleSignup ? 'CREDITED' : 'PENDING',
+                isGoogleSignup,
+                creditedAt: isGoogleSignup ? new Date() : null,
+              },
+            });
+            
+            // Only credit immediately for Google signups (prevents temp mail abuse)
+            if (isGoogleSignup) {
+              await prisma.affiliate.update({
+                where: { id: affiliate.id },
+                data: {
+                  affiliateCredits: { increment: AFFILIATE_CREDITS_PER_SIGNUP },
+                },
+              });
+            }
+          }
+        }
+      }
+    } catch (referralError) {
+      console.error('[Referral] Failed to process referral cookie:', referralError);
+    }
 
     revalidatePath("/dashboard");
   } catch (error) {

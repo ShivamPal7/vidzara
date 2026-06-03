@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
+import { ReferralTracker } from "@/components/referral-tracker";
 
 const plusJakartaSans = localFont({
   src: [
@@ -144,6 +145,7 @@ export default function RootLayout({
             speed={200}
             shadow="0 0 10px #a855f7,0 0 5px #a855f7"
           />
+          <ReferralTracker />
           {children}
           <Toaster />
         </ThemeProvider>

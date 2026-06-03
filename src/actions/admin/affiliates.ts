@@ -23,7 +23,17 @@ export async function getAffiliates() {
     }
   });
   
-  return affiliates;
+  const plainAffiliates = affiliates.map((a) => ({
+    ...a,
+    commissionRate: Number(a.commissionRate),
+    totalEarningsDecimal: Number(a.totalEarningsDecimal),
+    referrals: a.referrals.map((r) => ({
+      ...r,
+      commissionAmount: r.commissionAmount ? Number(r.commissionAmount) : null,
+    })),
+  }));
+  
+  return plainAffiliates;
 }
 
 export async function updateAffiliateStatus(id: string, enabled: boolean) {
@@ -42,4 +52,207 @@ export async function updateAffiliateStatus(id: string, enabled: boolean) {
 
   revalidatePath("/admin/affiliates");
   return { success: true };
+}
+
+// ─── Affiliate Applications ───────────────────────────────────────────────────
+
+export async function getAffiliateApplications() {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!isAdmin(session?.user?.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const applications = await prisma.affiliateApplication.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: { id: true, name: true, email: true, image: true },
+      },
+    },
+  });
+
+  return applications;
+}
+
+export async function approveAffiliateApplication(
+  applicationId: string,
+  commissionRate: number = 10
+) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!isAdmin(session?.user?.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const application = await prisma.affiliateApplication.findUnique({
+    where: { id: applicationId },
+  });
+
+  if (!application) {
+    throw new Error("Application not found");
+  }
+
+  // Convert percentage to decimal (10 → 0.10)
+  const rateDecimal = commissionRate / 100;
+
+  await prisma.$transaction(async (tx) => {
+    // Update application status
+    await tx.affiliateApplication.update({
+      where: { id: applicationId },
+      data: { status: "APPROVED" },
+    });
+
+    // Create or update the affiliate record
+    await tx.affiliate.upsert({
+      where: { userId: application.userId },
+      create: {
+        userId: application.userId,
+        referralCode: await generateUniqueReferralCode(tx),
+        commissionRate: rateDecimal,
+        enabled: true,
+      },
+      update: {
+        commissionRate: rateDecimal,
+        enabled: true,
+      },
+    });
+  });
+
+  revalidatePath("/admin/affiliates");
+  return { success: true };
+}
+
+export async function rejectAffiliateApplication(
+  applicationId: string,
+  adminNotes: string
+) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!isAdmin(session?.user?.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  await prisma.affiliateApplication.update({
+    where: { id: applicationId },
+    data: {
+      status: "REJECTED",
+      adminNotes,
+    },
+  });
+
+  revalidatePath("/admin/affiliates");
+  return { success: true };
+}
+
+// ─── Withdrawal Requests ──────────────────────────────────────────────────────
+
+export async function getWithdrawalRequests(status?: string) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!isAdmin(session?.user?.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const requests = await prisma.withdrawalRequest.findMany({
+    where: status ? { status: status as "PENDING" | "APPROVED" | "REJECTED" } : undefined,
+    orderBy: { createdAt: "desc" },
+    include: {
+      affiliate: {
+        select: {
+          id: true,
+          referralCode: true,
+          user: {
+            select: { name: true, email: true, image: true },
+          },
+        },
+      },
+    },
+  });
+
+  const plainRequests = requests.map((r) => ({
+    ...r,
+    monetaryAmount: Number(r.monetaryAmount),
+  }));
+
+  return plainRequests;
+}
+
+export async function processWithdrawalRequest(
+  requestId: string,
+  approved: boolean,
+  adminNotes?: string
+) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!isAdmin(session?.user?.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  const request = await prisma.withdrawalRequest.findUnique({
+    where: { id: requestId },
+    include: { affiliate: true }
+  });
+
+  if (!request) {
+    throw new Error("Request not found");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.withdrawalRequest.update({
+      where: { id: requestId },
+      data: {
+        status: approved ? "APPROVED" : "REJECTED",
+        adminNotes: adminNotes ?? null,
+        processedAt: new Date(),
+      },
+    });
+
+    if (approved) {
+      await tx.affiliate.update({
+        where: { id: request.affiliateId },
+        data: {
+          withdrawnCredits: { increment: request.creditsAmount },
+          totalEarningsDecimal: { increment: request.monetaryAmount }, // Optional: record total earnings
+        }
+      });
+    } else {
+      // Refund credits since they were deducted during request
+      await tx.affiliate.update({
+        where: { id: request.affiliateId },
+        data: {
+          affiliateCredits: { increment: request.creditsAmount }
+        }
+      });
+    }
+  });
+
+  revalidatePath("/admin/payouts");
+  return { success: true };
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function generateUniqueReferralCode(
+  tx: Omit<typeof prisma, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">
+): Promise<string> {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const code = Array.from({ length: 8 }, () =>
+      chars.charAt(Math.floor(Math.random() * chars.length))
+    ).join("");
+    const existing = await tx.affiliate.findUnique({ where: { referralCode: code } });
+    if (!existing) return code;
+  }
+  throw new Error("Failed to generate a unique referral code after 10 attempts.");
 }

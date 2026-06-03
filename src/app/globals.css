@@ -374,4 +374,25 @@
     background-size: 200% auto;
     animation: gradient 3s ease infinite;
   }
+
+  @keyframes orb-a {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    33%       { transform: translate(40px, -30px) scale(1.08); }
+    66%       { transform: translate(-20px, 20px) scale(0.95); }
+  }
+
+  @keyframes orb-b {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    40%       { transform: translate(-35px, 25px) scale(1.06); }
+    70%       { transform: translate(25px, -15px) scale(0.97); }
+  }
+
+  @keyframes orb-c {
+    0%, 100% { transform: translate(0px, 0px) scale(1); }
+    50%       { transform: translate(20px, 30px) scale(1.04); }
+  }
+
+  .animate-orb-a { animation: orb-a 14s ease-in-out infinite; }
+  .animate-orb-b { animation: orb-b 18s ease-in-out infinite; }
+  .animate-orb-c { animation: orb-c 22s ease-in-out infinite; }
 }

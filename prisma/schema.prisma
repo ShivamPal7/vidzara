@@ -27,11 +27,12 @@ model User {
   usageRecords  UsageRecord[]
   generations   Generation[]
   competitors   Competitor[]
-  affiliate     Affiliate?
+  affiliate     Affiliate?    @relation("UserAffiliate")
   referredBy    Referral?     @relation("ReferredUser")
   abuseLogs     AbuseLog[]
   youtubeConnection YoutubeConnection?
   chatSessions  ChatSession[]
+  affiliateApplication AffiliateApplication?
 
   @@map("user")
 }
@@ -178,15 +179,19 @@ model Coupon {
 }
 
 model Affiliate {
-  id             String     @id @default(cuid())
-  userId         String     @unique
-  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  referralCode   String     @unique
-  commissionRate Decimal    @default(0.1) @db.Decimal(10, 2)
-  enabled        Boolean    @default(true)
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  referrals      Referral[]
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation("UserAffiliate", fields: [userId], references: [id], onDelete: Cascade)
+  referralCode         String             @unique
+  commissionRate       Decimal            @default(0.1) @db.Decimal(10, 2)
+  enabled              Boolean            @default(true)
+  affiliateCredits     Int                @default(0)
+  withdrawnCredits     Int                @default(0)
+  totalEarningsDecimal Decimal            @default(0.00) @db.Decimal(10, 2)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  referrals            Referral[]
+  withdrawalRequests   WithdrawalRequest[]
 
   @@map("affiliate")
 }
@@ -196,14 +201,51 @@ model Referral {
   affiliateId      String
   affiliate        Affiliate      @relation(fields: [affiliateId], references: [id])
   referredUserId   String         @unique
-  referredUser     User           @relation("ReferredUser", fields: [referredUserId], references: [id])
+  referredUser     User           @relation("ReferredUser", fields: [referredUserId], references: [id], onDelete: Cascade)
   convertedAt      DateTime?
   commissionAmount Decimal?       @db.Decimal(10, 2)
   status           ReferralStatus @default(PENDING)
+  ipAddress        String?
+  isGoogleSignup   Boolean        @default(false)
+  creditedAt       DateTime?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
   @@map("referral")
+}
+
+model AffiliateApplication {
+  id          String            @id @default(cuid())
+  userId      String            @unique
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      ApplicationStatus @default(PENDING)
+  channelLink String?
+  niche       String?
+  socialLinks Json?
+  motivation  String?           @db.Text
+  adminNotes  String?           @db.Text
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("affiliate_application")
+}
+
+model WithdrawalRequest {
+  id             String           @id @default(cuid())
+  affiliateId    String
+  affiliate      Affiliate        @relation(fields: [affiliateId], references: [id])
+  creditsAmount  Int
+  monetaryAmount Decimal          @db.Decimal(10, 2)
+  currency       String           @default("INR")
+  method         WithdrawalMethod
+  paymentDetails Json
+  status         WithdrawalStatus @default(PENDING)
+  adminNotes     String?          @db.Text
+  processedAt    DateTime?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@map("withdrawal_request")
 }
 
 model AbuseLog {
@@ -311,4 +353,22 @@ enum ReferralStatus {
   PENDING
   CREDITED
   PAID
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WithdrawalMethod {
+  UPI
+  BANK
+  PAYPAL
 }
