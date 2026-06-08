@@ -20,10 +20,11 @@ export interface YouTubeVideo {
 }
 
 export interface TopicGeneratorInput {
-  channelName: string;
+  channelName?: string;
   channelNames?: string;
-  recentVideos: YouTubeVideo[];
-  outliers: YouTubeVideo[];
+  recentVideos?: YouTubeVideo[];
+  outliers?: YouTubeVideo[];
+  prompt?: string;
 }
 
 export interface TopicGeneration {

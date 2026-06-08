@@ -37,9 +37,16 @@ export function TopicList({ generations, onToggleFavorite, onDelete }: TopicList
         {generations.map((gen) => {
           const input = gen.input as TopicGeneratorInput;
 
-          // For multiple competitors, we show them as comma separated or 'Multiple Channels'
-          let displayName = input?.channelNames || input?.channelName || "Unknown Competitor";
-          if (displayName.length > 50) {
+          // Prefer competitor channel names, fall back to prompt snippet, then generic label
+          let displayName =
+            input?.channelNames ||
+            input?.channelName ||
+            (input?.prompt
+              ? input.prompt.length > 60
+                ? input.prompt.slice(0, 60).trimEnd() + "…"
+                : input.prompt
+              : "Unknown Generation");
+          if ((input?.channelNames || input?.channelName) && displayName.length > 50) {
             displayName = "Multiple Channels Analysis";
           }
 
@@ -62,9 +69,19 @@ export function TopicList({ generations, onToggleFavorite, onDelete }: TopicList
                       {displayName}
                     </CardTitle>
                     <p className="text-xs text-muted-foreground flex flex-wrap gap-1">
-                      <span>Analyzed {formatDistanceToNow(new Date(gen.createdAt), { addSuffix: true })}</span>
-                      {input?.recentVideos && <span>• {input.recentVideos.length} recent videos analyzed</span>}
-                      {input?.outliers && <span>• {input.outliers.length} outliers found</span>}
+                      <span>Generated {formatDistanceToNow(new Date(gen.createdAt), { addSuffix: true })}</span>
+                      {input?.recentVideos && input.recentVideos.length > 0 && (
+                        <span>• {input.recentVideos.length} videos analyzed</span>
+                      )}
+                      {input?.outliers && input.outliers.length > 0 && (
+                        <span>• {input.outliers.length} outliers</span>
+                      )}
+                      {input?.prompt && !(input?.channelNames || input?.channelName) && (
+                        <span>• Prompt-based</span>
+                      )}
+                      {input?.prompt && (input?.channelNames || input?.channelName) && (
+                        <span>• Combined mode</span>
+                      )}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 self-end sm:self-auto shrink-0" onClick={(e) => e.stopPropagation()}>

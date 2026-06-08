@@ -15,19 +15,27 @@ interface TopicGeneratorSearchBarProps {
 
 export function TopicGeneratorSearchBar({ onGenerated }: TopicGeneratorSearchBarProps) {
   const [selectedCompetitorIds, setSelectedCompetitorIds] = useState<string[]>([]);
+  const [prompt, setPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
 
   const router = useRouter();
 
+  const hasCompetitors = selectedCompetitorIds.length > 0;
+  const hasPrompt = prompt.trim().length > 0;
+  const canGenerate = hasCompetitors || hasPrompt;
+
   const handleGenerate = async () => {
-    if (selectedCompetitorIds.length === 0) {
-      toast.error("Please select at least one competitor.");
+    if (!canGenerate) {
+      toast.error("Please select a competitor or enter a topic prompt.");
       return;
     }
 
     setGenerating(true);
 
-    const result = await generateTopicIdeas({ competitorIds: selectedCompetitorIds });
+    const result = await generateTopicIdeas({
+      competitorIds: hasCompetitors ? selectedCompetitorIds : undefined,
+      prompt: hasPrompt ? prompt.trim() : undefined,
+    });
 
     if (result.success && result.data?.id) {
       toast.success("Topics generated successfully!");
@@ -42,32 +50,54 @@ export function TopicGeneratorSearchBar({ onGenerated }: TopicGeneratorSearchBar
   return (
     <Card className="border-border/50 bg-background/50 backdrop-blur-sm shadow-sm overflow-hidden">
       <CardContent className="p-6">
-        <div className="flex flex-col gap-6">
-          <CompetitorSelector 
-            selectedIds={selectedCompetitorIds} 
-            onChange={setSelectedCompetitorIds} 
+        <div className="flex flex-col gap-5">
+
+          {/* Competitor Selector */}
+          <CompetitorSelector
+            selectedIds={selectedCompetitorIds}
+            onChange={setSelectedCompetitorIds}
           />
-          
-          <div className="flex justify-end pt-4 border-t border-border/50 mt-2">
-            <Button 
-              size="lg" 
-              className="w-full sm:w-auto font-medium transition-all"
+
+          {/* Bottom row: prompt input + generate button */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3 border-t border-border/50">
+            <input
+              placeholder="Describe your video idea..."
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              disabled={generating}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleGenerate();
+              }}
+              className="flex-1 min-w-0 rounded-full border border-input bg-transparent px-4 text-base sm:text-sm text-foreground placeholder:text-muted-foreground transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ height: "44px", minHeight: "44px", boxSizing: "border-box" }}
+            />
+            <Button
+              size="lg"
+              className="w-full sm:w-auto sm:shrink-0 font-medium"
+              style={{ height: "44px" }}
               onClick={handleGenerate}
-              disabled={generating || selectedCompetitorIds.length === 0}
+              disabled={generating || !canGenerate}
             >
               {generating ? (
                 <>
-                  <IconLoader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Analyzing & Generating...
+                  <IconLoader2 className="w-4 h-4 animate-spin" />
+                  <span className="ml-2">Generating...</span>
                 </>
               ) : (
                 <>
-                  <IconWand className="w-4 h-4 mr-2" />
-                  Analyze Topics
+                  <IconWand className="w-4 h-4" />
+                  <span className="ml-2">
+                    {hasCompetitors && hasPrompt
+                      ? "Analyze Topics"
+                      : hasCompetitors
+                      ? "Analyze Topics"
+                      : "Generate Topics"}
+                  </span>
                 </>
               )}
             </Button>
           </div>
+
         </div>
       </CardContent>
     </Card>

@@ -8,7 +8,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconArrowLeft, IconBulb } from "@tabler/icons-react";
+import { IconArrowLeft, IconBulb, IconMessageCircle, IconUsers, IconSparkles } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -21,8 +21,16 @@ export function GenerationDetails({ generation }: GenerationDetailsProps) {
   const input = generation.input as TopicGeneratorInput;
   const output = generation.output as TopicGeneratorOutput;
 
-  let displayName =
-    input?.channelNames || input?.channelName || "Unknown Competitor";
+  const hasCompetitors = !!(input?.channelNames || input?.channelName);
+  const hasPrompt = !!(input?.prompt && input.prompt.trim().length > 0);
+
+  let displayName = hasCompetitors
+    ? input?.channelNames || input?.channelName || "Unknown Competitor"
+    : hasPrompt
+    ? input.prompt!.length > 70
+      ? input.prompt!.slice(0, 70).trimEnd() + "…"
+      : input.prompt!
+    : "Topic Generation";
 
   return (
     <div className="w-full max-w-5xl mx-auto py-6 space-y-6">
@@ -38,11 +46,65 @@ export function GenerationDetails({ generation }: GenerationDetailsProps) {
             <IconArrowLeft className="h-4 w-4 sm:mr-2" />
             <span className="hidden sm:inline">Back</span>
           </Button>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate ml-2">
-            {displayName}
-          </h1>
+          <div className="flex flex-col gap-1 overflow-hidden ml-2">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
+              {displayName}
+            </h1>
+            <div className="flex items-center gap-1.5">
+              {hasCompetitors && hasPrompt && (
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
+                  <IconSparkles className="h-3 w-3" />
+                  Combined
+                </Badge>
+              )}
+              {hasCompetitors && !hasPrompt && (
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
+                  <IconUsers className="h-3 w-3" />
+                  Competitor Analysis
+                </Badge>
+              )}
+              {hasPrompt && !hasCompetitors && (
+                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 gap-1">
+                  <IconMessageCircle className="h-3 w-3" />
+                  Prompt-based
+                </Badge>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Input Context Card */}
+      {(hasPrompt || hasCompetitors) && (
+        <div className="flex flex-col sm:flex-row gap-3">
+          {hasCompetitors && (
+            <Card className="flex-1 bg-muted/20 border-border/40 py-0">
+              <CardContent className="p-4 flex items-start gap-3">
+                <IconUsers className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="space-y-0.5 min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">Competitors Analyzed</p>
+                  <p className="text-sm text-foreground font-medium truncate">
+                    {input?.channelNames || input?.channelName}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {hasPrompt && (
+            <Card className="flex-1 bg-muted/20 border-border/40 py-0">
+              <CardContent className="p-4 flex items-start gap-3">
+                <IconMessageCircle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="space-y-0.5 min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">Niche / Prompt</p>
+                  <p className="text-sm text-foreground/80 leading-relaxed line-clamp-3">
+                    {input.prompt}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
 
       <div className="space-y-8">
         {/* Viral Ideas */}
