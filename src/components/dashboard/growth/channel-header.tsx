@@ -6,6 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { IconLogout, IconLoader } from '@tabler/icons-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface ChannelHeaderProps {
   channelTitle: string;
@@ -24,23 +36,22 @@ export function ChannelHeader({
   const router = useRouter();
 
   const handleDisconnect = async () => {
-    if (confirm("Are you sure you want to disconnect your YouTube channel from Vidzara?")) {
-      try {
-        setIsDisconnecting(true);
-        const res = await fetch('/api/auth/youtube/disconnect', {
-          method: 'DELETE',
-        });
-        if (res.ok) {
-          router.refresh();
-        } else {
-          alert('Failed to disconnect channel. Please try again.');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('An error occurred while disconnecting.');
-      } finally {
-        setIsDisconnecting(false);
+    try {
+      setIsDisconnecting(true);
+      const res = await fetch('/api/auth/youtube/disconnect', {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('YouTube channel disconnected successfully.');
+        router.refresh();
+      } else {
+        toast.error('Failed to disconnect channel. Please try again.');
       }
+    } catch (err) {
+      console.error(err);
+      toast.error('An error occurred while disconnecting.');
+    } finally {
+      setIsDisconnecting(false);
     }
   };
 
@@ -61,20 +72,41 @@ export function ChannelHeader({
           <p className="text-muted-foreground">{channelHandle}</p>
         </div>
       </div>
-      <Button 
-        variant="destructive" 
-        size="sm" 
-        onClick={handleDisconnect}
-        disabled={isDisconnecting}
-        className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 disabled:opacity-50"
-      >
-        {isDisconnecting ? (
-          <IconLoader className="w-4 h-4 mr-2 animate-spin" />
-        ) : (
-          <IconLogout className="w-4 h-4 mr-2" />
-        )}
-        Disconnect
-      </Button>
+
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            disabled={isDisconnecting}
+            className="bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white border border-red-500/20 disabled:opacity-50"
+          >
+            {isDisconnecting ? (
+              <IconLoader className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <IconLogout className="w-4 h-4 mr-2" />
+            )}
+            Disconnect
+          </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect YouTube Channel?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to disconnect your YouTube channel from Vidzara? This will stop pulling your real-time analytics data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDisconnect}
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Disconnect
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
