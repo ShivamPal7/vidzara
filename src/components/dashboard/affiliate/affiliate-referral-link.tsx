@@ -239,7 +239,7 @@ export function AffiliateReferralLink({
               ) : (
                 <p className="text-xs text-zinc-500">
                   Lowercase letters, numbers, hyphens and underscores only. You can change
-                  your handle <span className="text-zinc-400 font-semibold">once every 30 days</span>.
+                  your handle <span className="text-zinc-400 font-semibold">once every 10 days</span>.
                 </p>
               )}
               <span className="ml-auto text-[10px] text-zinc-600 shrink-0 tabular-nums">

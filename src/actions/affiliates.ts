@@ -64,16 +64,16 @@ export async function updateReferralHandle(
     // --- No change needed ---
     if (affiliate.referralCode === trimmed) return { success: true, handle: trimmed };
 
-    // --- Rate limit: 1 change per 30 days ---
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    if (affiliate.updatedAt > thirtyDaysAgo) {
-      const nextAllowed = new Date(affiliate.updatedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
+    // --- Rate limit: 1 change per 10 days ---
+    const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+    if (affiliate.updatedAt > tenDaysAgo) {
+      const nextAllowed = new Date(affiliate.updatedAt.getTime() + 10 * 24 * 60 * 60 * 1000);
       const daysLeft = Math.ceil(
         (nextAllowed.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
       );
       return {
         success: false,
-        error: `You can only change your handle once every 30 days. Try again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
+        error: `You can only change your handle once every 10 days. Try again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
       };
     }
 

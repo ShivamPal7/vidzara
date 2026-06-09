@@ -71,13 +71,13 @@ export function AffiliateStatsCards({ stats }: StatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
       {cards.map((card, idx) => {
         const Icon = card.icon;
         return (
           <div
             key={idx}
-            className={`relative overflow-hidden rounded-2xl border border-zinc-800/50 p-6 backdrop-blur-xl transition-all duration-300 group ${card.hoverBorder}`}
+            className={`relative overflow-hidden rounded-2xl border border-zinc-800/50 p-4 md:p-6 backdrop-blur-xl transition-all duration-300 group ${card.hoverBorder}`}
             style={{
               background: card.gradient,
             }}
@@ -88,14 +88,14 @@ export function AffiliateStatsCards({ stats }: StatsProps) {
                 background: card.glow,
               }}
             />
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-zinc-400 tracking-wider uppercase">{card.title}</span>
-              <div className={`p-2 rounded-xl bg-zinc-900/80 border border-zinc-800 transition-colors ${card.colorClass}`}>
-                <Icon className="w-5 h-5" />
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs font-bold text-zinc-400 tracking-wider uppercase leading-tight">{card.title}</span>
+              <div className={`p-1.5 sm:p-2 rounded-xl bg-zinc-900/80 border border-zinc-800 transition-colors shrink-0 ${card.colorClass}`}>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
-            <div className="mt-4">
-              <div className="text-3xl font-extrabold text-zinc-100">{card.value}</div>
+            <div className="mt-3 md:mt-4">
+              <div className="text-2xl md:text-3xl font-extrabold text-zinc-100 truncate">{card.value}</div>
             </div>
           </div>
         );

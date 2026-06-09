@@ -39,13 +39,13 @@ export function AffiliateCreditsConvert({
   }
 
   return (
-    <div className="bg-zinc-950/40 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 flex flex-col">
+    <div className="bg-zinc-950/40 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 sm:p-6 flex flex-col">
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400 border border-indigo-500/20">
           <IconExchange className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-zinc-100">Convert to Usage Credits</h3>
+          <h3 className="text-base sm:text-lg font-bold text-zinc-100">Convert to Usage Credits</h3>
           <p className="text-xs text-zinc-400">Trade affiliate credits for platform usage</p>
         </div>
       </div>
