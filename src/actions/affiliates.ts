@@ -137,7 +137,26 @@ export async function getAffiliateStatus(): Promise<{
       },
     });
 
-    const plainAffiliate = affiliate ? {
+    if (!affiliate) {
+      return { success: true, status: "none" };
+    }
+
+    const subscriptionSales = affiliate.referrals.filter((r) => r.status === "PAID").length;
+    const paidEarnings = affiliate.withdrawalRequests
+      .filter((w) => w.status === "APPROVED")
+      .reduce((sum, w) => sum + Number(w.monetaryAmount), 0);
+
+    const stats = {
+      totalClicks: affiliate.clicks,
+      totalSignups: affiliate.referrals.length,
+      subscriptionSales,
+      totalEarnings: Number(affiliate.totalEarningsDecimal),
+      paidEarnings,
+      affiliateCredits: affiliate.affiliateCredits,
+      totalWithdrawn: affiliate.withdrawnCredits,
+    };
+
+    const plainAffiliate = {
       ...affiliate,
       commissionRate: Number(affiliate.commissionRate),
       totalEarningsDecimal: Number(affiliate.totalEarningsDecimal),
@@ -149,7 +168,8 @@ export async function getAffiliateStatus(): Promise<{
         ...w,
         monetaryAmount: Number(w.monetaryAmount),
       })),
-    } : undefined;
+      stats,
+    };
 
     return { success: true, status: "approved", application, affiliate: plainAffiliate };
   } catch (error) {
@@ -169,10 +189,13 @@ export async function getAffiliateDashboardStats(): Promise<{
   withdrawalRequests?: any[];
   stats?: {
     totalClicks: number;
+    totalSignups: number;
+    subscriptionSales: number;
+    totalEarnings: number;
+    paidEarnings: number;
+    affiliateCredits: number;
     pendingReferrals: number;
     creditedReferrals: number;
-    affiliateCredits: number;
-    totalEarningsDecimal: string;
     totalWithdrawn: number;
   };
   error?: string;
@@ -207,13 +230,20 @@ export async function getAffiliateDashboardStats(): Promise<{
     const creditedReferrals = referrals.filter(
       (r) => r.status === "CREDITED" || r.status === "PAID"
     ).length;
+    const subscriptionSales = referrals.filter((r) => r.status === "PAID").length;
+    const paidEarnings = withdrawalRequests
+      .filter((w) => w.status === "APPROVED")
+      .reduce((sum, w) => sum + Number(w.monetaryAmount), 0);
 
     const stats = {
-      totalClicks: referrals.length, // each referral row = 1 click/signup
+      totalClicks: affiliate.clicks,
+      totalSignups: referrals.length,
+      subscriptionSales,
+      totalEarnings: Number(affiliate.totalEarningsDecimal),
+      paidEarnings,
+      affiliateCredits: affiliate.affiliateCredits,
       pendingReferrals,
       creditedReferrals,
-      affiliateCredits: affiliate.affiliateCredits,
-      totalEarningsDecimal: affiliate.totalEarningsDecimal.toString(),
       totalWithdrawn: affiliate.withdrawnCredits,
     };
 
@@ -414,3 +444,42 @@ export async function requestWithdrawal(data: {
     return { success: false, error: message };
   }
 }
+
+// ---------------------------------------------------------------------------
+// Track affiliate link click (used by ReferralTracker query param detection)
+// ---------------------------------------------------------------------------
+
+export async function trackAffiliateClick(
+  code: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const sanitised = code.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+    if (!sanitised) {
+      return { success: false, error: "Invalid referral code" };
+    }
+
+    const affiliate = await prisma.affiliate.findUnique({
+      where: { referralCode: sanitised },
+    });
+
+    if (!affiliate) {
+      return { success: false, error: "Affiliate not found" };
+    }
+
+    if (!affiliate.enabled) {
+      return { success: false, error: "Affiliate is disabled" };
+    }
+
+    // Increment click count
+    await prisma.affiliate.update({
+      where: { id: affiliate.id },
+      data: { clicks: { increment: 1 } },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("[trackAffiliateClick] Error:", error);
+    return { success: false, error: "Failed to track affiliate click" };
+  }
+}
+

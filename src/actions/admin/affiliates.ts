@@ -54,6 +54,38 @@ export async function updateAffiliateStatus(id: string, enabled: boolean) {
   return { success: true };
 }
 
+export async function editAffiliateDetails(
+  id: string,
+  data: {
+    commissionRate: number;
+    enabled: boolean;
+    adminNotes?: string | null;
+  }
+) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+
+  if (!isAdmin(session?.user?.email)) {
+    throw new Error("Unauthorized");
+  }
+
+  // Convert percentage to decimal (e.g. 15 -> 0.15)
+  const rateDecimal = data.commissionRate / 100;
+
+  await prisma.affiliate.update({
+    where: { id },
+    data: {
+      commissionRate: rateDecimal,
+      enabled: data.enabled,
+      adminNotes: data.adminNotes ?? null,
+    },
+  });
+
+  revalidatePath("/admin/affiliates");
+  return { success: true };
+}
+
 // ─── Affiliate Applications ───────────────────────────────────────────────────
 
 export async function getAffiliateApplications() {
@@ -91,6 +123,13 @@ export async function approveAffiliateApplication(
 
   const application = await prisma.affiliateApplication.findUnique({
     where: { id: applicationId },
+    include: {
+      user: {
+        include: {
+          userProfile: true,
+        },
+      },
+    },
   });
 
   if (!application) {
@@ -107,12 +146,53 @@ export async function approveAffiliateApplication(
       data: { status: "APPROVED" },
     });
 
+    // Generate unique slugified handle if the affiliate doesn't exist yet
+    const existingAffiliate = await tx.affiliate.findUnique({
+      where: { userId: application.userId },
+    });
+
+    let referralCode = existingAffiliate?.referralCode;
+
+    if (!referralCode) {
+      const slugify = (text: string) => {
+        return text
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-+|-+$/g, "");
+      };
+
+      const baseName =
+        application.user?.userProfile?.displayName ||
+        application.user?.name ||
+        application.user?.email?.split("@")[0] ||
+        "affiliate";
+
+      const baseCode = slugify(baseName) || "affiliate";
+
+      let finalCode = baseCode;
+      let counter = 1;
+      while (true) {
+        const existing = await tx.affiliate.findUnique({
+          where: { referralCode: finalCode },
+        });
+        if (!existing) {
+          referralCode = finalCode;
+          break;
+        }
+        finalCode = `${baseCode}-${counter}`;
+        counter++;
+      }
+    }
+
     // Create or update the affiliate record
     await tx.affiliate.upsert({
       where: { userId: application.userId },
       create: {
         userId: application.userId,
-        referralCode: await generateUniqueReferralCode(tx),
+        referralCode: referralCode!,
         commissionRate: rateDecimal,
         enabled: true,
       },

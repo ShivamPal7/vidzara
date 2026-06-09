@@ -2,6 +2,7 @@
 
 import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { trackAffiliateClick } from "@/actions/affiliates";
 
 /**
  * Inner component that reads `?ref=` from the URL and persists the referral
@@ -39,6 +40,22 @@ function ReferralTrackerInner() {
       // localStorage may be unavailable in some private-browsing contexts.
       // Silently ignore — the cookie is the primary storage.
     }
+
+    // --- sessionStorage check to avoid duplicate tracking in the same session ---
+    try {
+      const alreadyTracked = sessionStorage.getItem("vidzara_ref_tracked");
+      if (alreadyTracked === sanitised) {
+        return;
+      }
+      sessionStorage.setItem("vidzara_ref_tracked", sanitised);
+    } catch {
+      // ignore sessionStorage errors
+    }
+
+    // --- Call server action to track click ---
+    trackAffiliateClick(sanitised).catch((err) => {
+      console.error("Failed to track affiliate click:", err);
+    });
   }, [searchParams]);
 
   return null;

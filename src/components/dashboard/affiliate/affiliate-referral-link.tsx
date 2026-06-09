@@ -14,7 +14,7 @@ export function AffiliateReferralLink({
   referrals: any[];
 }) {
   const [copied, setCopied] = useState(false);
-  const referralUrl = `https://vidzara.com/?ref=${referralCode}`;
+  const referralUrl = `https://vidzara.com/ref/${referralCode}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralUrl);

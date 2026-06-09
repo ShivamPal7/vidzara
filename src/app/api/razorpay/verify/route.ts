@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { Plan, BillingCycle, SubscriptionStatus, Gateway } from "../../../../../prisma/generated/prisma/enums";
+import { sendEmail } from "@/lib/email";
 
 const razorpay = new Razorpay({
   key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -132,6 +133,35 @@ export async function POST(req: NextRequest) {
           }
         })
       ]);
+
+      // Welcome Email for Pro Subscription
+      try {
+        await sendEmail({
+          to: session.user.email,
+          subject: "🎉 Welcome to Vidzara Pro",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <h2 style="color: #6366f1; text-align: center; margin-bottom: 20px;">Welcome to Vidzara Pro, ${session.user.name || "Creator"}!</h2>
+              <p>Thank you for choosing Vidzara Pro! Your subscription has been successfully activated.</p>
+              <p>As a Pro member, you now have access to:</p>
+              <ul style="line-height: 1.6;">
+                <li>Unlimited or high-limit Video SEO Generations</li>
+                <li>Script Writer for Long-form and Shorts</li>
+                <li>Script Shortener and Hook Failure Detector</li>
+                <li>Thumbnail Concept Generator</li>
+                <li>Creator Growth Dashboard and Analytics</li>
+              </ul>
+              <p>Your subscription is active and your credits have been updated. Log in to your dashboard to start creating!</p>
+              <div style="text-align: center; margin-top: 30px; margin-bottom: 30px;">
+                <a href="${process.env.BETTER_AUTH_URL || 'https://vidzara.com'}/dashboard" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Go to Dashboard</a>
+              </div>
+              <p style="margin-top: 30px; font-size: 12px; color: #888888; text-align: center;">If you have any questions, feel free to reply to this email.</p>
+            </div>
+          `
+        });
+      } catch (emailErr) {
+        console.error("Welcome email send failed:", emailErr);
+      }
 
       // 2. Handle Referral Commission Credit
       try {

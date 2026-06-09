@@ -13,7 +13,7 @@ export function AffiliateDashboard({
 }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <AffiliateStatsCards affiliate={affiliate} />
+      <AffiliateStatsCards stats={affiliate.stats} />
       
       <AffiliateReferralLink 
         referralCode={affiliate.referralCode} 

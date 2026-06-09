@@ -25,6 +25,18 @@ export default async function AdminUsersPage() {
           updatedAt: user.userProfile.updatedAt.toISOString(),
         }
       : null,
+    affiliate: user.affiliate
+      ? {
+          ...user.affiliate,
+          commissionRate: user.affiliate.commissionRate.toString(),
+          createdAt: user.affiliate.createdAt.toISOString(),
+          updatedAt: user.affiliate.updatedAt.toISOString(),
+        }
+      : null,
+    creditLogs: user.creditLogs?.map((log) => ({
+      ...log,
+      createdAt: log.createdAt.toISOString(),
+    })) || [],
   }));
 
   return (

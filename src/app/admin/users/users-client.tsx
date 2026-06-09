@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useTransition } from "react";
+import React, { useState, useMemo, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   IconUsers,
@@ -22,8 +22,11 @@ import {
   IconTag,
   IconMail,
   IconId,
+  IconDownload,
+  IconLoader2,
 } from "@tabler/icons-react";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import {
   Table,
@@ -59,7 +62,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { deleteUser } from "@/actions/admin/users";
+import { deleteUser, adjustUserCredits } from "@/actions/admin/users";
 
 interface UserProfile {
   id: string;
@@ -88,6 +91,26 @@ interface Subscription {
   updatedAt: Date | string;
 }
 
+interface Affiliate {
+  id: string;
+  userId: string;
+  referralCode: string;
+  commissionRate: string | number;
+  enabled: boolean;
+  clicks: number;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+interface CreditLog {
+  id: string;
+  userId: string;
+  amount: number;
+  reason: string;
+  adminId: string;
+  createdAt: Date | string;
+}
+
 interface User {
   id: string;
   name: string;
@@ -99,6 +122,8 @@ interface User {
   credits: number;
   subscription: Subscription | null;
   userProfile: UserProfile | null;
+  affiliate: Affiliate | null;
+  creditLogs?: CreditLog[];
 }
 
 interface UsersManagementClientProps {
@@ -135,9 +160,13 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
 
   // Search & Filter state
   const [search, setSearch] = useState("");
+  const [userTypeFilter, setUserTypeFilter] = useState<string>("ALL");
   const [planFilter, setPlanFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [sortBy, setSortBy] = useState<string>("joined_desc");
+
+  // Checkbox selection state
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -146,6 +175,22 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
   // Dialog states
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
+  // Credit adjustment form states
+  const [adjustAmount, setAdjustAmount] = useState("");
+  const [adjustOperation, setAdjustOperation] = useState<"ADD" | "REMOVE">("ADD");
+  const [adjustReason, setAdjustReason] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
+
+  // Sync selectedUser details with latest users array (e.g. after credit adjustments)
+  useEffect(() => {
+    if (selectedUser) {
+      const updated = users.find((u) => u.id === selectedUser.id);
+      if (updated) {
+        setSelectedUser(updated);
+      }
+    }
+  }, [users, selectedUser?.id]);
 
   // Copy helper
   const handleCopy = (text: string, type: string) => {
@@ -168,6 +213,42 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
         toast.error(error.message || "Failed to delete user");
       }
     });
+  };
+
+  // Credit Adjustment handler
+  const handleAdjustCredits = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    const amt = parseInt(adjustAmount, 10);
+    if (isNaN(amt) || amt <= 0) {
+      toast.error("Please enter a valid credit amount greater than zero.");
+      return;
+    }
+
+    const finalAmount = adjustOperation === "ADD" ? amt : -amt;
+
+    if (!adjustReason.trim()) {
+      toast.error("Please provide a reason for the adjustment.");
+      return;
+    }
+
+    setAdjusting(true);
+    try {
+      const res = await adjustUserCredits(selectedUser.id, finalAmount, adjustReason.trim());
+      if (res.success) {
+        toast.success(
+          `Successfully ${adjustOperation === "ADD" ? "added" : "removed"} ${amt} credits.`
+        );
+        setAdjustAmount("");
+        setAdjustReason("");
+        router.refresh();
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Failed to adjust credits");
+    } finally {
+      setAdjusting(false);
+    }
   };
 
   // Stats Calculations
@@ -210,6 +291,28 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
           u.email.toLowerCase().includes(q) ||
           u.id.toLowerCase().includes(q)
       );
+    }
+
+    // User Type Filter
+    if (userTypeFilter !== "ALL") {
+      result = result.filter((u) => {
+        const plan = u.subscription?.plan || "FREE";
+        const status = u.subscription?.status;
+        const isAffiliate = !!u.affiliate;
+
+        switch (userTypeFilter) {
+          case "FREE":
+            return plan === "FREE" || !u.subscription;
+          case "TRIAL":
+            return status === "TRIALING";
+          case "ACTIVE_PRO":
+            return plan !== "FREE" && status === "ACTIVE";
+          case "AFFILIATE":
+            return isAffiliate;
+          default:
+            return true;
+        }
+      });
     }
 
     // Plan Filter
@@ -258,15 +361,88 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
   const totalItems = filteredSortedUsers.length;
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
   
-  // Reset page to 1 when filters change
+  // Reset page to 1 and clear selection when filters change
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [search, planFilter, statusFilter, sortBy, pageSize]);
+    setSelectedUserIds(new Set());
+  }, [search, userTypeFilter, planFilter, statusFilter, sortBy, pageSize]);
 
   const paginatedUsers = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredSortedUsers.slice(startIndex, startIndex + pageSize);
   }, [filteredSortedUsers, currentPage, pageSize]);
+
+  const isAllPageSelected = paginatedUsers.length > 0 && paginatedUsers.every((u) => selectedUserIds.has(u.id));
+
+  const handleSelectAllPage = () => {
+    const newSelected = new Set(selectedUserIds);
+    if (isAllPageSelected) {
+      paginatedUsers.forEach((u) => newSelected.delete(u.id));
+    } else {
+      paginatedUsers.forEach((u) => newSelected.add(u.id));
+    }
+    setSelectedUserIds(newSelected);
+  };
+
+  const handleSelectRow = (userId: string) => {
+    const newSelected = new Set(selectedUserIds);
+    if (newSelected.has(userId)) {
+      newSelected.delete(userId);
+    } else {
+      newSelected.add(userId);
+    }
+    setSelectedUserIds(newSelected);
+  };
+
+  const handleCopyEmails = () => {
+    const emailsToCopy = selectedUserIds.size > 0
+      ? users.filter((u) => selectedUserIds.has(u.id)).map((u) => u.email)
+      : filteredSortedUsers.map((u) => u.email);
+
+    if (emailsToCopy.length === 0) {
+      toast.error("No emails to copy");
+      return;
+    }
+
+    navigator.clipboard.writeText(emailsToCopy.join(", "));
+    toast.success(`Copied ${emailsToCopy.length} email(s) to clipboard!`);
+  };
+
+  const handleExportCSV = () => {
+    const usersToExport = selectedUserIds.size > 0
+      ? users.filter((u) => selectedUserIds.has(u.id))
+      : filteredSortedUsers;
+
+    if (usersToExport.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const headers = ["Name", "Email", "Signup Date"];
+    const rows = usersToExport.map((u) => [
+      u.name,
+      u.email,
+      new Date(u.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    ]);
+
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `vidzara-creators-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Exported ${usersToExport.length} creators to CSV!`);
+  };
 
   return (
     <div className="space-y-8 max-w-6xl">
@@ -380,18 +556,62 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
       {/* Main Content Area */}
       <div className="bg-zinc-950/20 backdrop-blur-xl border border-zinc-800/60 rounded-2xl overflow-hidden shadow-2xl">
         {/* Controls / Filter Header */}
-        <div className="p-6 border-b border-zinc-800/60 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-zinc-950/40">
-          <div className="relative flex-1 max-w-md">
-            <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-zinc-500" />
-            <Input
-              placeholder="Search by name, email, or ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10 h-10 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500/50 focus:ring-indigo-500/10 text-sm rounded-xl transition-all duration-200"
-            />
+        <div className="p-6 border-b border-zinc-800/60 space-y-4 bg-zinc-950/40">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="relative flex-1 max-w-md">
+              <IconSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-zinc-500" />
+              <Input
+                placeholder="Search by name, email, or ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 h-10 bg-zinc-950/50 border-zinc-800 focus:border-indigo-500/50 focus:ring-indigo-500/10 text-sm rounded-xl transition-all duration-200"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedUserIds.size > 0 && (
+                <span className="text-xs text-indigo-400 font-semibold mr-2">
+                  {selectedUserIds.size} selected
+                </span>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyEmails}
+                className="h-10 bg-zinc-950/50 border-zinc-800 text-xs rounded-xl focus:ring-indigo-500/10 flex items-center gap-2 text-zinc-300 hover:text-white"
+              >
+                <IconCopy className="h-4 w-4" />
+                {selectedUserIds.size > 0 ? "Copy Selected" : "Copy Filtered Emails"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                className="h-10 bg-zinc-950/50 border-zinc-800 text-xs rounded-xl focus:ring-indigo-500/10 flex items-center gap-2 text-zinc-300 hover:text-white"
+              >
+                <IconDownload className="h-4 w-4" />
+                CSV Export
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {/* Filter by User Type */}
+            <div className="space-y-1">
+              <Select value={userTypeFilter} onValueChange={setUserTypeFilter}>
+                <SelectTrigger className="h-10 w-[150px] bg-zinc-950/50 border-zinc-800 text-xs rounded-xl focus:ring-indigo-500/10">
+                  <SelectValue placeholder="User Type" />
+                </SelectTrigger>
+                <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
+                  <SelectItem value="ALL">All Types</SelectItem>
+                  <SelectItem value="FREE">Free</SelectItem>
+                  <SelectItem value="TRIAL">Trial</SelectItem>
+                  <SelectItem value="ACTIVE_PRO">Active Pro</SelectItem>
+                  <SelectItem value="AFFILIATE">Affiliate</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Filter by Plan */}
             <div className="space-y-1">
               <Select value={planFilter} onValueChange={setPlanFilter}>
@@ -449,7 +669,14 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
           <Table>
             <TableHeader className="bg-zinc-950/50 border-b border-zinc-800/80">
               <TableRow className="hover:bg-transparent border-zinc-800/60">
-                <TableHead className="w-[300px] text-zinc-400 font-bold py-4 pl-6 text-[10px] uppercase tracking-widest">Creator</TableHead>
+                <TableHead className="w-[50px] py-4 pl-6">
+                  <Checkbox
+                    checked={isAllPageSelected}
+                    onCheckedChange={handleSelectAllPage}
+                    aria-label="Select all creators"
+                  />
+                </TableHead>
+                <TableHead className="w-[250px] text-zinc-400 font-bold py-4 text-[10px] uppercase tracking-widest">Creator</TableHead>
                 <TableHead className="text-zinc-400 font-bold py-4 text-[10px] uppercase tracking-widest">Email</TableHead>
                 <TableHead className="text-zinc-400 font-bold py-4 text-[10px] uppercase tracking-widest">Credits</TableHead>
                 <TableHead className="text-zinc-400 font-bold py-4 text-[10px] uppercase tracking-widest">Plan</TableHead>
@@ -478,6 +705,13 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
                       className="border-zinc-850 hover:bg-zinc-900/20 dark:hover:bg-zinc-900/30 transition-all duration-300"
                     >
                       <TableCell className="py-4.5 pl-6">
+                        <Checkbox
+                          checked={selectedUserIds.has(user.id)}
+                          onCheckedChange={() => handleSelectRow(user.id)}
+                          aria-label={`Select ${user.name}`}
+                        />
+                      </TableCell>
+                      <TableCell className="py-4.5">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10 border border-zinc-800/80 shadow-[0_4px_12px_rgba(0,0,0,0.3)] transition-transform duration-300 hover:scale-105">
                             {user.image ? (
@@ -611,7 +845,7 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={7}
+                    colSpan={8}
                     className="h-40 text-center text-zinc-500 py-12"
                   >
                     <div className="flex flex-col items-center justify-center gap-2">
@@ -683,7 +917,7 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
 
       {/* User Detail Dialog */}
       <Dialog open={selectedUser !== null} onOpenChange={(open) => !open && setSelectedUser(null)}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-200 max-w-lg p-6 rounded-2xl">
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-zinc-200 max-w-lg p-6 rounded-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="space-y-4">
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-indigo-200 via-zinc-100 to-indigo-300 bg-clip-text text-transparent">
               Creator Profile Details
@@ -844,6 +1078,124 @@ export function UsersManagementClient({ users }: UsersManagementClientProps) {
                     <strong className="text-zinc-400">FREE PLAN (Trial / Regular)</strong>
                   </div>
                 )}
+              </div>
+
+              {/* Adjust Credits Sub-form */}
+              <div className="p-4 rounded-xl border border-zinc-800/40 bg-zinc-950/20 space-y-3">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <IconBolt className="h-4 w-4 text-teal-400" />
+                  Adjust Creator Credits
+                </span>
+
+                <form onSubmit={handleAdjustCredits} className="space-y-3">
+                  <div className="flex gap-2">
+                    <div className="w-[120px] shrink-0">
+                      <Select
+                        value={adjustOperation}
+                        onValueChange={(val) => setAdjustOperation(val as "ADD" | "REMOVE")}
+                      >
+                        <SelectTrigger className="h-9 bg-zinc-950/50 border-zinc-800 text-xs rounded-xl focus:ring-indigo-500/10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-900 border-zinc-800 rounded-xl">
+                          <SelectItem value="ADD">Add (+)</SelectItem>
+                          <SelectItem value="REMOVE">Remove (-)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="flex-1 relative">
+                      <Input
+                        type="number"
+                        min={1}
+                        placeholder="Amount"
+                        value={adjustAmount}
+                        onChange={(e) => setAdjustAmount(e.target.value)}
+                        className="h-9 bg-zinc-950/50 border-zinc-800 text-xs rounded-xl focus-visible:ring-indigo-500/30 pr-8"
+                        required
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 text-[10px] font-bold pointer-events-none">
+                        CR
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Input
+                      placeholder="Reason for adjustment (e.g. Compensation, Promo bonus)..."
+                      value={adjustReason}
+                      onChange={(e) => setAdjustReason(e.target.value)}
+                      className="h-9 bg-zinc-950/50 border-zinc-800 text-xs rounded-xl focus-visible:ring-indigo-500/30 placeholder:text-zinc-650"
+                      required
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={adjusting}
+                    className="w-full h-9 bg-teal-600 hover:bg-teal-500 text-zinc-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-[0_0_12px_rgba(20,184,166,0.1)] transition-all duration-200"
+                  >
+                    {adjusting ? (
+                      <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <IconBolt className="h-3.5 w-3.5" />
+                    )}
+                    Apply Adjustment
+                  </Button>
+                </form>
+              </div>
+
+              {/* Credit History List */}
+              <div className="p-4 rounded-xl border border-zinc-800/40 bg-zinc-950/20 space-y-3">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+                  <IconChartBar className="h-4 w-4 text-indigo-400" />
+                  Credit History & Audit Logs
+                </span>
+
+                <div className="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                  {selectedUser.creditLogs && selectedUser.creditLogs.length > 0 ? (
+                    selectedUser.creditLogs.map((log) => {
+                      const isAddition = log.amount > 0;
+                      const logDate = new Date(log.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      });
+
+                      return (
+                        <div
+                          key={log.id}
+                          className="flex items-start justify-between gap-3 p-2.5 rounded-lg bg-zinc-950/40 border border-zinc-800/50 hover:border-zinc-850 transition-colors"
+                        >
+                          <div className="space-y-0.5 min-w-0">
+                            <p className="text-xs font-medium text-zinc-300 truncate">
+                              {log.reason}
+                            </p>
+                            <p className="text-[9px] text-zinc-500 font-bold uppercase">
+                              {logDate}
+                            </p>
+                          </div>
+                          <span
+                            className={`font-mono font-extrabold text-xs px-2 py-0.5 rounded-md shrink-0 border ${
+                              isAddition
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                            }`}
+                          >
+                            {isAddition ? "+" : ""}
+                            {log.amount} CR
+                          </span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-xs text-zinc-500 italic text-center py-4">
+                      No credit adjustment logs recorded.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}

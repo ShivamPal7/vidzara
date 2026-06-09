@@ -301,7 +301,7 @@ export default async function AdminAffiliatesPage() {
 
                         {/* Actions column */}
                         <TableCell className="py-4 text-right pr-6">
-                          <AffiliateActions affiliateId={affiliate.id} isEnabled={affiliate.enabled} />
+                          <AffiliateActions affiliate={affiliate} />
                         </TableCell>
                       </TableRow>
                     );

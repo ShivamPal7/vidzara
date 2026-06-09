@@ -33,6 +33,7 @@ model User {
   youtubeConnection YoutubeConnection?
   chatSessions  ChatSession[]
   affiliateApplication AffiliateApplication?
+  creditLogs    CreditLog[]
 
   @@map("user")
 }
@@ -185,6 +186,8 @@ model Affiliate {
   referralCode         String             @unique
   commissionRate       Decimal            @default(0.1) @db.Decimal(10, 2)
   enabled              Boolean            @default(true)
+  clicks               Int                @default(0)
+  adminNotes           String?            @db.Text
   affiliateCredits     Int                @default(0)
   withdrawnCredits     Int                @default(0)
   totalEarningsDecimal Decimal            @default(0.00) @db.Decimal(10, 2)
@@ -371,4 +374,16 @@ enum WithdrawalMethod {
   UPI
   BANK
   PAYPAL
+}
+
+model CreditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int      // Positive for added, negative for removed
+  reason    String
+  adminId   String
+  createdAt DateTime @default(now())
+
+  @@map("credit_log")
 }
