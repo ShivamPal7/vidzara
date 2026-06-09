@@ -98,14 +98,41 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
   
   [Feature.NICHE_FINDER]: z.object({
     niches: z.array(z.object({
-      name: z.string(),
-      competitionLevel: z.enum(["Low", "Medium", "High"]),
-      viralScore: z.number().min(1).max(100),
-      revenueScore: z.number().min(1).max(100),
-      competitionScore: z.number().min(1).max(100),
-      monetizationPotential: z.string(),
-      contentStrategy: z.string(),
+      name: z.string().describe("Memorable 3-8 word niche category or channel name"),
+      competitionLevel: z.enum(["Low", "Medium", "High"]).describe("Niche competition category"),
+      viralScore: z.number().min(1).max(100).describe("Viral potential score (1-100)"),
+      revenueScore: z.number().min(1).max(100).describe("Revenue generation potential score (1-100)"),
+      competitionScore: z.number().min(1).max(100).describe("Detailed competition score (1-100)"),
+      monetizationPotential: z.string().describe("Detail explanation of monetization channels (affiliates, products, deals)"),
+      contentStrategy: z.string().describe("Specific themes, content pillars, or playlist series strategy"),
+      audienceMetrics: z.object({
+        audienceSize: z.string().describe("Audience size description, e.g. 'Massive (5M+)', 'Niche (500k-1M)', 'Micro-Niche (50k)'"),
+        searchDemand: z.string().describe("Search demand levels, e.g. 'Very High', 'High', 'Moderate', 'Low'"),
+        growthTrend: z.string().describe("Growth velocity, e.g. 'Exploding', 'Growing', 'Stable', 'Saturated'"),
+        viralPotential: z.string().describe("Viral factor classification"),
+        competitionLevel: z.string().describe("Competition detailed category, e.g. 'Intense', 'Moderate', 'Low'"),
+      }).describe("Market demand and audience statistics for this niche"),
+      monetizationScores: z.object({
+        adsense: z.number().min(1).max(100).describe("Adsense CPM score (1-100)"),
+        affiliate: z.number().min(1).max(100).describe("Affiliate marketing score (1-100)"),
+        sponsorship: z.number().min(1).max(100).describe("Sponsorship appeal score (1-100)"),
+        digitalProduct: z.number().min(1).max(100).describe("Digital product creation potential (1-100)"),
+        courseSelling: z.number().min(1).max(100).describe("Online courses/coaching potential (1-100)"),
+      }).describe("Detailed monetization avenue ratings (1-100)"),
     })),
+    marketTrends: z.object({
+      growingNiches2026: z.array(z.string()).describe("List of growing sub-niches in 2026 for this category"),
+      newTrends: z.array(z.string()).describe("List of new and emerging trends in 2026"),
+      saturatedNiches: z.array(z.string()).describe("List of fully saturated or declining niches"),
+      opportunityZone: z.array(z.string()).describe("Niches currently in the high-opportunity sweet spot"),
+    }).describe("Overall market trend analysis for this creator space in 2026"),
+    finalRecommendation: z.object({
+      bestNiche: z.string().describe("Name of the recommended niche of the 3"),
+      whyRightForYou: z.string().describe("Specific explanation of why this niche fits the user profile"),
+      competition: z.string().describe("Competition level summary for the recommendation"),
+      growthPotential: z.string().describe("Growth potential summary for the recommendation"),
+      monetizationPotential: z.string().describe("Monetization potential summary for the recommendation"),
+    }).describe("Final specific recommendation matching the user's skillset and format"),
   }),
   
   [Feature.GROWTH_DASHBOARD]: z.object({

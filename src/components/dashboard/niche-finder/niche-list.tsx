@@ -36,8 +36,18 @@ export function NicheList({ generations, onToggleFavorite, onDelete }: NicheList
     <div className="space-y-4">
       <AnimatePresence mode="popLayout">
         {generations.map((gen) => {
-          const input = gen.input as NicheFinderInput;
-          const interestText = input?.interest || "Custom Interest Search";
+          const input = gen.input as any;
+          const interestText = (() => {
+            if (!input) return "Niche Report";
+            if (input.interest) return input.interest;
+            if (input.category === "Other") {
+              return input.customInterest || "Custom Interest";
+            }
+            let text = input.category || "Niche Report";
+            if (input.subCategory) text += ` - ${input.subCategory}`;
+            if (input.subSubCategory) text += ` - ${input.subSubCategory}`;
+            return text;
+          })();
 
           return (
             <motion.div

@@ -88,9 +88,9 @@ export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
     systemPrompt: SystemPrompts.COMPETITORS_SYSTEM,
   },
 
-  // ── Niche Finder → Gemini 2.5 Flash ──────────────────────────────────────
+  // ── Niche Finder → Gemini 2.5 Flash Lite ─────────────────────────────────
   [Feature.NICHE_FINDER]: {
-    models: ["google/gemini-2.5-flash", "deepseek/deepseek-chat"],
+    models: ["google/gemini-2.5-flash-lite", "google/gemini-2.5-flash", "deepseek/deepseek-chat"],
     temperature: 0.72,
     systemPrompt: SystemPrompts.NICHE_FINDER_SYSTEM,
   },

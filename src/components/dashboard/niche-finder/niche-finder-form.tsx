@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,21 +21,41 @@ import {
   IconCompass,
   IconChevronRight,
   IconArrowLeft,
+  IconMapPin,
+  IconCategory,
+  IconTag,
+  IconTarget,
 } from "@tabler/icons-react";
-import { generateNicheIdeas } from "@/actions/niche-finder";
+import { generateNicheIdeas, getSubCategories, getSubSubCategories } from "@/actions/niche-finder";
 import { cn } from "@/lib/utils";
 
 interface NicheFinderFormProps {
   onGenerated: (result?: any) => void;
 }
 
-const SUGGESTED_TAGS = [
-  "Minimalist Coding",
-  "Mechanical Keyboards",
-  "Vegan Meal Prep",
-  "Productivity Apps",
-  "Vintage Camera Reviews",
-  "Budget Travel",
+const SUGGESTED_COUNTRIES = [
+  { code: "India", name: "India", flag: "🇮🇳" },
+  { code: "USA", name: "USA", flag: "🇺🇸" },
+  { code: "UK", name: "UK", flag: "🇬🇧" },
+  { code: "Canada", name: "Canada", flag: "🇨🇦" },
+  { code: "Australia", name: "Australia", flag: "🇦🇺" },
+  { code: "Germany", name: "Germany", flag: "🇩🇪" },
+  { code: "Global", name: "Global", flag: "🌐" },
+];
+
+const SUGGESTED_CATEGORIES = [
+  "AI",
+  "Gaming",
+  "Education",
+  "Finance",
+  "Motivation",
+  "Cartoon Story",
+  "Tech & Gadgets",
+  "Travel & Vlogs",
+  "Food & Cooking",
+  "Fitness & Health",
+  "Fashion & Beauty",
+  "Lifestyle",
 ] as const;
 
 const SKILL_LEVELS = [
@@ -107,25 +128,89 @@ const slideVariants = {
 };
 
 export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
-  const [interest, setInterest] = useState("");
+  // Wizard States
+  const [country, setCountry] = useState("India");
+  const [category, setCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
+  const [subSubCategory, setSubSubCategory] = useState("");
+  const [customInterest, setCustomInterest] = useState("");
   const [skillLevel, setSkillLevel] = useState<"Beginner" | "Intermediate" | "Advanced">("Beginner");
   const [contentType, setContentType] = useState("Shorts & Reels");
 
+  // Dynamic Suggestion Lists
+  const [subCategoriesList, setSubCategoriesList] = useState<string[]>([]);
+  const [subSubCategoriesList, setSubSubCategoriesList] = useState<string[]>([]);
+  
+  // Loaders
+  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
+  const [loadingSubSubCategories, setLoadingSubSubCategories] = useState(false);
+
   const [[step, direction], setStep] = useState([1, 0]);
   const [isPending, startTransition] = useTransition();
-  const router = useRouter();
 
-  const handleNext = () => {
-    if (step === 1 && !interest.trim()) {
-      toast.error("Please share your interests first.");
-      return;
+  const fetchSubCategories = async (cat: string) => {
+    setLoadingSubCategories(true);
+    setSubCategoriesList([]);
+    setSubCategory("");
+    setSubSubCategory("");
+    try {
+      const res = await getSubCategories(cat, country);
+      if (res.success && res.data) {
+        setSubCategoriesList(res.data);
+      } else {
+        toast.error("Failed to load sub-categories.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong loading sub-categories.");
+    } finally {
+      setLoadingSubCategories(false);
     }
-    if (step === 1 && interest.trim().length < 3) {
-      toast.error("Interest must be at least 3 characters.");
-      return;
+  };
+
+  const fetchSubSubCategories = async (cat: string, sub: string) => {
+    setLoadingSubSubCategories(true);
+    setSubSubCategoriesList([]);
+    setSubSubCategory("");
+    try {
+      const res = await getSubSubCategories(cat, sub, country);
+      if (res.success && res.data) {
+        setSubSubCategoriesList(res.data);
+      } else {
+        toast.error("Failed to load topics.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong loading topics.");
+    } finally {
+      setLoadingSubSubCategories(false);
     }
-    if (step < 4) {
-      setStep([step + 1, 1]);
+  };
+
+  const handleNext = async () => {
+    if (step === 1) {
+      setStep([2, 1]);
+    } else if (step === 2) {
+      if (!category.trim()) {
+        toast.error("Please enter or select a category.");
+        return;
+      }
+      setStep([3, 1]);
+      await fetchSubCategories(category.trim());
+    } else if (step === 3) {
+      if (!subCategory.trim()) {
+        toast.error("Please select or enter a sub-category.");
+        return;
+      }
+      setStep([4, 1]);
+      await fetchSubSubCategories(category, subCategory.trim());
+    } else if (step === 4) {
+      // Sub-sub-category is optional, allow skipping if not filled
+      setStep([5, 1]);
+    } else if (step === 5) {
+      setStep([6, 1]);
+    } else if (step === 6) {
+      setStep([7, 1]);
     }
   };
 
@@ -135,15 +220,32 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
     }
   };
 
-  const handleTagClick = (tag: string) => {
-    setInterest(tag);
+  const handleCountryClick = (cName: string) => {
+    setCountry(cName);
     setTimeout(() => {
       setStep([2, 1]);
     }, 200);
   };
 
+  const handleCategoryClick = async (cat: string) => {
+    setCategory(cat);
+    setStep([3, 1]);
+    await fetchSubCategories(cat);
+  };
+
+  const handleSubCategoryClick = async (sub: string) => {
+    setSubCategory(sub);
+    setStep([4, 1]);
+    await fetchSubSubCategories(category, sub);
+  };
+
+  const handleSubSubCategoryClick = (subSub: string) => {
+    setSubSubCategory(subSub);
+    setStep([5, 1]);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey && step === 1) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleNext();
     }
@@ -151,17 +253,23 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
 
   const handleGenerate = () => {
     startTransition(async () => {
-      const result = await generateNicheIdeas({
-        interest: interest.trim(),
+      const payload = {
+        country,
+        category: category.trim(),
+        subCategory: subCategory.trim() || undefined,
+        subSubCategory: subSubCategory.trim() || undefined,
+        customInterest: category === "Other" ? customInterest.trim() : undefined,
         skillLevel,
         contentType,
-      });
+      };
+
+      const result = await generateNicheIdeas(payload);
 
       if (result.success && result.generationId) {
         toast.success("Niches discovered!");
         onGenerated({
           id: result.generationId,
-          input: { interest: interest.trim(), skillLevel, contentType },
+          input: payload,
           output: result.data,
           createdAt: new Date(),
           isFavorite: false,
@@ -172,7 +280,15 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
     });
   };
 
-  const STEP_TITLES = ["Your Interest", "Skill Level", "Content Format", "Confirm"];
+  const STEP_TITLES = [
+    "Target Country",
+    "General Category",
+    "Sub-Category",
+    "Specific Topic",
+    "Skill Level",
+    "Content Format",
+    "Confirm Details",
+  ];
 
   return (
     <Card className="border-border/50 bg-card/60 backdrop-blur-sm shadow-sm overflow-hidden rounded-2xl">
@@ -181,7 +297,7 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
         <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border/40">
           <div>
             <p className="text-[10px] uppercase tracking-widest font-semibold text-primary font-outfit mb-0.5">
-              Step {step} of 4
+              Step {step} of 7
             </p>
             <h2 className="text-lg sm:text-xl font-bold text-foreground font-outfit">
               {STEP_TITLES[step - 1]}
@@ -189,7 +305,7 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
           </div>
 
           <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4].map((s) => (
+            {[1, 2, 3, 4, 5, 6, 7].map((s) => (
               <div
                 key={s}
                 className={cn(
@@ -218,32 +334,77 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
               transition={{ duration: 0.22, ease: "easeInOut" }}
               className="px-4 sm:px-6 py-4 sm:py-6"
             >
-              {/* STEP 1 */}
+              {/* STEP 1: Country */}
               {step === 1 && (
                 <div className="space-y-4">
-                  <Textarea
-                    id="interests"
-                    placeholder="e.g., retro mechanical keyboards, vegan meal prep, iOS productivity..."
-                    value={interest}
-                    onChange={(e) => setInterest(e.target.value.slice(0, 500))}
-                    disabled={isPending}
-                    onKeyDown={handleKeyDown}
-                    className="min-h-[100px] resize-none text-sm rounded-xl border-border/50 bg-background/30 focus-visible:ring-primary/30 leading-relaxed disabled:opacity-50 transition-all placeholder:text-muted-foreground/40"
-                  />
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Select the target market for your content:
+                  </p>
+                  <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
+                    {SUGGESTED_COUNTRIES.map((c) => {
+                      const isActive = country === c.code;
+                      return (
+                        <button
+                          key={c.code}
+                          type="button"
+                          onClick={() => handleCountryClick(c.code)}
+                          className={cn(
+                            "flex items-center gap-3 p-3.5 rounded-xl border text-sm font-semibold transition-all duration-200 font-outfit",
+                            isActive
+                              ? "border-primary bg-primary/5 text-primary"
+                              : "border-border/50 bg-background/20 hover:border-border hover:bg-muted/20 text-foreground"
+                          )}
+                        >
+                          <span className="text-lg shrink-0">{c.flag}</span>
+                          <span className="truncate">{c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2: General Category */}
+              {step === 2 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium">
+                      Enter your category or pick a popular option:
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <IconCategory className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-muted-foreground/50" />
+                        <Input
+                          id="category-input"
+                          placeholder="e.g. Mechanical Keyboards, Space Exploration, AI..."
+                          value={category}
+                          onChange={(e) => setCategory(e.target.value.slice(0, 100))}
+                          disabled={isPending}
+                          onKeyDown={handleKeyDown}
+                          className="pl-10 text-sm rounded-xl border-border/50 bg-background/30 focus-visible:ring-primary/30 h-10"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
                   <div>
                     <p className="text-xs text-muted-foreground mb-2.5 font-medium">
-                      Quick picks:
+                      Popular categories:
                     </p>
                     <div className="flex flex-wrap gap-1.5">
-                      {SUGGESTED_TAGS.map((tag) => (
+                      {SUGGESTED_CATEGORIES.map((cat) => (
                         <button
-                          key={tag}
+                          key={cat}
                           type="button"
-                          onClick={() => handleTagClick(tag)}
-                          className="px-3 py-1 rounded-full text-xs font-medium border border-border/50 bg-muted/20 hover:border-primary/60 hover:bg-primary/5 hover:text-primary transition-all"
+                          onClick={() => handleCategoryClick(cat)}
+                          className={cn(
+                            "px-3 py-1 rounded-full text-xs font-semibold border transition-all duration-150 font-outfit",
+                            category === cat
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-border/50 bg-muted/20 hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
+                          )}
                         >
-                          {tag}
+                          {cat}
                         </button>
                       ))}
                     </div>
@@ -251,8 +412,120 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                 </div>
               )}
 
-              {/* STEP 2 */}
-              {step === 2 && (
+              {/* STEP 3: Sub-Category */}
+              {step === 3 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium">
+                      Select or type a sub-category:
+                    </p>
+                    <div className="relative">
+                      <IconTag className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-muted-foreground/50" />
+                      <Input
+                        id="subcategory-input"
+                        placeholder="e.g. AI Story Videos, PC Gaming, Personal Finance..."
+                        value={subCategory}
+                        onChange={(e) => setSubCategory(e.target.value.slice(0, 100))}
+                        disabled={isPending}
+                        onKeyDown={handleKeyDown}
+                        className="pl-10 text-sm rounded-xl border-border/50 bg-background/30 focus-visible:ring-primary/30 h-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2.5 font-medium">
+                      Suggested sub-categories for <span className="text-primary font-semibold">"{category}"</span>:
+                    </p>
+                    {loadingSubCategories ? (
+                      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="h-9 rounded-xl bg-muted/30 animate-pulse border border-border/20" />
+                        ))}
+                      </div>
+                    ) : subCategoriesList.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {subCategoriesList.map((sub) => (
+                          <button
+                            key={sub}
+                            type="button"
+                            onClick={() => handleSubCategoryClick(sub)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 font-outfit",
+                              subCategory === sub
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border/50 bg-muted/20 hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
+                            )}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground/60 italic">Type a custom sub-category above to proceed.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 4: Specific Topic */}
+              {step === 4 && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium">
+                      Select or enter a specific topic/niche (optional):
+                    </p>
+                    <div className="relative">
+                      <IconTarget className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-muted-foreground/50" />
+                      <Input
+                        id="subsubcategory-input"
+                        placeholder="e.g. Horror Stories, BGMI, Cryptocurrency..."
+                        value={subSubCategory}
+                        onChange={(e) => setSubSubCategory(e.target.value.slice(0, 100))}
+                        disabled={isPending}
+                        onKeyDown={handleKeyDown}
+                        className="pl-10 text-sm rounded-xl border-border/50 bg-background/30 focus-visible:ring-primary/30 h-10"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2.5 font-medium">
+                      Niches in <span className="text-primary font-semibold">"{subCategory}"</span>:
+                    </p>
+                    {loadingSubSubCategories ? (
+                      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="h-9 rounded-xl bg-muted/30 animate-pulse border border-border/20" />
+                        ))}
+                      </div>
+                    ) : subSubCategoriesList.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {subSubCategoriesList.map((subSub) => (
+                          <button
+                            key={subSub}
+                            type="button"
+                            onClick={() => handleSubSubCategoryClick(subSub)}
+                            className={cn(
+                              "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 font-outfit",
+                              subSubCategory === subSub
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border/50 bg-muted/20 hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
+                            )}
+                          >
+                            {subSub}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground/60 italic">Type a custom topic or skip this step by clicking Continue.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 5: Skill Level */}
+              {step === 5 && (
                 <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-3">
                   {SKILL_LEVELS.map((level) => {
                     const Icon = level.icon;
@@ -263,15 +536,13 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                         key={level.value}
                         onClick={() => setSkillLevel(level.value)}
                         className={cn(
-                          // On mobile: horizontal row layout. On sm+: vertical card layout
-                          "text-left p-3 sm:p-4 rounded-xl border transition-all duration-200 group",
+                          "relative text-left p-3 sm:p-4 rounded-xl border transition-all duration-200 group",
                           "flex flex-row sm:flex-col items-center sm:items-start gap-3 sm:gap-3",
                           isActive
                             ? "border-primary bg-primary/5"
                             : "border-border/50 bg-background/20 hover:border-border hover:bg-muted/20"
                         )}
                       >
-                        {/* Icon */}
                         <div
                           className={cn(
                             "p-1.5 rounded-lg transition-colors shrink-0",
@@ -282,7 +553,6 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                         >
                           <Icon className="h-4 w-4" />
                         </div>
-                        {/* Text — grows to fill row on mobile */}
                         <div className="flex-1 min-w-0">
                           <p className={cn(
                             "text-sm font-semibold font-outfit",
@@ -294,10 +564,10 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                             {level.description}
                           </p>
                         </div>
-                        {/* Radio — pushed to far right on mobile row */}
                         <div
                           className={cn(
                             "h-3.5 w-3.5 rounded-full border-2 transition-all duration-200 shrink-0",
+                            "sm:absolute sm:right-4 sm:top-4",
                             isActive
                               ? "border-primary bg-primary"
                               : "border-muted-foreground/30"
@@ -309,8 +579,8 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                 </div>
               )}
 
-              {/* STEP 3 */}
-              {step === 3 && (
+              {/* STEP 6: Content Format */}
+              {step === 6 && (
                 <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
                   {CONTENT_TYPES.map((type) => {
                     const Icon = type.icon;
@@ -364,30 +634,44 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                 </div>
               )}
 
-              {/* STEP 4 */}
-              {step === 4 && (
+              {/* STEP 7: Confirm Details */}
+              {step === 7 && (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Review your selections before generating your niche report.
+                    Review your selections before generating your niche report:
                   </p>
-                  <div className="rounded-xl border border-border/50 bg-background/30 divide-y divide-border/40 overflow-hidden">
-                    <div className="px-4 py-3">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Interest</p>
-                      <p className="text-sm font-semibold text-foreground font-outfit">"{interest}"</p>
+                  <div className="rounded-xl border border-border/50 bg-background/30 divide-y divide-border/40 overflow-hidden font-outfit">
+                    <div className="px-4 py-3 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Target Country</span>
+                      <span className="text-sm font-semibold text-foreground">{country}</span>
                     </div>
-                    <div className="px-4 py-3 flex items-center gap-6">
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Level</p>
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                          {skillLevel}
-                        </span>
+                    <div className="px-4 py-3 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Category</span>
+                      <span className="text-sm font-semibold text-foreground">"{category}"</span>
+                    </div>
+                    {subCategory && (
+                      <div className="px-4 py-3 flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Sub-Category</span>
+                        <span className="text-sm font-semibold text-foreground">"{subCategory}"</span>
                       </div>
-                      <div>
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Format</p>
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted/50 text-foreground border border-border/50">
-                          {contentType}
-                        </span>
+                    )}
+                    {subSubCategory && (
+                      <div className="px-4 py-3 flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">Topic</span>
+                        <span className="text-sm font-semibold text-foreground">"{subSubCategory}"</span>
                       </div>
+                    )}
+                    <div className="px-4 py-3 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Skill Level</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                        {skillLevel}
+                      </span>
+                    </div>
+                    <div className="px-4 py-3 flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Format</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-muted/50 text-foreground border border-border/50">
+                        {contentType}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -397,7 +681,7 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
         </div>
 
         {/* Footer Controls */}
-        <div className="flex items-center justify-between px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
+        <div className="flex items-center justify-between px-4 sm:px-6 pb-4 sm:pb-6 pt-2 border-t border-border/30 mt-2">
           <div>
             {step > 1 && (
               <Button
@@ -414,11 +698,14 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
           </div>
 
           <div>
-            {step < 4 ? (
+            {step < 7 ? (
               <Button
                 size="sm"
                 onClick={handleNext}
-                disabled={step === 1 && !interest.trim()}
+                disabled={
+                  (step === 2 && !category.trim()) ||
+                  (step === 3 && !subCategory.trim())
+                }
                 className="h-9 px-5 gap-2 font-medium"
               >
                 Continue
@@ -433,12 +720,12 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                 {isPending ? (
                   <>
                     <IconLoader2 className="w-4 h-4 animate-spin" />
-                    Analyzing...
+                    Discovering Niches...
                   </>
                 ) : (
                   <>
                     <IconWand className="w-4 h-4" />
-                    Generate Report
+                    Discover Niches
                   </>
                 )}
               </Button>
