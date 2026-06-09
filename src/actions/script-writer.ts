@@ -13,6 +13,7 @@ import {
 import { revalidatePath } from "next/cache";
 import { analyzeVideoStyle } from "@/lib/ai/style-analyzer";
 import { deductCreditsAction } from "./credits";
+import { incrementUsage } from "@/lib/usage";
 
 // ── Helpers ─────────────────────────────────────────────────────────────
 
@@ -220,3 +221,69 @@ Keep the parts of the script that are not affected by the instruction exactly th
     return errorResponse(error);
   }
 }
+
+// ── 5. Save Generated Script (From Stream) ─────────────────────────────
+
+const saveSchema = z.object({
+  prompt: z.string(),
+  format: z.string(),
+  duration: z.string(),
+  tone: z.string().optional(),
+  language: z.string(),
+  title: z.string().min(1),
+  content: z.string().min(1),
+  refinementSuggestions: z.array(z.string()).length(3),
+  modelUsed: z.string().optional(),
+});
+
+export async function saveGeneratedScript(input: z.infer<typeof saveSchema>) {
+  try {
+    const validated = saveSchema.parse(input);
+    const userId = await getAuthenticatedUserId();
+
+    // Deduct credits
+    const creditRes = await deductCreditsAction(Feature.SCRIPT_WRITER, {
+      format: validated.format,
+      duration: validated.duration,
+    });
+    
+    if (!creditRes.success) {
+      return { success: false as const, error: creditRes.error };
+    }
+
+    // Persist Generation Record
+    const genRecord = await prisma.generation.create({
+      data: {
+        userId,
+        feature: Feature.SCRIPT_WRITER,
+        input: {
+          prompt: validated.prompt,
+          format: validated.format,
+          duration: validated.duration,
+          tone: validated.tone,
+          language: validated.language,
+        } as any,
+        output: {
+          title: validated.title,
+          content: validated.content,
+          refinementSuggestions: validated.refinementSuggestions,
+        } as any,
+        model: validated.modelUsed || "google/gemini-2.5-pro",
+        tokensUsed: 0, // Streaming token count can default to 0
+      },
+    });
+
+    // Increment Usage
+    await incrementUsage(userId, Feature.SCRIPT_WRITER);
+
+    revalidatePath("/dashboard/create/script-writer");
+
+    return {
+      success: true as const,
+      generationId: genRecord.id,
+    };
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+

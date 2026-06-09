@@ -12,7 +12,7 @@ import {
 } from "@/components/dashboard/script-writer/recent-scripts"
 import { ScriptGenerationView } from "@/components/dashboard/script-writer/script-generation-view"
 import { getUsageData, type UsageData } from "@/actions/usage"
-import { getRecentScripts, generateScript } from "@/actions/script-writer"
+import { getRecentScripts, generateScript, saveGeneratedScript } from "@/actions/script-writer"
 import { DEFAULT_SCRIPT_WRITER_STATE, type ScriptWriterState } from "@/components/dashboard/script-writer/constants"
 
 export default function ScriptWriterClient({ initialData }: { initialData?: any }) {
@@ -52,6 +52,8 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
   const [generatedTitle, setGeneratedTitle] = useState(parsedOutput?.title || "")
   const [generatedId, setGeneratedId] = useState<string | null>(initialData?.id || null)
   const [hasReferenceVideo, setHasReferenceVideo] = useState(false)
+  const [streamedContent, setStreamedContent] = useState("")
+  const [streamedTitle, setStreamedTitle] = useState("")
 
   const [recentScripts, setRecentScripts] = useState<RecentScript[]>([])
   const hasRecents = recentScripts.length > 0 && view === "initial"
@@ -74,30 +76,125 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
   const handleSubmit = async (state: ScriptWriterState) => {
     setGeneratedTitle(state.prompt || "Untitled Script")
     setHasReferenceVideo(state.tone?.startsWith("Reference: ") ?? false)
+    setStreamedContent("")
+    setStreamedTitle("")
     setView("generating")
     setGeneratedId(null)
 
     try {
-      const res = await generateScript({
+      const response = await fetch("/api/generate-script", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: state.prompt,
+          format: state.format,
+          duration: state.duration,
+          tone: state.tone,
+          language: state.language,
+        }),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error || `HTTP ${response.status}`);
+      }
+
+      if (!response.body) {
+        throw new Error("ReadableStream not supported by response");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = "";
+
+      const parseStreamedText = (text: string) => {
+        let title = "";
+        let suggestions: string[] = [];
+        let content = "";
+
+        const titleIndex = text.indexOf("===TITLE===");
+        const suggestionsIndex = text.indexOf("===SUGGESTIONS===");
+        const scriptIndex = text.indexOf("===SCRIPT===");
+
+        if (titleIndex !== -1) {
+          const start = titleIndex + "===TITLE===".length;
+          const end = suggestionsIndex !== -1 ? suggestionsIndex : text.length;
+          title = text.slice(start, end).trim();
+        }
+
+        if (suggestionsIndex !== -1) {
+          const start = suggestionsIndex + "===SUGGESTIONS===".length;
+          const end = scriptIndex !== -1 ? scriptIndex : text.length;
+          const suggestionsBlock = text.slice(start, end).trim();
+          suggestions = suggestionsBlock
+            .split("\n")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+
+        if (scriptIndex !== -1) {
+          const start = scriptIndex + "===SCRIPT===".length;
+          content = text.slice(start).trim();
+        }
+
+        return { title, suggestions, content };
+      };
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        accumulatedText += decoder.decode(value, { stream: true });
+        const parsed = parseStreamedText(accumulatedText);
+        
+        if (parsed.title) {
+          setStreamedTitle(parsed.title);
+          setGeneratedTitle(parsed.title);
+        }
+        if (parsed.content) {
+          let cleanContent = parsed.content;
+          if (cleanContent.endsWith("===")) {
+            cleanContent = cleanContent.slice(0, -3);
+          }
+          setStreamedContent(cleanContent);
+        }
+      }
+
+      const finalParsed = parseStreamedText(accumulatedText);
+      const scriptTitle = finalParsed.title || state.prompt || "Untitled Script";
+      const scriptContent = finalParsed.content || accumulatedText;
+      const suggestions = finalParsed.suggestions.length === 3 
+        ? finalParsed.suggestions 
+        : ["Make the hook shorter", "Add a cliffhanger ending", "Use simpler words"];
+
+      const saveRes = await saveGeneratedScript({
         prompt: state.prompt,
         format: state.format,
         duration: state.duration,
         tone: state.tone,
         language: state.language,
-      })
+        title: scriptTitle,
+        content: scriptContent,
+        refinementSuggestions: suggestions,
+      });
 
-      if (res.success && res.generationId) {
-        setGeneratedId(res.generationId)
-        setView("result")
-      } else {
-        console.error(res.error)
-        setView("initial")
-        toast.error(res.error || "Failed to generate your script.")
+      if (!saveRes.success) {
+        throw new Error(saveRes.error || "Failed to save script to database.");
       }
-    } catch (error) {
-      console.error("Failed to generate script:", error)
-      setView("initial")
-      toast.error("An unexpected error occurred. Please try again.")
+
+      setGeneratedId(saveRes.generationId);
+      setView("result");
+      getRecentScripts().then((res) => {
+        if (res.success && res.data) {
+          setRecentScripts(res.data);
+        }
+      }).catch(console.error);
+    } catch (error: any) {
+      console.error("Failed to generate script:", error);
+      setView("initial");
+      toast.error(error.message || "An unexpected error occurred. Please try again.");
     }
   }
 
@@ -135,6 +232,8 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
             isGenerating={view === "generating"}
             title={generatedTitle}
             hasReferenceVideo={hasReferenceVideo}
+            streamedContent={streamedContent}
+            streamedTitle={streamedTitle}
             onViewScript={() => generatedId && router.push(`/dashboard/create/script-writer/${generatedId}`)}
           />
         ) : hasRecents ? (

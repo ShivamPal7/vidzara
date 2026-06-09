@@ -83,14 +83,37 @@ export function ScriptGenerationView({
   className,
   hasReferenceVideo = false,
   onViewScript,
-}: ScriptGenerationViewProps) {
+  streamedContent = "",
+  streamedTitle = "",
+}: ScriptGenerationViewProps & { streamedContent?: string; streamedTitle?: string }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [isCompleted, setIsCompleted] = useState(!isGenerating)
   const wasGenerating = useRef(isGenerating)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const STEPS = hasReferenceVideo ? REFERENCE_STEPS : DEFAULT_STEPS
+
+  // Auto-scroll the live preview container to the bottom as content streams in
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [streamedContent])
+
+  // When the stream starts (first token received), immediately complete Step 1 and Step 2
+  useEffect(() => {
+    if (streamedTitle || streamedContent) {
+      setCompletedSteps((prev) => {
+        const next = [...prev];
+        if (!next.includes(1)) next.push(1);
+        if (!next.includes(2)) next.push(2);
+        return next;
+      });
+      setCurrentStepIndex(2); // Set active step to Step 3 ("Writing script")
+    }
+  }, [streamedTitle, streamedContent]);
 
   // Detect when generation finishes: isGenerating flips false after being true
   useEffect(() => {
@@ -179,7 +202,7 @@ export function ScriptGenerationView({
           </motion.div>
         </motion.div>
       ) : (
-        <div className="space-y-4 py-4">
+        <div className="space-y-6 py-4">
           <div className="flex flex-col gap-3">
             {STEPS.map((step, idx) => {
               const isStepCompleted = completedSteps.includes(step.id)
@@ -218,6 +241,43 @@ export function ScriptGenerationView({
               )
             })}
           </div>
+
+          {/* Real-time streaming content preview (Thought Block / Preview) */}
+          {(streamedTitle || streamedContent) && (
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="border border-border/40 bg-zinc-950/20 backdrop-blur-md rounded-2xl p-4 sm:p-5 space-y-3 shadow-inner"
+            >
+              <div className="flex items-center justify-between border-b border-border/20 pb-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-primary uppercase tracking-wider">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  </span>
+                  {streamedContent ? "Writing Script..." : "Planning Script..."}
+                </div>
+                {streamedTitle && (
+                  <span className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-[350px] font-medium">
+                    {streamedTitle}
+                  </span>
+                )}
+              </div>
+              <div 
+                ref={scrollRef}
+                className="text-xs sm:text-sm text-foreground/80 leading-relaxed font-outfit max-h-[250px] overflow-y-auto pr-1 space-y-3 prose prose-invert select-none scroll-smooth"
+              >
+                {streamedContent ? (
+                  <div dangerouslySetInnerHTML={{ __html: streamedContent }} />
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground text-xs animate-pulse py-2">
+                    <Loader2 className="h-3 w-3 animate-spin text-primary shrink-0" />
+                    <span>Structuring script hook, outline, and suggestions...</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
         </div>
       )}
     </div>

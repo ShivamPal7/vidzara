@@ -61,8 +61,8 @@ export interface ScriptWriterState {
 
 export const DEFAULT_SCRIPT_WRITER_STATE: ScriptWriterState = {
   prompt: "",
-  format: "long",
-  duration: "10",
+  format: "short",
+  duration: "1",
   tone: "",
   language: "english",
 }

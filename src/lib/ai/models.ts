@@ -32,9 +32,9 @@ export interface FeatureRoutingConfig {
  */
 export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
 
-  // ── Script Writer → Kimi K2.6 ────────────────────────────────────
+  // ── Script Writer → Gemini 2.5 Pro ────────────────────────────────────
   [Feature.SCRIPT_WRITER]: {
-    models: ["moonshotai/kimi-k2.6", "google/gemini-2.5-pro", "google/gemini-2.5-flash"],
+    models: ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "deepseek/deepseek-chat"],
     temperature: 0.72,
     systemPrompt: SystemPrompts.SCRIPT_WRITER_SYSTEM,
   },
@@ -60,9 +60,9 @@ export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
     systemPrompt: SystemPrompts.THUMBNAIL_CONCEPT_SYSTEM,
   },
 
-  // ── Script Shortener → Kimi K2.6 ─────────────────────────────────────────
+  // ── Script Shortener → Gemini 2.5 Pro ─────────────────────────────────────────
   [Feature.SCRIPT_SHORTENER]: {
-    models: ["moonshotai/kimi-k2.6", "google/gemini-2.5-pro", "google/gemini-2.5-flash"],
+    models: ["google/gemini-2.5-pro", "google/gemini-2.5-flash", "deepseek/deepseek-chat"],
     temperature: 0.52,
     systemPrompt: SystemPrompts.SCRIPT_SHORTENER_SYSTEM,
   },
