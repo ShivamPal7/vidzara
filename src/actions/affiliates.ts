@@ -31,6 +31,71 @@ const MIN_CREDITS_USD = 20_000;
 // Usage-credit conversion: 20 affiliate credits = 1 usage credit
 const AFFILIATE_TO_USAGE_RATE = 20;
 
+
+// ---------------------------------------------------------------------------
+// Update referral handle (self-service by affiliate)
+// ---------------------------------------------------------------------------
+
+export async function updateReferralHandle(
+  newHandle: string
+): Promise<{ success: boolean; error?: string; handle?: string }> {
+  try {
+    const userId = await getAuthenticatedUserId();
+
+    // --- Validate format: 3–40 chars, letters/numbers/hyphens/underscores only ---
+    const trimmed = newHandle.trim().toLowerCase();
+    if (!trimmed) return { success: false, error: "Handle cannot be empty." };
+    if (trimmed.length < 3)
+      return { success: false, error: "Handle must be at least 3 characters." };
+    if (trimmed.length > 40)
+      return { success: false, error: "Handle must be 40 characters or fewer." };
+    if (!/^[a-z0-9][a-z0-9_-]*[a-z0-9]$/.test(trimmed))
+      return {
+        success: false,
+        error:
+          "Handle can only contain lowercase letters, numbers, hyphens, and underscores. It must start and end with a letter or number.",
+      };
+
+    const affiliate = await prisma.affiliate.findUnique({ where: { userId } });
+    if (!affiliate) return { success: false, error: "Affiliate account not found." };
+    if (!affiliate.enabled)
+      return { success: false, error: "Your affiliate account is currently disabled." };
+
+    // --- No change needed ---
+    if (affiliate.referralCode === trimmed) return { success: true, handle: trimmed };
+
+    // --- Rate limit: 1 change per 30 days ---
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    if (affiliate.updatedAt > thirtyDaysAgo) {
+      const nextAllowed = new Date(affiliate.updatedAt.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const daysLeft = Math.ceil(
+        (nextAllowed.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      );
+      return {
+        success: false,
+        error: `You can only change your handle once every 30 days. Try again in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`,
+      };
+    }
+
+    // --- Uniqueness check ---
+    const existing = await prisma.affiliate.findUnique({
+      where: { referralCode: trimmed },
+    });
+    if (existing) return { success: false, error: "This handle is already taken. Please choose another." };
+
+    await prisma.affiliate.update({
+      where: { id: affiliate.id },
+      data: { referralCode: trimmed },
+    });
+
+    revalidatePath("/dashboard/affiliate");
+    return { success: true, handle: trimmed };
+  } catch (error) {
+    console.error("[updateReferralHandle] Error:", error);
+    return { success: false, error: "Failed to update handle. Please try again." };
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Apply for affiliate program
 // ---------------------------------------------------------------------------
