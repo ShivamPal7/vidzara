@@ -100,7 +100,7 @@ export function AffiliateReferralLink({
   };
 
   return (
-    <div className="relative overflow-hidden bg-zinc-950/40 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-6 md:p-8 space-y-5">
+    <div className="relative overflow-hidden bg-zinc-950/40 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-4 sm:p-6 md:p-8 space-y-5">
       {/* Glow blobs */}
       <div className="absolute -left-24 -bottom-24 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute right-0 top-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -175,10 +175,10 @@ export function AffiliateReferralLink({
         ) : (
           /* ── Edit mode ── */
           <div className="space-y-2">
-            {/* Editable field with prefix */}
-            <div className="flex items-center gap-2">
+            {/* Row 1: prefix + input */}
+            <div className="flex items-center">
               {/* Static prefix */}
-              <div className="shrink-0 flex items-center h-11 px-3 rounded-l-xl border border-r-0 border-zinc-700 bg-zinc-900/50 text-zinc-500 text-xs font-mono select-none">
+              <div className="shrink-0 flex items-center h-11 px-2 sm:px-3 rounded-l-xl border border-r-0 border-zinc-700 bg-zinc-900/50 text-zinc-500 text-[11px] sm:text-xs font-mono select-none whitespace-nowrap">
                 vidzara.com/ref/
               </div>
 
@@ -189,7 +189,7 @@ export function AffiliateReferralLink({
                 onChange={(e) => handleEditChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={handle}
-                className={`flex-1 h-11 rounded-l-none rounded-r-xl bg-zinc-900 border font-mono text-sm text-zinc-100 focus-visible:ring-1 focus-visible:ring-indigo-500/50 transition-colors ${
+                className={`flex-1 min-w-0 h-11 rounded-l-none rounded-r-xl bg-zinc-900 border font-mono text-sm text-zinc-100 focus-visible:ring-1 focus-visible:ring-indigo-500/50 transition-colors ${
                   validationError
                     ? "border-red-500/60 focus-visible:ring-red-500/30"
                     : "border-zinc-700 focus-visible:border-indigo-500/60"
@@ -198,23 +198,24 @@ export function AffiliateReferralLink({
                 autoComplete="off"
                 spellCheck={false}
               />
+            </div>
 
-              {/* Save button */}
+            {/* Row 2: Save + Cancel (full-width on mobile, inline on sm+) */}
+            <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 onClick={handleSave}
                 disabled={saving || !!validationError}
-                className="h-11 px-4 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white gap-1.5 shrink-0"
+                className="flex-1 sm:flex-none h-10 sm:h-11 px-4 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white gap-1.5"
               >
                 {saving ? (
                   <IconLoader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <IconCheck className="w-4 h-4" />
                 )}
-                {saving ? "Saving..." : "Save"}
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
 
-              {/* Cancel */}
               <Button
                 size="sm"
                 variant="ghost"
@@ -223,9 +224,10 @@ export function AffiliateReferralLink({
                   setValidationError(null);
                 }}
                 disabled={saving}
-                className="h-11 w-11 p-0 rounded-xl text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 shrink-0"
+                className="h-10 sm:h-11 px-4 rounded-xl text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-zinc-800"
               >
-                <IconX className="w-4 h-4" />
+                <IconX className="w-4 h-4 mr-1.5" />
+                Cancel
               </Button>
             </div>
 
