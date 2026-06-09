@@ -82,6 +82,9 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
     setGeneratedId(null)
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for headers
+
       const response = await fetch("/api/generate-script", {
         method: "POST",
         headers: {
@@ -94,7 +97,10 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
           tone: state.tone,
           language: state.language,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errJson = await response.json().catch(() => ({}));
@@ -142,10 +148,21 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
         return { title, suggestions, content };
       };
 
+      let chunkTimeoutId: NodeJS.Timeout | null = null;
+      const resetChunkTimeout = () => {
+        if (chunkTimeoutId) clearTimeout(chunkTimeoutId);
+        chunkTimeoutId = setTimeout(() => {
+          controller.abort();
+        }, 45000); // 45s mid-stream idle watchdog timeout
+      };
+
+      resetChunkTimeout();
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
+        resetChunkTimeout();
         accumulatedText += decoder.decode(value, { stream: true });
         const parsed = parseStreamedText(accumulatedText);
         
@@ -161,6 +178,8 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
           setStreamedContent(cleanContent);
         }
       }
+
+      if (chunkTimeoutId) clearTimeout(chunkTimeoutId);
 
       const finalParsed = parseStreamedText(accumulatedText);
       const scriptTitle = finalParsed.title || state.prompt || "Untitled Script";
@@ -194,7 +213,11 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
     } catch (error: any) {
       console.error("Failed to generate script:", error);
       setView("initial");
-      toast.error(error.message || "An unexpected error occurred. Please try again.");
+      const isAbort = error.name === "AbortError" || error.message?.includes("aborted");
+      toast.error(isAbort
+        ? "Script generation timed out (AI model took too long to respond). Please try again."
+        : error.message || "An unexpected error occurred. Please try again."
+      );
     }
   }
 

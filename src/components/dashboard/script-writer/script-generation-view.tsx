@@ -243,7 +243,7 @@ export function ScriptGenerationView({
           </div>
 
           {/* Real-time streaming content preview (Thought Block / Preview) */}
-          {(streamedTitle || streamedContent) && (
+          {(currentStepIndex === 2 || streamedTitle || streamedContent) && (
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
