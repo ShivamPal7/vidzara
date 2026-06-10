@@ -182,6 +182,7 @@ export async function refineScript(input: z.infer<typeof refineSchema>) {
     // with a specific refinement prompt instead of going through the full AIEngine
     const { GeminiProvider } = await import("@/lib/ai/provider");
     
+    const currentYear = new Date().getFullYear();
     const refinePrompt = `
 You are an expert YouTube scriptwriter and editor.
 Your task is to refine the following video script according to the user's instructions.
@@ -194,6 +195,10 @@ ${validated.content}
 
 Return ONLY the refined script formatted in HTML (using <h3> and <p> and <strong> tags). Do not include markdown blocks like \`\`\`html.
 Keep the parts of the script that are not affected by the instruction exactly the same.
+
+CRITICAL SYSTEM DIRECTIVE (CURRENT YEAR):
+- The current year is ${currentYear}.
+- When refining, if you mention or update references to the current year, you MUST use "${currentYear}" instead of "2024" or "2025".
 `;
 
     const result = await GeminiProvider.generateText(refinePrompt);

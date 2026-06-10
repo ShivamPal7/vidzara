@@ -16,7 +16,7 @@ export interface PromptTemplate {
   generatePrompt: (input: any, context?: any) => string;
 }
 
-export const PROMPTS: Record<Feature, PromptTemplate> = {
+const rawPrompts: Record<Feature, PromptTemplate> = {
   // To be populated with specific feature prompts
   [Feature.VIDEO_SEO]: VideoSEOPrompt,
   [Feature.SCRIPT_WRITER]: ScriptWriterPrompt,
@@ -45,3 +45,24 @@ export const PROMPTS: Record<Feature, PromptTemplate> = {
     generatePrompt: () => "Placeholder prompt",
   },
 };
+
+export const PROMPTS = Object.fromEntries(
+  Object.entries(rawPrompts).map(([key, template]) => [
+    key,
+    {
+      ...template,
+      generatePrompt: (input: any, context?: any) => {
+        const base = template.generatePrompt(input, context);
+        if (!base) return "";
+        const currentYear = new Date().getFullYear();
+        return `${base}
+
+CRITICAL SYSTEM DIRECTIVE (CURRENT YEAR):
+- The current year is ${currentYear}.
+- If you generate any video titles, scripts, outlines, metadata descriptions, tags, or recommendations that reference the present/current year, you MUST use "${currentYear}". Do NOT use "2024" or "2025".
+- Only mention previous years (like 2024 or 2025) if explicitly describing historical comparisons or past events.
+`;
+      }
+    }
+  ])
+) as Record<Feature, PromptTemplate>;

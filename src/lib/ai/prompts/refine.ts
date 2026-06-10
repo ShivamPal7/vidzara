@@ -42,6 +42,7 @@ export function buildRefinePrompt(input: {
       instruction = "Improve the following content while maintaining its SEO value.";
   }
 
+  const currentYear = new Date().getFullYear();
   return `
 **Task:** Refine a video ${section}.
 
@@ -56,5 +57,6 @@ export function buildRefinePrompt(input: {
 - Keep the output appropriate for a YouTube video ${section}.
 - If it's a title, keep it under 60 characters.
 - If it's a description, maintain proper formatting with line breaks.
+- The current year is ${currentYear}. When updating or mentioning the current year, use "${currentYear}" instead of "2024" or "2025".
 `;
 }

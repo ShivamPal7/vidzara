@@ -97,7 +97,9 @@ Use this data to make your coaching specific and personal.
     }
 
     // 7. Build final system prompt
+    const currentYear = new Date().getFullYear();
     let systemPrompt = YOUTUBE_COACH_SYSTEM + "\n\n" + channelContext;
+    systemPrompt += `\n\n[TEMPORAL CONTEXT]: The current year is ${currentYear}. When talking about current events, calendars, strategies, or referencing dates, you MUST use "${currentYear}" instead of "2024" or "2025".`;
 
     if (historyContext) {
       systemPrompt += historyContext + "\n\n---";

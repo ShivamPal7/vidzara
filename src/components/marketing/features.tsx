@@ -278,7 +278,7 @@ function SeoPreview() {
     return (
         <div className="flex flex-col gap-3 h-full justify-center">
             <div className="flex flex-wrap gap-1.5">
-                {["#viral", "#growth", "#strategy", "#2025"].map((tag, i) => (
+                {["#viral", "#growth", "#strategy", "#2026"].map((tag, i) => (
                     <span key={i} className="text-[10px] px-2 py-1 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 rounded-md font-medium">
                         {tag}
                     </span>
