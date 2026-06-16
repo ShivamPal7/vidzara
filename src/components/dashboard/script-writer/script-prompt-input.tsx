@@ -40,9 +40,10 @@ interface ScriptPromptInputProps {
   state: ScriptWriterState
   onStateChange: (state: ScriptWriterState) => void
   onSubmit?: (state: ScriptWriterState) => void
+  disabled?: boolean
 }
 
-export function ScriptPromptInput({ className, usage, state, onStateChange, onSubmit }: ScriptPromptInputProps) {
+export function ScriptPromptInput({ className, usage, state, onStateChange, onSubmit, disabled = false }: ScriptPromptInputProps) {
   const [isFocused, setIsFocused] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -180,22 +181,25 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
             ref={textareaRef}
             value={state.prompt}
             onChange={(e) => {
-              if (e.target.value.length <= MAX_CHARS) {
+              if (!disabled && e.target.value.length <= MAX_CHARS) {
                 update("prompt", e.target.value)
               }
             }}
-            onFocus={() => setIsFocused(true)}
+            disabled={disabled}
+            onFocus={() => !disabled && setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             onKeyDown={(e) => {
+              if (disabled) return
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault()
                 handleSubmit()
               }
             }}
-            placeholder={isListening ? "Listening... Speak now" : "What's your video about?"}
+            placeholder={disabled ? "Select option above or reply..." : isListening ? "Listening... Speak now" : "What's your video about?"}
             rows={1}
             className={cn(
-              "w-full resize-none bg-transparent text-sm sm:text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+              "w-full resize-none bg-transparent text-sm sm:text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:outline-none",
+              disabled && "opacity-45 cursor-not-allowed"
             )}
           />
         </div>
@@ -203,7 +207,7 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
         {/* Bottom toolbar */}
         <div className="flex items-center justify-between px-2.5 sm:px-4 pb-3 sm:pb-4 pt-0.5 sm:pt-1">
           {/* Left — option chips */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className={cn("flex items-center gap-1.5 sm:gap-2", disabled && "pointer-events-none opacity-30")}>
             {/* Options Button Popover */}
             <Popover open={popoverOpen} onOpenChange={handlePopoverOpenChange}>
               <PopoverTrigger asChild>
@@ -557,7 +561,7 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
           </div>
 
           {/* Right — usage + send */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
+          <div className={cn("flex items-center gap-1.5 sm:gap-2.5", disabled && "pointer-events-none opacity-30")}>
             {/* Generations Indicator */}
             {isProPlan ? (
               <div 

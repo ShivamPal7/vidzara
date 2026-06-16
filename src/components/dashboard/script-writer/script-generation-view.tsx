@@ -11,6 +11,9 @@ interface ScriptGenerationViewProps {
   className?: string
   hasReferenceVideo?: boolean
   onViewScript?: () => void
+  useDynamicFlow?: boolean
+  currentStepOverride?: number
+  completedStepsOverride?: number[]
 }
 
 interface Step {
@@ -77,6 +80,29 @@ const REFERENCE_STEPS: Step[] = [
   },
 ]
 
+const DYNAMIC_STEPS: Step[] = [
+  {
+    id: 1,
+    loadingMessages: ["Analyzing topic...", "Generating clarifying questions...", "Creating choices..."],
+    completedMessage: "Topic analyzed & questions generated",
+  },
+  {
+    id: 2,
+    loadingMessages: ["Waiting for your choices below...", "Customizing script hook & angle...", "Applying selected preferences..."],
+    completedMessage: "Script customized with answers",
+  },
+  {
+    id: 3,
+    loadingMessages: [
+      "Writing the first draft",
+      "Refining hook and flow",
+      "Polishing final script content",
+      "It will take some time, please wait...",
+    ],
+    completedMessage: "Script generation complete",
+  },
+]
+
 export function ScriptGenerationView({
   isGenerating,
   title,
@@ -85,6 +111,9 @@ export function ScriptGenerationView({
   onViewScript,
   streamedContent = "",
   streamedTitle = "",
+  useDynamicFlow = false,
+  currentStepOverride,
+  completedStepsOverride,
 }: ScriptGenerationViewProps & { streamedContent?: string; streamedTitle?: string }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0)
@@ -93,7 +122,19 @@ export function ScriptGenerationView({
   const wasGenerating = useRef(isGenerating)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const STEPS = hasReferenceVideo ? REFERENCE_STEPS : DEFAULT_STEPS
+  const STEPS = useDynamicFlow
+    ? DYNAMIC_STEPS
+    : hasReferenceVideo
+    ? REFERENCE_STEPS
+    : DEFAULT_STEPS
+
+  const stepIndex = currentStepOverride !== undefined ? currentStepOverride : currentStepIndex
+  const compSteps = completedStepsOverride !== undefined ? completedStepsOverride : completedSteps
+
+  // Reset message index when active step changes
+  useEffect(() => {
+    setCurrentMessageIndex(0)
+  }, [stepIndex])
 
   // Auto-scroll the live preview container to the bottom as content streams in
   useEffect(() => {
@@ -102,9 +143,9 @@ export function ScriptGenerationView({
     }
   }, [streamedContent])
 
-  // When the stream starts (first token received), immediately complete Step 1 and Step 2
+  // When the stream starts (first token received), immediately complete Step 1 and Step 2 if not overriden
   useEffect(() => {
-    if (streamedTitle || streamedContent) {
+    if ((streamedTitle || streamedContent) && currentStepOverride === undefined) {
       setCompletedSteps((prev) => {
         const next = [...prev];
         if (!next.includes(1)) next.push(1);
@@ -113,7 +154,7 @@ export function ScriptGenerationView({
       });
       setCurrentStepIndex(2); // Set active step to Step 3 ("Writing script")
     }
-  }, [streamedTitle, streamedContent]);
+  }, [streamedTitle, streamedContent, currentStepOverride]);
 
   // Detect when generation finishes: isGenerating flips false after being true
   useEffect(() => {
@@ -142,19 +183,25 @@ export function ScriptGenerationView({
   useEffect(() => {
     if (!isGenerating) return
 
-    const currentStep = STEPS[currentStepIndex]
+    const currentStep = STEPS[stepIndex]
     if (!currentStep) return
+
+    // Freeze Step 2 messages while user is answering questions
+    if (stepIndex === 1 && currentStepOverride !== undefined) {
+      setCurrentMessageIndex(0)
+      return
+    }
 
     const timer = setTimeout(() => {
       if (currentMessageIndex < currentStep.loadingMessages.length - 1) {
         // Advance to next loading message in the same step
         setCurrentMessageIndex((prev) => prev + 1)
       } else {
-        const isLastStep = currentStepIndex === STEPS.length - 1
+        const isLastStep = stepIndex === STEPS.length - 1
 
         if (isLastStep) {
-          // Don't cycle back to 0. Just stay on the last message ("It will take some time, please wait...")
-        } else {
+          // Don't cycle back to 0. Just stay on the last message
+        } else if (currentStepOverride === undefined) {
           // Finished all loading messages for this step — mark it done
           setCompletedSteps((prev) => [...prev, currentStep.id])
           setCurrentStepIndex((prev) => prev + 1)
@@ -164,7 +211,7 @@ export function ScriptGenerationView({
     }, 1200) // 1.2s per message for a more natural pace
 
     return () => clearTimeout(timer)
-  }, [isGenerating, currentStepIndex, currentMessageIndex, STEPS])
+  }, [isGenerating, stepIndex, currentMessageIndex, STEPS, currentStepOverride])
 
   return (
     <div className={cn("w-full space-y-6", className)}>
@@ -172,7 +219,7 @@ export function ScriptGenerationView({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
+          className="space-y-4 text-left"
         >
           {/* AI Response Message */}
           <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
@@ -202,12 +249,12 @@ export function ScriptGenerationView({
           </motion.div>
         </motion.div>
       ) : (
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 text-left">
           <div className="flex flex-col gap-3">
             {STEPS.map((step, idx) => {
-              const isStepCompleted = completedSteps.includes(step.id)
-              const isActive = idx === currentStepIndex && !isStepCompleted
-              const isPending = idx > currentStepIndex && !isStepCompleted
+              const isStepCompleted = compSteps.includes(step.id)
+              const isActive = idx === stepIndex && !isStepCompleted
+              const isPending = idx > stepIndex && !isStepCompleted
 
               if (isPending) return null
 
@@ -235,7 +282,7 @@ export function ScriptGenerationView({
                   >
                     {isStepCompleted
                       ? step.completedMessage
-                      : step.loadingMessages[currentMessageIndex]}
+                      : step.loadingMessages[Math.min(currentMessageIndex, step.loadingMessages.length - 1)]}
                   </span>
                 </motion.div>
               )
@@ -243,7 +290,7 @@ export function ScriptGenerationView({
           </div>
 
           {/* Real-time streaming content preview (Thought Block / Preview) */}
-          {(currentStepIndex === 2 || streamedTitle || streamedContent) && (
+          {(stepIndex === 2 || streamedTitle || streamedContent) && (
             <motion.div
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}

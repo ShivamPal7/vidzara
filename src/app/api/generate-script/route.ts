@@ -22,7 +22,7 @@ export async function POST(req: Request) {
     const userId = session.user.id;
 
     // 2. Parse request payload
-    const { prompt, format, duration, tone, language } = await req.json();
+    const { prompt, format, duration, tone, language, answers } = await req.json();
     if (!prompt) {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
@@ -61,7 +61,21 @@ export async function POST(req: Request) {
     if (!template) {
       return NextResponse.json({ error: "Prompt template missing" }, { status: 500 });
     }
-    const basePrompt = template.generatePrompt(enrichedInput);
+    let basePrompt = template.generatePrompt(enrichedInput);
+
+    if (answers && Array.isArray(answers) && answers.length > 0) {
+      const answersText = answers
+        .map((a: any) => `Question: ${a.question}\nAnswer: ${a.answer}`)
+        .join("\n");
+      basePrompt = `${basePrompt}
+
+CLARIFYING QUESTIONS & USER RESPONSES (HIGHEST PRIORITY):
+You asked the user specific questions to write a better script. They answered as follows:
+${answersText}
+
+You MUST use these answers to directly shape the hook, structure, and details of this script.
+`;
+    }
 
     // 7. Inject output format formatting directives to ensure easy plain text parsing
     const streamPrompt = `${basePrompt}
