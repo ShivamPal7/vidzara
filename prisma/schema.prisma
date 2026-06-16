@@ -34,6 +34,7 @@ model User {
   chatSessions  ChatSession[]
   affiliateApplication AffiliateApplication?
   creditLogs    CreditLog[]
+  couponUsages  CouponUsage[]
 
   @@map("user")
 }
@@ -164,17 +165,18 @@ model Competitor {
 }
 
 model Coupon {
-  id              String   @id @default(cuid())
-  code            String   @unique
+  id              String        @id @default(cuid())
+  code            String        @unique
   discountPercent Int
   expiresAt       DateTime?
   maxUses         Int?
-  usedCount       Int      @default(0)
-  perUserLimit    Int?
+  usedCount       Int           @default(0)
+  perUserLimit    Int?          @default(1)
   country         String?
-  active          Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  active          Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  usages          CouponUsage[]
 
   @@map("coupon")
 }
@@ -386,4 +388,46 @@ model CreditLog {
   createdAt DateTime @default(now())
 
   @@map("credit_log")
+}
+
+model CouponUsage {
+  id        String   @id @default(cuid())
+  couponId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usedAt    DateTime @default(now())
+
+  @@map("coupon_usage")
+}
+
+model PlanConfig {
+  id                     String   @id @default(cuid())
+  plan                   Plan     @unique
+  monthlyPriceINR        Int
+  yearlyPriceINR         Int
+  monthlyPriceUSD        Int
+  yearlyPriceUSD         Int
+  monthlyCredits         Int
+  yearlyCredits          Int
+  razorpayPlanMonthlyINR String?
+  razorpayPlanYearlyINR  String?
+  razorpayPlanMonthlyUSD String?
+  razorpayPlanYearlyUSD  String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("plan_config")
+}
+
+model DynamicPlan {
+  id           String       @id @default(cuid())
+  razorpayId   String       @unique
+  amount       Int          // subunit amount (paise/cents)
+  currency     String
+  plan         Plan
+  billingCycle BillingCycle
+  createdAt    DateTime     @default(now())
+
+  @@map("dynamic_plan")
 }

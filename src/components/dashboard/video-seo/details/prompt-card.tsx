@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KeywordPill } from "./keyword-pill";
@@ -26,6 +26,33 @@ export function PromptCard({
   const [promptValue, setPromptValue] = useState(prompt);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  const [loadingText, setLoadingText] = useState("Regenerating...");
+
+  useEffect(() => {
+    if (!isPending) {
+      setLoadingText("Regenerating...");
+      return;
+    }
+
+    const texts = [
+      "Analyzing request...",
+      "Rewriting SEO titles...",
+      "Regenerating details...",
+      "Updating metadata...",
+      "Applying adjustments...",
+    ];
+
+    let index = 0;
+    setLoadingText(texts[0]);
+
+    const interval = setInterval(() => {
+      index = (index + 1) % texts.length;
+      setLoadingText(texts[index]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isPending]);
 
   const handleRegenerate = () => {
     if (!promptValue.trim() || isPending) return;
@@ -100,7 +127,7 @@ export function PromptCard({
           ) : (
             <RefreshCw className="size-3.5" />
           )}
-          {isPending ? "Regenerating..." : "Regenerate"}
+          {isPending ? loadingText : "Regenerate"}
         </Button>
         {error && (
           <p className="text-xs text-destructive">{error}</p>

@@ -8,7 +8,7 @@ export const ScriptWriterPrompt: PromptTemplate = {
   generatePrompt: (input: any) => {
     const { prompt, format, duration, tone, language, styleAnalysis } = input;
 
-    const isShort = format === "short";
+    const isShort = format === "short" || format === "insta" || format === "instagram" || format === "tiktok";
     const durationInMinutes = parseFloat(duration) || (isShort ? 1 : 10);
     const estimatedWords = Math.round(durationInMinutes * 150);
     const timeLabel = durationInMinutes < 1 ? `${Math.round(durationInMinutes * 60)} seconds` : `${durationInMinutes} minutes`;
@@ -32,7 +32,7 @@ Your assignment: Write a script based on the following topic.
 Topic/Prompt: "${prompt}"
 
 CONSTRAINTS & PARAMETERS:
-- Format: ${format === "short" ? `Vertical Short-Form Video (TikTok / Reel / YT Short) specifically targeted for a ${timeLabel} duration.` : "Long-form YouTube Video"}
+- Format: ${isShort ? `Vertical Short-Form Video (${format === "tiktok" ? "TikTok" : format === "insta" || format === "instagram" ? "Instagram Reel" : "Shorts/Reel/TikTok"}) specifically targeted for a ${timeLabel} duration.` : "Long-form YouTube Video"}
 - Target Length: Aim for approximately ${estimatedWords} words. You should generate a comprehensive script that provides enough depth and content to match this length (which corresponds to a ${timeLabel} video at a standard speaking pace).
 - Tone/Vibe: ${tone || "Highly engaging, storytelling-driven, authoritative yet conversational"}
 - Language: STRICTLY write the ENTIRE script in ${language || "English"}. Do not use any other language. All spoken text must be in this language.

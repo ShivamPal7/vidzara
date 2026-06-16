@@ -27,6 +27,7 @@ interface ChipPopoverProps {
   align?: "start" | "center" | "end"
   /** Width class for the popover panel */
   popoverClassName?: string
+  showLabelOnMobile?: boolean
 }
 
 export function ChipPopover({
@@ -37,6 +38,7 @@ export function ChipPopover({
   className,
   align = "start",
   popoverClassName,
+  showLabelOnMobile,
 }: ChipPopoverProps) {
   const [open, setOpen] = useState(false)
   const selected = options.find((o) => o.value === value)
@@ -51,6 +53,7 @@ export function ChipPopover({
           showChevron
           active={open}
           className={className}
+          showLabelOnMobile={showLabelOnMobile}
         />
       </PopoverTrigger>
       <PopoverContent

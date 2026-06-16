@@ -38,6 +38,35 @@ export function VideoSeoSearchBar({ className, onGenerated, initialPrompt: propP
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const router = useRouter();
 
+  const [loadingText, setLoadingText] = useState("Generating...");
+
+  useEffect(() => {
+    if (!isPending) {
+      setLoadingText("Generating...");
+      return;
+    }
+
+    const texts = [
+      "Analyzing topic...",
+      "Generating SEO titles...",
+      "Crafting description...",
+      "Finding relevant tags...",
+      "Researching hashtags...",
+      "Structuring metadata...",
+      "Finalizing response...",
+    ];
+
+    let index = 0;
+    setLoadingText(texts[0]);
+
+    const interval = setInterval(() => {
+      index = (index + 1) % texts.length;
+      setLoadingText(texts[index]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isPending]);
+
   const handleToggle = useCallback((id: string) => {
     setOptions((prev) =>
       prev.map((opt) => (opt.id === id ? { ...opt, enabled: !opt.enabled } : opt))
@@ -98,7 +127,7 @@ export function VideoSeoSearchBar({ className, onGenerated, initialPrompt: propP
       ) : (
         <Sparkles className="size-4" />
       )}
-      {isPending ? "Generating..." : "Generate"}
+      {isPending ? loadingText : "Generate"}
     </Button>
   );
 
@@ -164,7 +193,7 @@ export function VideoSeoSearchBar({ className, onGenerated, initialPrompt: propP
           ) : (
             <Sparkles className="size-4" />
           )}
-          {isPending ? "Generating..." : "Generate"}
+          {isPending ? loadingText : "Generate"}
         </Button>
       </div>
 

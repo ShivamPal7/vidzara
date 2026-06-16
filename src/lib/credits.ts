@@ -18,10 +18,11 @@ export interface CreditCostContext {
 export function getCreditCost(feature: Feature, context?: CreditCostContext): number {
   switch (feature) {
     case Feature.SCRIPT_WRITER: {
-      const format = context?.format || "long";
+      const format = context?.format || "youtube";
       const durationVal = parseFloat(String(context?.duration || "10"));
+      const isShort = format === "short" || format === "insta" || format === "instagram" || format === "tiktok" || durationVal <= 3;
       
-      if (format === "short" || durationVal <= 3) {
+      if (isShort) {
         // Shorts / Reels Scripts
         if (durationVal <= 1) return 1;
         if (durationVal <= 2) return 2;
@@ -60,13 +61,15 @@ export function getCreditCost(feature: Feature, context?: CreditCostContext): nu
     }
     
     case Feature.HOOK_DETECTOR: {
-      const format = context?.format || "short";
-      return format === "long" ? 5 : 2; // Reels/Shorts hook = 2 credits, Long-form hook = 5 credits
+      const format = context?.format || "insta";
+      const isLong = format === "long" || format === "youtube";
+      return isLong ? 5 : 2; // Reels/Shorts hook = 2 credits, Long-form hook = 5 credits
     }
     
     case Feature.CONTENT_SAFETY: {
-      const format = context?.format || "short";
-      return format === "long" ? 10 : 2; // Shorts/Reels = 2 credits, Long-form = 10 credits
+      const format = context?.format || "insta";
+      const isLong = format === "long" || format === "youtube";
+      return isLong ? 10 : 2; // Shorts/Reels = 2 credits, Long-form = 10 credits
     }
     
     case Feature.TOPIC_GENERATOR: {

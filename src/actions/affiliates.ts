@@ -103,7 +103,7 @@ export async function updateReferralHandle(
 export async function applyForAffiliate(data: {
   channelLink?: string;
   niche: string;
-  socialLinks?: { instagram?: string; twitter?: string; youtube?: string };
+  socialLinks?: { instagram?: string; twitter?: string; youtube?: string; tiktok?: string };
   motivation?: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {

@@ -100,7 +100,7 @@ export default function VideoSeoDetailsPage({
 
         {/* Title Section */}
         <motion.div variants={sectionVariants}>
-          <TitleBlock title={data.title} generationId={data.id} />
+          <TitleBlock title={data.title} titles={data.titles} generationId={data.id} />
         </motion.div>
 
         {/* Description Section */}

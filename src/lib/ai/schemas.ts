@@ -13,9 +13,21 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
   }),
   
   [Feature.VIDEO_SEO]: z.object({
-    titles: z.array(z.string()).describe("5 highly engaging, high-CTR optimized titles"),
+    titles: z.array(z.string()).describe("10 highly engaging, high-CTR optimized titles"),
     description: z.string().describe("SEO optimized description with keyword rich intro and timestamps structure"),
-    tags: z.array(z.string()).describe("Targeted keyword tags list"),
+    tags: z.array(
+      z.object({
+        keyword: z.string().describe("Tag keyword"),
+        score: z.number().describe("Relevance score from 0 to 100"),
+      })
+    ).describe("Targeted keyword tags list with relevance score"),
+    hashtags: z.array(z.string()).describe("10 relevant hashtags (without the # symbol)"),
+    keywords: z.array(
+      z.object({
+        keyword: z.string().describe("Target keyword"),
+        score: z.number().describe("Relevance score from 0 to 100"),
+      })
+    ).describe("Target keywords list with relevance score"),
   }),
   
   [Feature.THUMBNAIL_CONCEPT]: z.object({

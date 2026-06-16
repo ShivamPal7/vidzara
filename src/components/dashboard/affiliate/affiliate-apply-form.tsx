@@ -36,6 +36,7 @@ export function AffiliateApplyForm({
       motivation: (formData.get("motivation") as string) || undefined,
       socialLinks: {
         instagram: (formData.get("instagram") as string) || undefined,
+        tiktok: (formData.get("tiktok") as string) || undefined,
         twitter: (formData.get("twitter") as string) || undefined,
         youtube: (formData.get("youtube") as string) || undefined,
       },
@@ -121,12 +122,21 @@ export function AffiliateApplyForm({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="instagram">Instagram Handle</Label>
                 <Input
                   id="instagram"
                   name="instagram"
+                  placeholder="@yourhandle"
+                  className="bg-zinc-900 border-zinc-800"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="tiktok">TikTok Handle</Label>
+                <Input
+                  id="tiktok"
+                  name="tiktok"
                   placeholder="@yourhandle"
                   className="bg-zinc-900 border-zinc-800"
                 />

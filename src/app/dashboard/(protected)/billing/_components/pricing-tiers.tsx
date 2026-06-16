@@ -1,23 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Coins, Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { CheckCircle2, Coins, Loader2, Tag, Percent } from "lucide-react";
 import CountUp from "react-countup";
 import Script from "next/script";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getUserCreditsAction } from "@/actions/credits";
-import { useEffect } from "react";
+import { fetchPlanPricingAction, validateCouponAction } from "@/actions/user-coupon";
+
+interface PlanConfigData {
+  plan: string;
+  monthlyPriceINR: number;
+  yearlyPriceINR: number;
+  monthlyPriceUSD: number;
+  yearlyPriceUSD: number;
+  monthlyCredits: number;
+  yearlyCredits: number;
+}
 
 export function PricingTiers({ isIndia }: { isIndia: boolean }) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string>("FREE");
   const [currentCycle, setCurrentCycle] = useState<string>("MONTHLY");
+  
+  // Dynamic Pricing Configurations
+  const [configs, setConfigs] = useState<PlanConfigData[]>([]);
+  const [loadingPricing, setLoadingPricing] = useState(true);
+
+  // Coupon States
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number } | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const router = useRouter();
 
   const fetchPlan = async () => {
@@ -32,24 +54,117 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
     }
   };
 
+  const loadPricingConfigs = async () => {
+    try {
+      setLoadingPricing(true);
+      const result = await fetchPlanPricingAction();
+      if (result.success) {
+        setConfigs(result.configs as PlanConfigData[]);
+      }
+    } catch (e) {
+      console.error("Failed to load pricing configurations:", e);
+    } finally {
+      setLoadingPricing(false);
+    }
+  };
+
   useEffect(() => {
     fetchPlan();
+    loadPricingConfigs();
+
     const handleCreditsUpdated = () => fetchPlan();
     window.addEventListener("credits-updated", handleCreditsUpdated);
     return () => window.removeEventListener("credits-updated", handleCreditsUpdated);
   }, []);
 
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+
+    try {
+      setIsValidating(true);
+      setValidationError(null);
+
+      // Validate against the current selected cycle and a representative plan (LIMITED_PRO)
+      const res = await validateCouponAction({
+        code,
+        plan: "LIMITED_PRO", // representative check for validity
+        billingCycle: billingCycle === "monthly" ? "MONTHLY" : "YEARLY",
+        isIndia,
+      });
+
+      if (res.success) {
+        setAppliedCoupon({
+          code: res.code,
+          discountPercent: res.discountPercent,
+        });
+        toast.success(`Coupon "${res.code}" applied successfully!`);
+      } else {
+        setValidationError(res.error);
+        toast.error(res.error);
+      }
+    } catch (error: any) {
+      setValidationError(error.message || "Failed to validate coupon.");
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setValidationError(null);
+    toast.info("Coupon code removed.");
+  };
+
   const currencySymbol = isIndia ? "₹" : "$";
 
+  // Base configurations (fallback if loading)
   const starterPrice = isIndia ? 99 : 1;
-  
-  const creatorMonthly = isIndia ? 999 : 19;
-  const creatorYearly = isIndia ? 7999 : 190;
-  const creatorSave = isIndia ? 3990 : 38;
+  const starterCredits = 150;
 
-  const studioMonthly = isIndia ? 3499 : 59;
-  const studioYearly = isIndia ? 27999 : 590;
-  const studioSave = isIndia ? 13989 : 118;
+  let creatorMonthly = isIndia ? 999 : 19;
+  let creatorYearly = isIndia ? 7999 : 190;
+  let creatorCredits = 1200;
+
+  let studioMonthly = isIndia ? 3499 : 59;
+  let studioYearly = isIndia ? 27999 : 590;
+  let studioCredits = 6000;
+
+  // Match configurations from DB
+  const creatorConfig = configs.find((c) => c.plan === "LIMITED_PRO");
+  const studioConfig = configs.find((c) => c.plan === "UNLIMITED_PRO");
+
+  if (creatorConfig) {
+    creatorMonthly = isIndia ? creatorConfig.monthlyPriceINR : creatorConfig.monthlyPriceUSD;
+    creatorYearly = isIndia ? creatorConfig.yearlyPriceINR : creatorConfig.yearlyPriceUSD;
+    creatorCredits = creatorConfig.monthlyCredits;
+  }
+
+  if (studioConfig) {
+    studioMonthly = isIndia ? studioConfig.monthlyPriceINR : studioConfig.monthlyPriceUSD;
+    studioYearly = isIndia ? studioConfig.yearlyPriceINR : studioConfig.yearlyPriceUSD;
+    studioCredits = studioConfig.monthlyCredits;
+  }
+
+  // Savings
+  const creatorSave = creatorMonthly * 12 - creatorYSaveValue();
+  function creatorYSaveValue() {
+    return creatorYearly;
+  }
+  const studioSave = studioMonthly * 12 - studioYearly;
+
+  // Apply Coupon Discounts
+  const calculateDiscount = (price: number) => {
+    if (!appliedCoupon) return price;
+    const discount = Math.round((price * appliedCoupon.discountPercent) / 100);
+    return price - discount;
+  };
+
+  const finalCreatorMonthly = calculateDiscount(creatorMonthly);
+  const finalCreatorYearly = calculateDiscount(creatorYearly);
+  const finalStudioMonthly = calculateDiscount(studioMonthly);
+  const finalStudioYearly = calculateDiscount(studioYearly);
 
   const handleSubscribe = async (planKey: string) => {
     try {
@@ -58,7 +173,11 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
       const response = await fetch("/api/razorpay/create-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planType: planKey }),
+        body: JSON.stringify({ 
+          planType: planKey,
+          isIndia: isIndia,
+          couponCode: appliedCoupon ? appliedCoupon.code : undefined
+        }),
       });
       
       const subscription = await response.json();
@@ -74,12 +193,16 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
           const verifyRes = await fetch("/api/razorpay/verify", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(response),
+            body: JSON.stringify({
+              ...response,
+              couponCode: appliedCoupon ? appliedCoupon.code : undefined
+            }),
           });
           
           if (verifyRes.ok) {
             toast.success("Subscription successful!");
             window.dispatchEvent(new Event("credits-updated"));
+            router.refresh();
           } else {
             toast.error("Subscription verification failed.");
           }
@@ -94,9 +217,9 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
         toast.error("Payment failed. Please try again.");
       });
       rzp.open();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      toast.error("Something went wrong initializing subscription.");
+      toast.error(error.message || "Something went wrong initializing subscription.");
     } finally {
       setLoadingPlan(null);
     }
@@ -105,8 +228,9 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
   return (
     <>
       <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      
       {/* Billing Cycle Switcher */}
-      <div className="flex justify-center pt-4 pb-2">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4 pb-2">
         <Tabs
           value={billingCycle}
           onValueChange={(val) => setBillingCycle(val as "monthly" | "yearly")}
@@ -144,7 +268,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
               </span>
             </div>
             <div className="text-xs font-semibold text-primary mt-2 flex items-center gap-1.5">
-              <Coins className="w-3.5 h-3.5" /> 150 Credits Included
+              <Coins className="w-3.5 h-3.5" /> {starterCredits} Credits Included
             </div>
           </CardHeader>
           <CardContent className="flex-1 space-y-4 px-4 sm:px-6">
@@ -154,7 +278,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span className="font-medium">150 AI Credits</span>
+                <span className="font-medium">{starterCredits} AI Credits</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -191,7 +315,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
 
         {/* Tier 2: Creator Pro */}
         <Card className="flex flex-col relative border-primary shadow-md hover:shadow-lg transition-all transform md:-translate-y-1">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
             <Badge className="bg-primary text-primary-foreground font-semibold px-3 py-1 shadow-sm uppercase tracking-widest text-[9px]">
               ⭐️ Most Popular
             </Badge>
@@ -210,7 +334,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
               <div className="flex items-baseline text-4xl font-extrabold tracking-tight">
                 {currencySymbol}
                 <CountUp 
-                  end={billingCycle === "monthly" ? creatorMonthly : creatorYearly} 
+                  end={billingCycle === "monthly" ? finalCreatorMonthly : finalCreatorYearly} 
                   duration={0.8} 
                   separator="," 
                   preserveValue 
@@ -219,15 +343,22 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
                   / {billingCycle === "monthly" ? "month" : "year"}
                 </span>
               </div>
+              
+              {appliedCoupon && (
+                <span className="text-xs text-zinc-500 line-through">
+                  Original: {currencySymbol}{billingCycle === "monthly" ? creatorMonthly : creatorYearly}
+                </span>
+              )}
+
               {billingCycle === "yearly" && (
                 <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  Save {currencySymbol}{creatorSave} / year
+                  Save {currencySymbol}{appliedCoupon ? (creatorMonthly * 12 - finalCreatorYearly) : creatorSave} / year
                 </span>
               )}
             </div>
 
             <div className="text-xs font-semibold text-primary mt-2 flex items-center gap-1.5">
-              <Coins className="w-3.5 h-3.5" /> 1,200 Credits / month
+              <Coins className="w-3.5 h-3.5" /> {creatorCredits.toLocaleString()} Credits / month
             </div>
           </CardHeader>
           <CardContent className="flex-1 space-y-4 px-4 sm:px-6">
@@ -237,7 +368,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span className="font-medium">1200 AI Credits / Month</span>
+                <span className="font-medium">{creatorCredits.toLocaleString()} AI Credits / Month</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -299,7 +430,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
               <div className="flex items-baseline text-4xl font-extrabold tracking-tight">
                 {currencySymbol}
                 <CountUp 
-                  end={billingCycle === "monthly" ? studioMonthly : studioYearly} 
+                  end={billingCycle === "monthly" ? finalStudioMonthly : finalStudioYearly} 
                   duration={0.8} 
                   separator="," 
                   preserveValue 
@@ -308,15 +439,22 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
                   / {billingCycle === "monthly" ? "month" : "year"}
                 </span>
               </div>
+              
+              {appliedCoupon && (
+                <span className="text-xs text-zinc-500 line-through">
+                  Original: {currencySymbol}{billingCycle === "monthly" ? studioMonthly : studioYearly}
+                </span>
+              )}
+
               {billingCycle === "yearly" && (
                 <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                  Save {currencySymbol}{studioSave} / year
+                  Save {currencySymbol}{appliedCoupon ? (studioMonthly * 12 - finalStudioYearly) : studioSave} / year
                 </span>
               )}
             </div>
 
             <div className="text-xs font-semibold text-primary mt-2 flex items-center gap-1.5">
-              <Coins className="w-3.5 h-3.5" /> 6,000 Credits / month
+              <Coins className="w-3.5 h-3.5" /> {studioCredits.toLocaleString()} Credits / month
             </div>
           </CardHeader>
           <CardContent className="flex-1 space-y-4 px-4 sm:px-6">
@@ -326,7 +464,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span className="font-medium">6000 AI Credits / Month</span>
+                <span className="font-medium">{studioCredits.toLocaleString()} AI Credits / Month</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
@@ -374,6 +512,62 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
             </Button>
           </CardFooter>
         </Card>
+      </div>
+
+      {/* Coupon Application Zone */}
+      <div className="max-w-md mx-auto mt-8 bg-zinc-950/30 p-4 border border-zinc-800/80 rounded-xl backdrop-blur-sm shadow-xl animate-in fade-in duration-200">
+        <div className="space-y-2">
+          <Label htmlFor="promo-code" className="text-zinc-400 text-xs font-semibold uppercase tracking-wider flex items-center gap-1">
+            <Tag className="w-3.5 h-3.5" /> Have a Coupon Code?
+          </Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                id="promo-code"
+                type="text"
+                placeholder="ENTER PROMO CODE"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 pl-9 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono tracking-wider"
+                value={couponInput}
+                onChange={(e) => {
+                  setCouponInput(e.target.value.toUpperCase());
+                  setValidationError(null);
+                }}
+                disabled={!!appliedCoupon}
+              />
+              <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+            </div>
+            
+            {appliedCoupon ? (
+              <Button 
+                variant="destructive" 
+                onClick={handleRemoveCoupon}
+                className="px-4 py-2 font-medium text-sm rounded-lg"
+              >
+                Remove
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleApplyCoupon} 
+                disabled={isValidating || !couponInput.trim()}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm rounded-lg px-4 py-2"
+              >
+                {isValidating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+              </Button>
+            )}
+          </div>
+          
+          {validationError && (
+            <p className="text-rose-500 text-xs mt-1 font-medium">
+              ⚠️ {validationError}
+            </p>
+          )}
+          
+          {appliedCoupon && (
+            <p className="text-emerald-400 text-xs mt-1 flex items-center gap-1 font-medium">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" /> Coupon "{appliedCoupon.code}" successfully applied! ({appliedCoupon.discountPercent}% OFF)
+            </p>
+          )}
+        </div>
       </div>
     </>
   );

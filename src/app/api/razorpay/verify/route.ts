@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import Razorpay from "razorpay";
-import { prisma } from "@/lib/prisma";
+import { prisma, Plan, BillingCycle, SubscriptionStatus, Gateway } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { Plan, BillingCycle, SubscriptionStatus, Gateway } from "../../../../../prisma/generated/prisma/enums";
 import { sendEmail } from "@/lib/email";
 
 const razorpay = new Razorpay({
@@ -28,7 +27,8 @@ export async function POST(req: NextRequest) {
       razorpay_payment_id, 
       razorpay_order_id, 
       razorpay_subscription_id, 
-      razorpay_signature 
+      razorpay_signature,
+      couponCode
     } = await req.json();
 
     const secret = process.env.RAZORPAY_KEY_SECRET;
@@ -89,30 +89,72 @@ export async function POST(req: NextRequest) {
       let dbCycle: BillingCycle = BillingCycle.MONTHLY;
       let creditsToAdd = 0;
 
-      if (planId === process.env.RAZORPAY_PLAN_CREATOR_MONTHLY_INR) {
-        dbPlan = Plan.LIMITED_PRO;
-        dbCycle = BillingCycle.MONTHLY;
-        creditsToAdd = 1200;
-      } else if (planId === process.env.RAZORPAY_PLAN_CREATOR_YEARLY_INR) {
-        dbPlan = Plan.LIMITED_PRO;
-        dbCycle = BillingCycle.YEARLY;
-        creditsToAdd = 14400; // 1200 * 12
-      } else if (planId === process.env.RAZORPAY_PLAN_STUDIO_MONTHLY_INR) {
-        dbPlan = Plan.UNLIMITED_PRO;
-        dbCycle = BillingCycle.MONTHLY;
-        creditsToAdd = 6000;
-      } else if (planId === process.env.RAZORPAY_PLAN_STUDIO_YEARLY_INR) {
-        dbPlan = Plan.UNLIMITED_PRO;
-        dbCycle = BillingCycle.YEARLY;
-        creditsToAdd = 72000; // 6000 * 12
+      // 1. Look up plan in PlanConfig
+      const planConfig = await prisma.planConfig.findFirst({
+        where: {
+          OR: [
+            { razorpayPlanMonthlyINR: planId },
+            { razorpayPlanYearlyINR: planId },
+            { razorpayPlanMonthlyUSD: planId },
+            { razorpayPlanYearlyUSD: planId },
+          ]
+        }
+      });
+
+      if (planConfig) {
+        dbPlan = planConfig.plan;
+        const isYearly = planConfig.razorpayPlanYearlyINR === planId || planConfig.razorpayPlanYearlyUSD === planId;
+        dbCycle = isYearly ? BillingCycle.YEARLY : BillingCycle.MONTHLY;
+        creditsToAdd = isYearly ? planConfig.yearlyCredits : planConfig.monthlyCredits;
+      } else {
+        // 2. Look up in DynamicPlan
+        const dynamicPlan = await prisma.dynamicPlan.findUnique({
+          where: { razorpayId: planId }
+        });
+        if (dynamicPlan) {
+          dbPlan = dynamicPlan.plan;
+          dbCycle = dynamicPlan.billingCycle;
+          
+          const baseConfig = await prisma.planConfig.findUnique({
+            where: { plan: dbPlan }
+          });
+          if (baseConfig) {
+            creditsToAdd = dbCycle === BillingCycle.YEARLY ? baseConfig.yearlyCredits : baseConfig.monthlyCredits;
+          } else {
+            creditsToAdd = dbPlan === Plan.UNLIMITED_PRO ? 6000 : 1200;
+          }
+        } else {
+          // 3. Fallback to existing environment variables
+          if (planId === process.env.RAZORPAY_PLAN_CREATOR_MONTHLY_INR) {
+            dbPlan = Plan.LIMITED_PRO;
+            dbCycle = BillingCycle.MONTHLY;
+            creditsToAdd = 1200;
+          } else if (planId === process.env.RAZORPAY_PLAN_CREATOR_YEARLY_INR) {
+            dbPlan = Plan.LIMITED_PRO;
+            dbCycle = BillingCycle.YEARLY;
+            creditsToAdd = 14400; // 1200 * 12
+          } else if (planId === process.env.RAZORPAY_PLAN_STUDIO_MONTHLY_INR) {
+            dbPlan = Plan.UNLIMITED_PRO;
+            dbCycle = BillingCycle.MONTHLY;
+            creditsToAdd = 6000;
+          } else if (planId === process.env.RAZORPAY_PLAN_STUDIO_YEARLY_INR) {
+            dbPlan = Plan.UNLIMITED_PRO;
+            dbCycle = BillingCycle.YEARLY;
+            creditsToAdd = 72000; // 6000 * 12
+          }
+        }
       }
 
-      await prisma.$transaction([
-        prisma.user.update({
+      // 4. Update Database inside a transaction
+      await prisma.$transaction(async (tx) => {
+        // Increment user credits
+        await tx.user.update({
           where: { id: userId },
           data: { credits: { increment: creditsToAdd } }
-        }),
-        prisma.subscription.upsert({
+        });
+
+        // Set or update subscription
+        await tx.subscription.upsert({
           where: { userId },
           update: {
             plan: dbPlan,
@@ -131,8 +173,33 @@ export async function POST(req: NextRequest) {
             gatewaySubscriptionId: razorpay_subscription_id,
             currentPeriodEnd: new Date(Number(subscription.current_end) * 1000),
           }
-        })
-      ]);
+        });
+
+        // Record coupon code usage if present
+        if (couponCode) {
+          const cleanCode = couponCode.trim().toUpperCase();
+          const coupon = await tx.coupon.findUnique({
+            where: { code: cleanCode }
+          });
+          if (coupon && coupon.active) {
+            const existingUsage = await tx.couponUsage.findFirst({
+              where: { couponId: coupon.id, userId }
+            });
+            if (!existingUsage) {
+              await tx.coupon.update({
+                where: { id: coupon.id },
+                data: { usedCount: { increment: 1 } }
+              });
+              await tx.couponUsage.create({
+                data: {
+                  couponId: coupon.id,
+                  userId
+                }
+              });
+            }
+          }
+        }
+      });
 
       // Welcome Email for Pro Subscription
       try {

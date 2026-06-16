@@ -1,3 +1,4 @@
+// Hot-reload trigger: Schema updated on 2026-06-12 (added PlanConfig & CouponUsage)
 import { PrismaClient } from "../../prisma/generated/prisma/client";
 export * from "../../prisma/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
