@@ -4,6 +4,7 @@ import { Features } from "../../components/marketing/features";
 import { Pricing } from "../../components/marketing/pricing";
 import { Testimonials } from "../../components/marketing/testimonials";
 import { FAQ } from "../../components/marketing/faq";
+import { AboutVidzara } from "../../components/marketing/about-vidzara";
 
 export default function Home() {
   return (
@@ -14,6 +15,7 @@ export default function Home() {
       <Testimonials />
       <Pricing />
       <FAQ />
+      <AboutVidzara />
     </div>
   );
 }

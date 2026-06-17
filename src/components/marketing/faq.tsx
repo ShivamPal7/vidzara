@@ -23,8 +23,8 @@ const leftColumnFaqs: FAQItem[] = [
         answer: "You can track your usage directly from the dashboard, including tool usage and limits."
     },
     {
-        question: "What is a fair usage policy?",
-        answer: "Unlimited plans are designed for genuine creator usage. Excessive or automated abuse may be restricted."
+        question: "Why request YouTube permissions?",
+        answer: "To power your Creator Growth Dashboard, we request read-only access to channel stats and analytics. We only use this data to display insights. We never request edit/upload access, and your data is kept private."
     },
     {
         question: "Can I generate content in multiple languages?",

@@ -28,10 +28,21 @@ export interface ThumbnailRowProps {
 export interface ThumbnailConceptDetail {
   id: string;
   textIdea: string;
+  textIdeas?: string[];
   emotion: string;
   layout: string;
   colors: string[];
   imagePrompt?: string;
+  thumbnailPrompt?: {
+    textPlacement: string;
+    subject: string;
+    facialExpression: string;
+    background: string;
+    composition: string;
+    lighting: string;
+    colorsDescription: string;
+    midjourneyPrompt: string;
+  };
 }
 
 export interface ThumbnailDetails {

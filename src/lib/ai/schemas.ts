@@ -32,11 +32,22 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
   
   [Feature.THUMBNAIL_CONCEPT]: z.object({
     concepts: z.array(z.object({
-      textIdea: z.string().describe("Engaging short click-optimized text on the thumbnail (max 4 words)"),
+      textIdea: z.string().describe("Primary engaging short click-optimized text on the thumbnail (max 4 words)"),
+      textIdeas: z.array(z.string()).length(5).describe("Exactly 5 different clickable/engaging text ideas for the thumbnail (max 4 words each)"),
       emotion: z.string().describe("Suggested facial expression or emotion"),
       layout: z.string().describe("Detailed description of composition layout"),
       colors: z.array(z.string()).describe("Suggested high-contrast hex color codes"),
       imagePrompt: z.string().optional().describe("A highly detailed AI image generator prompt for Midjourney/Stable Diffusion (if enabled)"),
+      thumbnailPrompt: z.object({
+        textPlacement: z.string().describe("Where to place the text options and how to style them (font, background plates, outlines)"),
+        subject: z.string().describe("Description of the primary subject (look, clothing, position)"),
+        facialExpression: z.string().describe("Exaggerated facial expression, gaze direction, and emotional trigger"),
+        background: z.string().describe("Background environment, key objects, and depth of field"),
+        composition: z.string().describe("Camera shot type, framing, Rule of Thirds layout, and focal alignment"),
+        lighting: z.string().describe("Lighting style, source direction, intensity, and neon/contrast accents"),
+        colorsDescription: z.string().describe("Color psychology choices, high-contrast pairs, and dark-mode optimization details"),
+        midjourneyPrompt: z.string().describe("A complete ready-to-use Midjourney/DALL-E 3 image generation prompt string incorporating all visual details"),
+      }).describe("Complete ready-to-use thumbnail creation prompt components"),
     })),
   }),
   
