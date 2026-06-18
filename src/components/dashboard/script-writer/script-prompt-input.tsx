@@ -7,6 +7,7 @@ import { ArrowRight, Mic, Sparkles, Youtube, Clock, Globe, Plus, ChevronRight, C
 import { ChipPopover } from "@/components/dashboard/shared/chip-popover"
 import { PromptChip } from "@/components/dashboard/shared/prompt-chip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useCredits } from "@/components/dashboard/credits-provider"
 
 const PRESET_TONES = [
   "Professional",
@@ -44,6 +45,7 @@ interface ScriptPromptInputProps {
 }
 
 export function ScriptPromptInput({ className, usage, state, onStateChange, onSubmit, disabled = false }: ScriptPromptInputProps) {
+  const { credits, plan, subscriptionStatus } = useCredits()
   const [isFocused, setIsFocused] = useState(false)
   const [isListening, setIsListening] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -160,7 +162,10 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
     value: ScriptWriterState[K]
   ) => onStateChange({ ...state, [key]: value })
 
-  const isProPlan = usage.limit >= 50
+  const isPaidSubscription = plan && plan !== "FREE" && subscriptionStatus !== "TRIALING"
+  const isTrial = !plan || plan === "FREE" || subscriptionStatus === "TRIALING"
+  const isLowCredits = credits !== null && credits < 100
+  const shouldShowCredits = isTrial || isLowCredits
 
   return (
     <motion.div
@@ -563,23 +568,32 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
           {/* Right — usage + send */}
           <div className={cn("flex items-center gap-1.5 sm:gap-2.5", disabled && "pointer-events-none opacity-30")}>
             {/* Generations Indicator */}
-            {isProPlan ? (
+            {shouldShowCredits ? (
               <div 
-                className="inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary px-3 py-1.5 gap-1.5 text-xs font-medium select-none"
-                title="Pro Plan Active"
-              >
-                <Sparkles className="size-3.5 shrink-0" strokeWidth={2} />
-                <span className="font-semibold">PRO</span>
-              </div>
-            ) : (
-              <div 
-                className="inline-flex items-center justify-center rounded-full border border-border/40 bg-muted/40 text-foreground/80 px-3 py-1.5 gap-1.5 text-xs font-medium select-none"
-                title={`${usage.remaining} generations remaining`}
+                className="inline-flex items-center justify-center rounded-full border border-border/40 bg-muted/40 text-foreground/80 px-3 py-1.5 gap-1.5 text-xs font-medium select-none shrink-0"
+                title={`${credits !== null ? credits : "..."} credits remaining`}
               >
                 <Sparkles className="size-3.5 text-primary shrink-0" strokeWidth={2} />
-                <span>{usage.remaining} left</span>
+                <span>
+                  {credits !== null ? (
+                    <>
+                      <span>{credits}</span>
+                      <span className="hidden sm:inline"> left</span>
+                    </>
+                  ) : (
+                    "Loading..."
+                  )}
+                </span>
               </div>
-            )}
+            ) : isPaidSubscription ? (
+              <div 
+                className="inline-flex items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-primary px-3 py-1.5 gap-1.5 text-xs font-medium select-none shrink-0"
+                title="Plan Active"
+              >
+                <Sparkles className="size-3.5 shrink-0" strokeWidth={2} />
+                <span className="font-semibold">{plan === "UNLIMITED_PRO" ? "UNLIMITED" : "PRO"}</span>
+              </div>
+            ) : null}
 
             {/* Mic / Send button */}
             <AnimatePresence mode="wait">

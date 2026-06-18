@@ -36,12 +36,12 @@ export function NavMain({
           <SidebarMenuItem className="flex items-center gap-2">
             <SidebarMenuButton
               asChild
-              tooltip="Quick Create"
+              tooltip="New Chat"
               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
             >
               <Link href="/dashboard/new">
                 <IconCirclePlusFilled />
-                <span>Quick Create</span>
+                <span>New Chat</span>
               </Link>
             </SidebarMenuButton>
             <Button

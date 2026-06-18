@@ -18,6 +18,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { useCredits } from "@/components/dashboard/credits-provider";
+import { getCreditCost } from "@/lib/credits";
+import { Feature } from "../../../../prisma/generated/prisma/enums";
+
 interface CompetitorManagerModalProps {
   onChange: (competitorIds: string[]) => void;
   selectedIds: string[];
@@ -33,6 +37,7 @@ export function CompetitorManagerModal({
   setCompetitors,
   children 
 }: CompetitorManagerModalProps) {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   const [open, setOpen] = useState(false);
   
   // Search state
@@ -42,8 +47,6 @@ export function CompetitorManagerModal({
   const [isSearching, setIsSearching] = useState(false);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  // Initial Fetch removed - now handled by parent
 
   // Debounce logic
   useEffect(() => {
@@ -90,7 +93,15 @@ export function CompetitorManagerModal({
   };
 
   const handleAdd = async (channel: any) => {
+    const cost = getCreditCost(Feature.COMPETITORS);
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Competitor Analysis", cost);
+      return;
+    }
+
     setAddingId(channel.channelId);
+    deductCreditsLocal(cost);
     const result = await addCompetitorDirectly(channel);
     if (result.success && result.data) {
       toast.success("Competitor added!");
@@ -107,7 +118,8 @@ export function CompetitorManagerModal({
       setSearchQuery("");
       setSearchResults([]);
     } else {
-      toast.error(result.error || "Failed to add competitor");
+      deductCreditsLocal(-cost);
+      toast.error(result.error || "Failed to add competitor.");
     }
     setAddingId(null);
   };

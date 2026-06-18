@@ -7,8 +7,17 @@ interface GeoInfo {
 
 export async function getGeoInfo(): Promise<GeoInfo> {
   const headersList = await headers();
-  const country = headersList.get("x-vercel-ip-country") || "US";
+  let country = headersList.get("x-vercel-ip-country");
 
+  if (!country && process.env.NODE_ENV !== "production") {
+    // Local development fallback based on timezone
+    const systemTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (systemTimeZone === "Asia/Calcutta" || systemTimeZone === "Asia/Kolkata") {
+      country = "IN";
+    }
+  }
+
+  country = country || "US";
   const isIndia = country === "IN";
 
   return {

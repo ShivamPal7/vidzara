@@ -26,9 +26,10 @@ interface PlanConfigData {
 
 export function PricingTiers({ isIndia }: { isIndia: boolean }) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState<string>("FREE");
   const [currentCycle, setCurrentCycle] = useState<string>("MONTHLY");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   
   // Dynamic Pricing Configurations
   const [configs, setConfigs] = useState<PlanConfigData[]>([]);
@@ -48,6 +49,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
       if (result.success) {
         setCurrentPlan(result.plan || "FREE");
         setCurrentCycle(result.billingCycle || "MONTHLY");
+        setSubscriptionStatus(result.subscriptionStatus || null);
       }
     } catch (e) {
       console.error("Failed to fetch user plan", e);
@@ -121,7 +123,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
 
   // Base configurations (fallback if loading)
   const starterPrice = isIndia ? 99 : 1;
-  const starterCredits = 150;
+  const starterCredits = 100;
 
   let creatorMonthly = isIndia ? 999 : 19;
   let creatorYearly = isIndia ? 7999 : 190;
@@ -165,6 +167,9 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
   const finalCreatorYearly = calculateDiscount(creatorYearly);
   const finalStudioMonthly = calculateDiscount(studioMonthly);
   const finalStudioYearly = calculateDiscount(studioYearly);
+
+  const isStarterActive = currentPlan === "LIMITED_PRO" && subscriptionStatus === "TRIALING";
+  const isCreatorActive = currentPlan === "LIMITED_PRO" && subscriptionStatus !== "TRIALING";
 
   const handleSubscribe = async (planKey: string) => {
     try {
@@ -307,8 +312,14 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
             </ul>
           </CardContent>
           <CardFooter className="pt-4 px-4 sm:px-6">
-            <Button className="w-full" variant="outline">
-              Start {isIndia ? "7-Day" : "3-Day"} Trial
+            <Button 
+              className="w-full" 
+              variant={isStarterActive ? "default" : "outline"}
+              disabled={isStarterActive || loadingPlan === (isIndia ? "trial_creator_monthly_inr" : "trial_creator_monthly_usd")}
+              onClick={() => handleSubscribe(isIndia ? "trial_creator_monthly_inr" : "trial_creator_monthly_usd")}
+            >
+              {loadingPlan === (isIndia ? "trial_creator_monthly_inr" : "trial_creator_monthly_usd") ? <Loader2 className="w-5 h-5 animate-spin" /> :
+               isStarterActive ? "Current Plan" : `Start ${isIndia ? "7-Day" : "3-Day"} Trial`}
             </Button>
           </CardFooter>
         </Card>
@@ -408,10 +419,10 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
             <Button 
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm"
               onClick={() => handleSubscribe(`creator_${billingCycle}_inr`)}
-              disabled={loadingPlan === `creator_${billingCycle}_inr` || (currentPlan === "LIMITED_PRO" && currentCycle.toLowerCase() === billingCycle)}
+              disabled={loadingPlan === `creator_${billingCycle}_inr` || isCreatorActive}
             >
               {loadingPlan === `creator_${billingCycle}_inr` ? <Loader2 className="w-5 h-5 animate-spin" /> : 
-               (currentPlan === "LIMITED_PRO" && currentCycle.toLowerCase() === billingCycle) ? "Current Plan" : "Upgrade to Pro"}
+               isCreatorActive ? "Current Plan" : "Upgrade to Pro"}
             </Button>
           </CardFooter>
         </Card>

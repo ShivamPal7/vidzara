@@ -64,4 +64,9 @@ export const FEATURES: Record<Feature, FeatureMetadata> = {
     description: 'Track your channel growth and get actionable insights.',
     route: '/dashboard/growth',
   },
+  [Feature.CHAT]: {
+    label: 'AI Chat Coach',
+    description: 'Chat with our AI YouTube coach for growth strategies.',
+    route: '/dashboard/new',
+  },
 };

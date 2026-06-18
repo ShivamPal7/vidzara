@@ -28,6 +28,9 @@ import {
 } from "@tabler/icons-react";
 import { generateNicheIdeas, getSubCategories, getSubSubCategories } from "@/actions/niche-finder";
 import { cn } from "@/lib/utils";
+import { useCredits } from "@/components/dashboard/credits-provider";
+import { getCreditCost } from "@/lib/credits";
+import { Feature } from "../../../../prisma/generated/prisma/enums";
 
 interface NicheFinderFormProps {
   onGenerated: (result?: any) => void;
@@ -128,6 +131,7 @@ const slideVariants = {
 };
 
 export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   // Wizard States
   const [country, setCountry] = useState("India");
   const [category, setCategory] = useState("");
@@ -203,14 +207,10 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
         return;
       }
       setStep([4, 1]);
-      await fetchSubSubCategories(category, subCategory.trim());
     } else if (step === 4) {
-      // Sub-sub-category is optional, allow skipping if not filled
       setStep([5, 1]);
     } else if (step === 5) {
       setStep([6, 1]);
-    } else if (step === 6) {
-      setStep([7, 1]);
     }
   };
 
@@ -236,7 +236,6 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
   const handleSubCategoryClick = async (sub: string) => {
     setSubCategory(sub);
     setStep([4, 1]);
-    await fetchSubSubCategories(category, sub);
   };
 
   const handleSubSubCategoryClick = (subSub: string) => {
@@ -252,6 +251,15 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
   };
 
   const handleGenerate = () => {
+    const cost = getCreditCost(Feature.NICHE_FINDER);
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Niche Finder", cost);
+      return;
+    }
+
+    deductCreditsLocal(cost);
+
     startTransition(async () => {
       const payload = {
         country,
@@ -275,6 +283,7 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
           isFavorite: false,
         });
       } else {
+        deductCreditsLocal(-cost);
         toast.error(result.error || "Failed to discover niches. Try again.");
       }
     });
@@ -284,7 +293,6 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
     "Target Country",
     "General Category",
     "Sub-Category",
-    "Specific Topic",
     "Skill Level",
     "Content Format",
     "Confirm Details",
@@ -297,7 +305,7 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
         <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4 border-b border-border/40">
           <div>
             <p className="text-[10px] uppercase tracking-widest font-semibold text-primary font-outfit mb-0.5">
-              Step {step} of 7
+              Step {step} of 6
             </p>
             <h2 className="text-lg sm:text-xl font-bold text-foreground font-outfit">
               {STEP_TITLES[step - 1]}
@@ -305,7 +313,7 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
           </div>
 
           <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
                 key={s}
                 className={cn(
@@ -468,64 +476,8 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                 </div>
               )}
 
-              {/* STEP 4: Specific Topic */}
+              {/* STEP 4: Skill Level */}
               {step === 4 && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground font-medium">
-                      Select or enter a specific topic/niche (optional):
-                    </p>
-                    <div className="relative">
-                      <IconTarget className="absolute left-3.5 top-2.5 h-4.5 w-4.5 text-muted-foreground/50" />
-                      <Input
-                        id="subsubcategory-input"
-                        placeholder="e.g. Horror Stories, BGMI, Cryptocurrency..."
-                        value={subSubCategory}
-                        onChange={(e) => setSubSubCategory(e.target.value.slice(0, 100))}
-                        disabled={isPending}
-                        onKeyDown={handleKeyDown}
-                        className="pl-10 text-sm rounded-xl border-border/50 bg-background/30 focus-visible:ring-primary/30 h-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-2.5 font-medium">
-                      Niches in <span className="text-primary font-semibold">"{subCategory}"</span>:
-                    </p>
-                    {loadingSubSubCategories ? (
-                      <div className="grid gap-2 grid-cols-2 sm:grid-cols-3">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                          <div key={i} className="h-9 rounded-xl bg-muted/30 animate-pulse border border-border/20" />
-                        ))}
-                      </div>
-                    ) : subSubCategoriesList.length > 0 ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {subSubCategoriesList.map((subSub) => (
-                          <button
-                            key={subSub}
-                            type="button"
-                            onClick={() => handleSubSubCategoryClick(subSub)}
-                            className={cn(
-                              "px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 font-outfit",
-                              subSubCategory === subSub
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border/50 bg-muted/20 hover:border-primary/60 hover:bg-primary/5 hover:text-primary"
-                            )}
-                          >
-                            {subSub}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground/60 italic">Type a custom topic or skip this step by clicking Continue.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 5: Skill Level */}
-              {step === 5 && (
                 <div className="grid gap-2.5 grid-cols-1 sm:grid-cols-3">
                   {SKILL_LEVELS.map((level) => {
                     const Icon = level.icon;
@@ -579,8 +531,8 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                 </div>
               )}
 
-              {/* STEP 6: Content Format */}
-              {step === 6 && (
+              {/* STEP 5: Content Format */}
+              {step === 5 && (
                 <div className="grid gap-2.5 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
                   {CONTENT_TYPES.map((type) => {
                     const Icon = type.icon;
@@ -634,8 +586,8 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                 </div>
               )}
 
-              {/* STEP 7: Confirm Details */}
-              {step === 7 && (
+              {/* STEP 6: Confirm Details */}
+              {step === 6 && (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Review your selections before generating your niche report:
@@ -653,12 +605,6 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
                       <div className="px-4 py-3 flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">Sub-Category</span>
                         <span className="text-sm font-semibold text-foreground">"{subCategory}"</span>
-                      </div>
-                    )}
-                    {subSubCategory && (
-                      <div className="px-4 py-3 flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">Topic</span>
-                        <span className="text-sm font-semibold text-foreground">"{subSubCategory}"</span>
                       </div>
                     )}
                     <div className="px-4 py-3 flex items-center justify-between">
@@ -698,7 +644,7 @@ export function NicheFinderForm({ onGenerated }: NicheFinderFormProps) {
           </div>
 
           <div>
-            {step < 7 ? (
+            {step < 6 ? (
               <Button
                 size="sm"
                 onClick={handleNext}

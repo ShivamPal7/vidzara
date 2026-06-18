@@ -12,7 +12,12 @@ import type { ChannelSearchResult, ConsistencyData } from "./types";
 import { toast } from "sonner";
 import { IconChartDots } from "@tabler/icons-react";
 
+import { useCredits } from "@/components/dashboard/credits-provider";
+import { getCreditCost } from "@/lib/credits";
+import { Feature } from "../../../../prisma/generated/prisma/enums";
+
 export function ConsistencyCheckerClient() {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   const searchParams = useSearchParams();
   const generationId = searchParams.get("generationId");
 
@@ -43,11 +48,21 @@ export function ConsistencyCheckerClient() {
   }, [generationId]);
 
   const handleChannelSelect = (channel: ChannelSearchResult) => {
+    const cost = getCreditCost(Feature.CONSISTENCY_CHECKER);
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Consistency Checker", cost);
+      return;
+    }
+
+    deductCreditsLocal(cost);
+
     startTransition(async () => {
       const result = await analyzeChannelConsistency(channel);
       if (result.success && result.data) {
         setData(result.data);
       } else {
+        deductCreditsLocal(-cost);
         toast.error(result.error || "Failed to analyse channel.");
       }
     });

@@ -12,6 +12,10 @@ import { generateContentSafety } from "@/actions/content-safety";
 import { toast } from "sonner";
 import { safeJsonParse } from "@/components/dashboard/history/history-utils";
 
+import { useCredits } from "@/components/dashboard/credits-provider";
+import { getCreditCost } from "@/lib/credits";
+import { Feature } from "../../../../../../prisma/generated/prisma/enums";
+
 function normalizeContentSafetyResult(parsedOutput: any): ContentSafetyResult | null {
   if (!parsedOutput) return null;
   if (typeof parsedOutput !== "object") return null;
@@ -42,6 +46,7 @@ function normalizeContentSafetyResult(parsedOutput: any): ContentSafetyResult | 
 }
 
 export default function ContentSafetyPage() {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   const searchParams = useSearchParams();
   const generationId = searchParams.get("generationId");
 
@@ -76,6 +81,15 @@ export default function ContentSafetyPage() {
   }, [generationId]);
 
   const handleAnalyze = async (content: string) => {
+    const cost = getCreditCost(Feature.CONTENT_SAFETY, {
+      format: content.length > 2000 ? "long" : "shorts"
+    });
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Content Safety Checker", cost);
+      return;
+    }
+
     setIsAnalyzing(true);
     setResult(null); // Clear previous result to show skeleton
     
@@ -83,6 +97,7 @@ export default function ContentSafetyPage() {
       const response = await generateContentSafety({ content });
       
       if (response.success && response.data) {
+        deductCreditsLocal(cost);
         setResult(normalizeContentSafetyResult(response.data));
       } else {
         toast.error(response.error || "Failed to analyze content");

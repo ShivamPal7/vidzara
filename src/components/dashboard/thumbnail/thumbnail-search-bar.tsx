@@ -9,6 +9,7 @@ import { ThumbnailOptions, type ThumbnailOption } from "./thumbnail-options";
 import { generateThumbnailConcepts } from "@/actions/thumbnail";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { ThumbnailSearchBarProps } from "./types";
+import { useCredits } from "@/components/dashboard/credits-provider";
 
 const DEFAULT_OPTIONS: ThumbnailOption[] = [
   { id: "text", label: "Text Ideas", description: "Generate click-optimized text for thumbnails", enabled: true },
@@ -19,6 +20,7 @@ const DEFAULT_OPTIONS: ThumbnailOption[] = [
 ];
 
 export function ThumbnailSearchBar({ className, onGenerated }: ThumbnailSearchBarProps) {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   const searchParams = useSearchParams();
   const initialPrompt = searchParams.get("prompt") || "";
   
@@ -59,6 +61,14 @@ export function ThumbnailSearchBar({ className, onGenerated }: ThumbnailSearchBa
       count,
     };
 
+    const cost = 5;
+    if (credits !== null && credits < cost) {
+      openCreditGate("Thumbnail Concept Generator", cost);
+      return;
+    }
+
+    deductCreditsLocal(cost);
+
     startTransition(async () => {
       const result = await generateThumbnailConcepts({
         mode: "topic",
@@ -70,6 +80,7 @@ export function ThumbnailSearchBar({ className, onGenerated }: ThumbnailSearchBa
         onGenerated?.(result.generationId);
         router.push(`/dashboard/create/thumbnail/${result.generationId}`);
       } else {
+        deductCreditsLocal(-cost);
         setError(result.error || "Generation failed. Please try again.");
       }
     });

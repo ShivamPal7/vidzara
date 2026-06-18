@@ -10,7 +10,12 @@ import { generateShorts } from "./actions"
 import { motion } from "framer-motion"
 import { IconScissors } from "@tabler/icons-react"
 
+import { useCredits } from "@/components/dashboard/credits-provider"
+import { getCreditCost } from "@/lib/credits"
+import { Feature } from "../../../../prisma/generated/prisma/enums"
+
 export function ShortenerView() {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits()
   const searchParams = useSearchParams()
   const generationId = searchParams.get("generationId")
 
@@ -71,13 +76,22 @@ export function ShortenerView() {
   }, [generationId]);
 
   const handleAnalyze = async (script: string, count: number) => {
+    const cost = getCreditCost(Feature.SCRIPT_SHORTENER, { count });
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Script Shortener", cost);
+      return;
+    }
+
     setIsGenerating(true)
     setShorts([])
+    deductCreditsLocal(cost)
     
     try {
       const result = await generateShorts(script, count)
       
       if (!result.success) {
+        deductCreditsLocal(-cost)
         toast.error(result.error || "Failed to generate shorts")
         return
       }
@@ -90,9 +104,11 @@ export function ShortenerView() {
         setShorts(shortsArray)
         toast.success("Shorts generated successfully!")
       } else {
+        deductCreditsLocal(-cost)
         toast.error("Received invalid data from AI")
       }
     } catch (error) {
+      deductCreditsLocal(-cost)
       toast.error("An unexpected error occurred. Please try again.")
     } finally {
       setIsGenerating(false)

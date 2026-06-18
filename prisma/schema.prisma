@@ -22,7 +22,7 @@ model User {
   
   // New Relations (M1.1)
   userProfile   UserProfile?
-  credits       Int       @default(100)
+  credits       Int       @default(0)
   subscription  Subscription?
   usageRecords  UsageRecord[]
   generations   Generation[]
@@ -346,6 +346,7 @@ enum Feature {
   NICHE_FINDER
   THUMBNAIL_CONCEPT
   GROWTH_DASHBOARD
+  CHAT
 }
 
 enum AbuseEvent {

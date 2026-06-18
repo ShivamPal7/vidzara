@@ -147,10 +147,15 @@ export async function POST(req: NextRequest) {
 
       // 4. Update Database inside a transaction
       await prisma.$transaction(async (tx) => {
+        const isTrial = subscription.notes && (subscription.notes as any).is_trial === "true";
+        const actualCreditsToAdd = isTrial ? 100 : creditsToAdd;
+        const subStatus = isTrial ? SubscriptionStatus.TRIALING : SubscriptionStatus.ACTIVE;
+        const trialEnds = isTrial ? new Date(Number(subscription.current_end) * 1000) : null;
+
         // Increment user credits
         await tx.user.update({
           where: { id: userId },
-          data: { credits: { increment: creditsToAdd } }
+          data: { credits: { increment: actualCreditsToAdd } }
         });
 
         // Set or update subscription
@@ -159,19 +164,21 @@ export async function POST(req: NextRequest) {
           update: {
             plan: dbPlan,
             billingCycle: dbCycle,
-            status: SubscriptionStatus.ACTIVE,
+            status: subStatus,
             gateway: Gateway.RAZORPAY,
             gatewaySubscriptionId: razorpay_subscription_id,
             currentPeriodEnd: new Date(Number(subscription.current_end) * 1000),
+            trialEndsAt: trialEnds,
           },
           create: {
             userId,
             plan: dbPlan,
             billingCycle: dbCycle,
-            status: SubscriptionStatus.ACTIVE,
+            status: subStatus,
             gateway: Gateway.RAZORPAY,
             gatewaySubscriptionId: razorpay_subscription_id,
             currentPeriodEnd: new Date(Number(subscription.current_end) * 1000),
+            trialEndsAt: trialEnds,
           }
         });
 

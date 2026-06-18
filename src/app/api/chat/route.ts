@@ -6,6 +6,8 @@ import { openrouterClient } from "@/lib/ai/client";
 import { prisma } from "@/lib/prisma";
 import { YOUTUBE_COACH_SYSTEM } from "@/lib/ai/system-prompts";
 import { getConnectedChannel } from "@/actions/growth-analytics";
+import { deductCreditsAction } from "@/actions/credits";
+import { Feature } from "../../../../prisma/generated/prisma/enums";
 
 const HISTORY_WINDOW = 10; // number of recent messages to include in context
 
@@ -30,6 +32,12 @@ export async function POST(req: Request) {
     });
     if (!chatSession) {
       return NextResponse.json({ error: "Chat session not found" }, { status: 404 });
+    }
+
+    // 3.5. Deduct 1 credit for chat message
+    const creditRes = await deductCreditsAction(Feature.CHAT);
+    if (!creditRes.success) {
+      return NextResponse.json({ error: creditRes.error || "Insufficient credits" }, { status: 403 });
     }
 
     // 4. Save the user's message to DB first

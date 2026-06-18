@@ -42,7 +42,12 @@ function normalizeHookResult(parsedOutput: any): HookDetectorResult | null {
   };
 }
 
+import { useCredits } from "@/components/dashboard/credits-provider";
+import { getCreditCost } from "@/lib/credits";
+import { Feature } from "../../../../prisma/generated/prisma/enums";
+
 export function HookDetectorClient({ initialData }: { initialData?: any }) {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   const searchParams = useSearchParams();
   const generationId = searchParams.get("generationId");
 
@@ -77,13 +82,24 @@ export function HookDetectorClient({ initialData }: { initialData?: any }) {
   }, [generationId]);
 
   const handleAnalyze = async (content: string) => {
+    const cost = getCreditCost(Feature.HOOK_DETECTOR, {
+      format: content.length > 500 ? "long" : "shorts"
+    });
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Hook Failure Detector", cost);
+      return;
+    }
+
     setIsAnalyzing(true);
     setResults(null);
+    deductCreditsLocal(cost);
 
     try {
       const result = await generateHookAnalysis({ script: content });
       
       if (!result.success || !result.data) {
+        deductCreditsLocal(-cost);
         toast.error(result.error || "Failed to analyze hook.");
         return;
       }
@@ -92,6 +108,7 @@ export function HookDetectorClient({ initialData }: { initialData?: any }) {
       toast.success("Analysis complete!");
       
     } catch (error) {
+      deductCreditsLocal(-cost);
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsAnalyzing(false);

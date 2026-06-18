@@ -108,6 +108,13 @@ export const FEATURE_MODELS: Record<Feature, FeatureRoutingConfig> = {
     temperature: 0.42,
     systemPrompt: SystemPrompts.GROWTH_DASHBOARD_SYSTEM,
   },
+
+  // ── Coaching Chat → Gemini 2.5 Flash ─────────────────────────────────────────
+  [Feature.CHAT]: {
+    models: ["google/gemini-2.5-flash", "google/gemini-2.5-pro"],
+    temperature: 0.75,
+    systemPrompt: SystemPrompts.YOUTUBE_COACH_SYSTEM,
+  },
 };
 
 /**

@@ -11,8 +11,12 @@ import { createChatSession, getChatMessages } from "@/actions/chat"
 import { getConnectedChannel } from "@/actions/growth-analytics"
 import { useSidebar } from "@/components/ui/sidebar"
 import { toast } from "sonner"
+import { useCredits } from "@/components/dashboard/credits-provider"
+import { getCreditCost } from "@/lib/credits"
+import { Feature } from "../../../../../prisma/generated/prisma/enums"
 
 function NewPageContent() {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits()
   const { state, isMobile } = useSidebar()
   const searchParams = useSearchParams()
   const urlSessionId = searchParams.get("sessionId")
@@ -83,6 +87,12 @@ function NewPageContent() {
   ) => {
     if (!text.trim() || isGenerating) return
 
+    const cost = getCreditCost(Feature.CHAT)
+    if (credits !== null && credits < cost) {
+      openCreditGate("AI Coaching Chat", cost)
+      return
+    }
+
     // Tool redirect
     if (selectedTool) {
       const paths: Record<string, string> = {
@@ -116,13 +126,19 @@ function NewPageContent() {
     setStreamingText("")
     setPrompt("")
 
+    // Deduct credits locally immediately
+    deductCreditsLocal(cost)
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: activeSessionId, prompt: text, isDeepThinking, attachments }),
       })
-      if (!response.ok) throw new Error("Coach couldn't respond. Please try again.")
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}))
+        throw new Error(errJson.error || "Coach couldn't respond. Please try again.")
+      }
 
       const reader = response.body?.getReader()
       if (!reader) throw new Error("Stream not available.")
@@ -158,6 +174,7 @@ function NewPageContent() {
         createdAt: new Date(),
       }])
     } catch (err: any) {
+      deductCreditsLocal(-cost)
       toast.error(err.message || "Something went wrong. Try again.")
     } finally {
       setIsGenerating(false)

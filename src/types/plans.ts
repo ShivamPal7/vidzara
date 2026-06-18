@@ -39,6 +39,7 @@ export const PLAN_FEATURES: Record<Plan, Record<Feature, FeatureConstraint>> = {
     [Feature.NICHE_FINDER]: { allowed: false },
     [Feature.THUMBNAIL_CONCEPT]: { allowed: true, limit: 3 },
     [Feature.GROWTH_DASHBOARD]: { allowed: true, advancedFeatures: false }, // Basic view
+    [Feature.CHAT]: { allowed: true },
   },
   [Plan.LIMITED_PRO]: {
     [Feature.VIDEO_SEO]: { allowed: true },
@@ -52,6 +53,7 @@ export const PLAN_FEATURES: Record<Plan, Record<Feature, FeatureConstraint>> = {
     [Feature.NICHE_FINDER]: { allowed: true, limit: 5 },
     [Feature.THUMBNAIL_CONCEPT]: { allowed: true },
     [Feature.GROWTH_DASHBOARD]: { allowed: true, advancedFeatures: true }, // Full dashboard
+    [Feature.CHAT]: { allowed: true },
   },
   [Plan.UNLIMITED_PRO]: {
     [Feature.VIDEO_SEO]: { allowed: true },
@@ -65,5 +67,6 @@ export const PLAN_FEATURES: Record<Plan, Record<Feature, FeatureConstraint>> = {
     [Feature.NICHE_FINDER]: { allowed: true },
     [Feature.THUMBNAIL_CONCEPT]: { allowed: true },
     [Feature.GROWTH_DASHBOARD]: { allowed: true, advancedFeatures: true },
+    [Feature.CHAT]: { allowed: true },
   },
 };

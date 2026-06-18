@@ -9,6 +9,7 @@ import { SeoOptions, type SeoOption } from "./seo-options";
 import { generateVideoSEO } from "@/actions/video-seo";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { VideoSeoSearchBarProps } from "./types";
+import { useCredits } from "@/components/dashboard/credits-provider";
 
 const DEFAULT_OPTIONS: SeoOption[] = [
   { id: "title", label: "Title", description: "Generate optimized video titles", enabled: true },
@@ -18,6 +19,7 @@ const DEFAULT_OPTIONS: SeoOption[] = [
 ];
 
 export function VideoSeoSearchBar({ className, onGenerated, initialPrompt: propPrompt, initialOptions }: VideoSeoSearchBarProps) {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   const searchParams = useSearchParams();
   const initialPrompt = propPrompt || searchParams.get("prompt") || "";
   
@@ -92,6 +94,26 @@ export function VideoSeoSearchBar({ className, onGenerated, initialPrompt: propP
       hashtags: options.find((o) => o.id === "hashtags")?.enabled ?? true,
     };
 
+    // Calculate cost
+    let cost = 0;
+    if (optionsMap.title && optionsMap.description && optionsMap.tags && optionsMap.hashtags) {
+      cost = 5;
+    } else {
+      if (optionsMap.title) cost += 1;
+      if (optionsMap.description) cost += 2;
+      if (optionsMap.tags) cost += 1;
+      if (optionsMap.hashtags) cost += 1;
+    }
+    if (cost === 0) cost = 5;
+
+    // Credit validation
+    if (credits !== null && credits < cost) {
+      openCreditGate("Video SEO Generator", cost);
+      return;
+    }
+
+    deductCreditsLocal(cost);
+
     startTransition(async () => {
       const result = await generateVideoSEO({
         mode: "topic",
@@ -103,6 +125,7 @@ export function VideoSeoSearchBar({ className, onGenerated, initialPrompt: propP
         onGenerated?.(result.generationId);
         router.push(`/dashboard/create/video-seo/${result.generationId}`);
       } else {
+        deductCreditsLocal(-cost);
         setError(result.error || "Generation failed. Please try again.");
       }
     });

@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
 
     const currency = isIndia ? "INR" : "USD";
     const planNamePrefix = dbPlan === Plan.LIMITED_PRO ? "Creator Pro" : "Studio Unlimited";
+    const isTrial = planType.includes("trial");
 
     // 2. Fetch configurations from the database (seeds if empty)
     await getPlanConfigsInternal();
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     let validatedCoupon = null;
 
     // 4. Validate coupon code if provided
-    if (couponCode) {
+    if (couponCode && !isTrial) {
       const cleanCode = couponCode.trim().toUpperCase();
       const coupon = await prisma.coupon.findUnique({
         where: { code: cleanCode },
@@ -197,12 +198,118 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 6. Create Razorpay Subscription
-    const subscription = await razorpay.subscriptions.create({
-      plan_id: planId,
-      customer_notify: 1,
-      total_count: 12, // Defaulting to 12 cycles
-    });
+    // 6. Create Razorpay Subscription with self-healing fallback for invalid plan IDs
+    let subscription;
+    try {
+      if (isTrial) {
+        const startAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7 days from now
+        const trialAmount = currency === "INR" ? 9900 : 100; // ₹99 or $1
+
+        subscription = await razorpay.subscriptions.create({
+          plan_id: planId,
+          customer_notify: 1,
+          total_count: 12,
+          start_at: startAt,
+          addons: [
+            {
+              item: {
+                name: `${planNamePrefix} 7-Day Trial`,
+                amount: trialAmount,
+                currency: currency,
+                description: "Initial 7-day trial charge with 100 credits"
+              }
+            }
+          ],
+          notes: {
+            is_trial: "true",
+            credits_to_grant: "100"
+          }
+        });
+      } else {
+        subscription = await razorpay.subscriptions.create({
+          plan_id: planId,
+          customer_notify: 1,
+          total_count: 12,
+        });
+      }
+    } catch (error: any) {
+      console.warn("[Razorpay] Initial subscription creation failed, checking if plan ID is invalid:", error);
+      
+      const isInvalidPlanError = error.statusCode === 400 && 
+        error.error?.code === "BAD_REQUEST_ERROR" && 
+        (error.error?.description?.includes("ID provided is invalid") || error.error?.description?.includes("could not be found"));
+
+      if (isInvalidPlanError) {
+        console.warn(`[Razorpay] Plan ID ${planId} was invalid. Regenerating plan dynamically...`);
+        
+        const targetAmountSubunit = Math.round(targetPrice * 100);
+        const rpPlan = await razorpay.plans.create({
+          period: dbCycle === BillingCycle.YEARLY ? "yearly" : "monthly",
+          interval: 1,
+          item: {
+            name: `${planNamePrefix} - ${dbCycle} (${currency})`,
+            amount: targetAmountSubunit,
+            currency: currency,
+            description: `${planNamePrefix} base plan`,
+          },
+        });
+
+        planId = rpPlan.id;
+
+        // Update database config
+        const updateData: any = {};
+        if (currency === "INR") {
+          if (dbCycle === BillingCycle.YEARLY) updateData.razorpayPlanYearlyINR = planId;
+          else updateData.razorpayPlanMonthlyINR = planId;
+        } else {
+          if (dbCycle === BillingCycle.YEARLY) updateData.razorpayPlanYearlyUSD = planId;
+          else updateData.razorpayPlanMonthlyUSD = planId;
+        }
+
+        await prisma.planConfig.update({
+          where: { plan: dbPlan },
+          data: updateData,
+        });
+
+        console.log(`[Razorpay] Dynamically created new plan ${planId} and updated database config.`);
+
+        // Retry subscription creation
+        if (isTrial) {
+          const startAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+          const trialAmount = currency === "INR" ? 9900 : 100;
+
+          subscription = await razorpay.subscriptions.create({
+            plan_id: planId,
+            customer_notify: 1,
+            total_count: 12,
+            start_at: startAt,
+            addons: [
+              {
+                item: {
+                  name: `${planNamePrefix} 7-Day Trial`,
+                  amount: trialAmount,
+                  currency: currency,
+                  description: "Initial 7-day trial charge with 100 credits"
+                }
+              }
+            ],
+            notes: {
+              is_trial: "true",
+              credits_to_grant: "100"
+            }
+          });
+        } else {
+          subscription = await razorpay.subscriptions.create({
+            plan_id: planId,
+            customer_notify: 1,
+            total_count: 12,
+          });
+        }
+      } else {
+        // Not an invalid plan error, rethrow
+        throw error;
+      }
+    }
 
     return NextResponse.json(subscription, { status: 200 });
   } catch (error: any) {

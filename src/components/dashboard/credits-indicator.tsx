@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getUserCreditsAction } from "@/actions/credits";
+import { useCredits } from "@/components/dashboard/credits-provider";
 import { Coins, Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,41 +17,9 @@ interface CreditsIndicatorProps {
 }
 
 export function CreditsIndicator({ className }: CreditsIndicatorProps) {
-  const [credits, setCredits] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { credits, loading } = useCredits();
 
-  useEffect(() => {
-    async function fetchCredits() {
-      try {
-        const result = await getUserCreditsAction();
-        if (result.success) {
-          setCredits(result.credits);
-        }
-      } catch (error) {
-        console.error("Failed to fetch credits:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchCredits();
-    
-    const handleCreditsUpdated = () => {
-      setLoading(true);
-      fetchCredits();
-    };
-    
-    window.addEventListener("credits-updated", handleCreditsUpdated);
-    
-    // Periodically refresh credits (every minute)
-    const interval = setInterval(fetchCredits, 60000);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("credits-updated", handleCreditsUpdated);
-    };
-  }, []);
-
-  if (loading) {
+  if (loading && credits === null) {
     return (
       <div className={cn("flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground bg-muted/50 rounded-md", className)}>
         <Loader2 className="w-4 h-4 animate-spin" />

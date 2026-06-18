@@ -16,9 +16,13 @@ import { ScriptGenerationView } from "@/components/dashboard/script-writer/scrip
 import { getUsageData, type UsageData } from "@/actions/usage"
 import { getRecentScripts, generateScript, saveGeneratedScript } from "@/actions/script-writer"
 import { DEFAULT_SCRIPT_WRITER_STATE, type ScriptWriterState } from "@/components/dashboard/script-writer/constants"
+import { useCredits } from "@/components/dashboard/credits-provider"
+import { Feature } from "../../../../../../prisma/generated/prisma/enums"
+import { getCreditCost } from "@/lib/credits"
 
 export default function ScriptWriterClient({ initialData }: { initialData?: any }) {
   const router = useRouter()
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits()
   const [usage, setUsage] = useState<UsageData>({
     used: 0,
     limit: 3,
@@ -89,6 +93,16 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
 
   // Triggers when user presses enter or clicks send
   const handleSubmit = async (state: ScriptWriterState) => {
+    const cost = getCreditCost(Feature.SCRIPT_WRITER, {
+      format: state.format,
+      duration: state.duration,
+    })
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Script Writer", cost);
+      return;
+    }
+
     // Preserve the original prompt and configuration parameters
     setSubmittedState(state)
     setGeneratedTitle(state.prompt || "Untitled Script")
@@ -184,6 +198,13 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
   const handleGenerateScript = async (state: ScriptWriterState, answers: Array<{ question: string; answer: string }>) => {
     setQuestionFlowState("loading-steps")
     const activeState = state || submittedState || writerState
+
+    const cost = getCreditCost(Feature.SCRIPT_WRITER, {
+      format: activeState.format,
+      duration: activeState.duration,
+    })
+
+    deductCreditsLocal(cost)
 
     try {
       const controller = new AbortController();
@@ -324,6 +345,7 @@ export default function ScriptWriterClient({ initialData }: { initialData?: any 
         }
       }).catch(console.error);
     } catch (error: any) {
+      deductCreditsLocal(-cost) // Refund by adding them back
       console.error("Failed to generate script:", error);
       setQuestionFlowState("idle")
       setView("initial")

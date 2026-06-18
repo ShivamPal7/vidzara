@@ -9,11 +9,16 @@ import { toast } from "sonner";
 import { IconWand, IconLoader2 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 
+import { useCredits } from "@/components/dashboard/credits-provider";
+import { getCreditCost } from "@/lib/credits";
+import { Feature } from "../../../../prisma/generated/prisma/enums";
+
 interface TopicGeneratorSearchBarProps {
   onGenerated: () => void;
 }
 
 export function TopicGeneratorSearchBar({ onGenerated }: TopicGeneratorSearchBarProps) {
+  const { credits, openCreditGate, deductCreditsLocal } = useCredits();
   const [selectedCompetitorIds, setSelectedCompetitorIds] = useState<string[]>([]);
   const [prompt, setPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -30,7 +35,16 @@ export function TopicGeneratorSearchBar({ onGenerated }: TopicGeneratorSearchBar
       return;
     }
 
+    const channelsCount = hasCompetitors ? selectedCompetitorIds.length : 1;
+    const cost = getCreditCost(Feature.TOPIC_GENERATOR, { channelsCount });
+
+    if (credits !== null && credits < cost) {
+      openCreditGate("Topic Generator", cost);
+      return;
+    }
+
     setGenerating(true);
+    deductCreditsLocal(cost);
 
     const result = await generateTopicIdeas({
       competitorIds: hasCompetitors ? selectedCompetitorIds : undefined,
@@ -42,6 +56,7 @@ export function TopicGeneratorSearchBar({ onGenerated }: TopicGeneratorSearchBar
       onGenerated();
       router.push(`/dashboard/analyze/topic-generator/${result.data.id}`);
     } else {
+      deductCreditsLocal(-cost);
       toast.error(result.error || "Failed to generate topics.");
       setGenerating(false);
     }

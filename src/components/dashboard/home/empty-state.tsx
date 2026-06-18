@@ -4,7 +4,7 @@ import Link from "next/link"
 
 export function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-12 text-center glass-1 rounded-xl border border-dashed p-8">
+    <div className="flex flex-col items-center justify-center py-12 text-center bg-muted/10 rounded-xl border border-dashed p-8">
       <div className="bg-muted/50 p-4 rounded-full mb-4">
         <IconGhost className="h-8 w-8 text-muted-foreground" />
       </div>

@@ -163,4 +163,5 @@ export const FEATURE_SCHEMAS: Record<Feature, z.ZodSchema<any> | undefined> = {
     actionItems: z.array(z.string()),
     projectedGrowth: z.string(),
   }),
+  [Feature.CHAT]: undefined,
 };

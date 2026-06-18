@@ -44,6 +44,12 @@ const rawPrompts: Record<Feature, PromptTemplate> = {
     description: "Growth analysis",
     generatePrompt: () => "Placeholder prompt",
   },
+  [Feature.CHAT]: {
+    name: "Chat Coaching",
+    feature: Feature.CHAT,
+    description: "AI YouTube growth coaching conversation",
+    generatePrompt: (input: string) => input,
+  },
 };
 
 export const PROMPTS = Object.fromEntries(
