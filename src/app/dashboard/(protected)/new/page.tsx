@@ -108,26 +108,34 @@ function NewPageContent() {
       return
     }
 
-    // Ensure a session exists
-    let activeSessionId = sessionId
-    if (!activeSessionId) {
-      const res = await createChatSession(text.slice(0, 40) + (text.length > 40 ? "…" : ""))
-      if (res.success && res.data) {
-        activeSessionId = res.data.id
-        setSessionId(activeSessionId)
-      } else {
-        toast.error("Couldn't start a coaching session. Try again.")
-        return
-      }
-    }
-
+    // 1. Optimistically display user message and lock the input field immediately
     setMessages((prev) => [...prev, { role: "user", content: text, attachments, createdAt: new Date() }])
     setIsGenerating(true)
     setStreamingText("")
     setPrompt("")
 
-    // Deduct credits locally immediately
+    // 2. Deduct credits locally immediately
     deductCreditsLocal(cost)
+
+    // 3. Ensure a session exists
+    let activeSessionId = sessionId
+    if (!activeSessionId) {
+      try {
+        const res = await createChatSession(text.slice(0, 40) + (text.length > 40 ? "…" : ""))
+        if (res.success && res.data) {
+          activeSessionId = res.data.id
+          setSessionId(activeSessionId)
+        } else {
+          throw new Error(res.error || "Failed to create session")
+        }
+      } catch (err: any) {
+        toast.error("Couldn't start a coaching session. Try again.")
+        setIsGenerating(false)
+        setMessages((prev) => prev.slice(0, -1)) // Remove the optimistic message
+        deductCreditsLocal(-cost) // Refund the credits
+        return
+      }
+    }
 
     try {
       const response = await fetch("/api/chat", {

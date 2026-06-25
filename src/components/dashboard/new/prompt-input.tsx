@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ToolsDropdown } from "./tools-dropdown"
 import { toast } from "sonner"
+import { useCredits } from "@/components/dashboard/credits-provider"
 
 const MAX_CHARS = 4000
 const MAX_ATTACHMENTS = 5
@@ -52,6 +53,7 @@ export function PromptInput({
   onSend,
   isGenerating,
 }: PromptInputProps) {
+  const { credits } = useCredits()
   const [isFocused, setIsFocused] = useState(false)
   const [deepThinking, setDeepThinking] = useState(false)
   const [attachments, setAttachments] = useState<AttachmentData[]>([])
@@ -354,10 +356,10 @@ export function PromptInput({
             ) : (
               <div 
                 className="inline-flex items-center justify-center rounded-full border border-border/40 bg-muted/40 text-foreground/80 px-3 py-1.5 gap-1.5 text-xs font-medium select-none"
-                title={`${usage.remaining} generations remaining`}
+                title={`${credits !== null ? credits : "..."} credits remaining`}
               >
                 <Sparkles className="size-3.5 text-primary shrink-0" strokeWidth={2} />
-                <span>{usage.remaining} left</span>
+                <span>{credits !== null ? credits : "..."} left</span>
               </div>
             )}
 
