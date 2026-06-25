@@ -79,7 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
       label: "Manage",
       items: [
-        { title: "Growth Dashboard", url: "/dashboard/growth", icon: IconTrendingUp },
+        // { title: "Growth Dashboard", url: "/dashboard/growth", icon: IconTrendingUp },
         { title: "History Logs", url: "/dashboard/history", icon: IconHistory },
         { title: "Plan & Pricing", url: "/dashboard/billing", icon: IconCoins },
         { title: "Affiliate Portal", url: "/dashboard/affiliate", icon: IconUsers },
