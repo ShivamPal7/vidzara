@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import NextTopLoader from "nextjs-toploader";
 import { ReferralTracker } from "@/components/referral-tracker";
+import { PwaRegister } from "@/components/pwa-register";
 
 const plusJakartaSans = localFont({
   src: [
@@ -146,6 +147,7 @@ export default function RootLayout({
             shadow="0 0 10px #a855f7,0 0 5px #a855f7"
           />
           <ReferralTracker />
+          <PwaRegister />
           {children}
           <Toaster />
         </ThemeProvider>
