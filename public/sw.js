@@ -22,3 +22,8 @@ self.addEventListener('notificationclick', function (event) {
     clients.openWindow(self.location.origin || 'https://vidzara.com')
   )
 })
+
+// Dummy fetch handler for compatibility with older Android PWA install requirements
+self.addEventListener('fetch', function (event) {
+  // Pass-through or no-op is sufficient for registration validation
+})
