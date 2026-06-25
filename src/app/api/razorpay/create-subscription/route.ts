@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Razorpay from "razorpay";
-import { prisma, Plan, BillingCycle } from "@/lib/prisma";
+import { prisma, Plan, BillingCycle, SubscriptionStatus } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { getPlanConfigsInternal } from "@/actions/admin/plan-config";
@@ -47,6 +47,31 @@ export async function POST(req: NextRequest) {
     const currency = isIndia ? "INR" : "USD";
     const planNamePrefix = dbPlan === Plan.LIMITED_PRO ? "Creator Pro" : "Studio Unlimited";
     const isTrial = planType.includes("trial");
+
+    // Check if trial restrictions apply
+    if (isTrial) {
+      const userSub = await prisma.subscription.findUnique({
+        where: { userId: session.user.id },
+      });
+
+      if (userSub) {
+        // Cannot downgrade to trial if they currently have an active paid plan
+        if (userSub.plan !== Plan.FREE && userSub.status === SubscriptionStatus.ACTIVE) {
+          return NextResponse.json(
+            { error: "You already have an active plan and cannot downgrade to a trial." },
+            { status: 400 }
+          );
+        }
+
+        // Trial is one-time access only (prevent if they have gatewaySubscriptionId or had a non-FREE plan)
+        if (userSub.gatewaySubscriptionId || userSub.plan !== Plan.FREE) {
+          return NextResponse.json(
+            { error: "The trial plan is only for one-time access, which you have already used." },
+            { status: 400 }
+          );
+        }
+      }
+    }
 
     // 2. Fetch configurations from the database (seeds if empty)
     await getPlanConfigsInternal();
@@ -103,98 +128,49 @@ export async function POST(req: NextRequest) {
 
     let planId = "";
 
-    // 5. Select or create Razorpay Plan ID
-    if (validatedCoupon && targetPrice < basePrice) {
-      // Coupon applied - handle dynamic plan creation
-      const targetAmountSubunit = Math.round(targetPrice * 100); // in paise/cents
-      
-      let dynamicPlan = await prisma.dynamicPlan.findFirst({
-        where: {
-          plan: dbPlan,
-          billingCycle: dbCycle,
-          currency: currency,
-          amount: targetAmountSubunit,
-        },
-      });
-
-      if (!dynamicPlan) {
-        // Create new plan dynamically on Razorpay
-        try {
-          const rpPlan = await razorpay.plans.create({
-            period: dbCycle === BillingCycle.YEARLY ? "yearly" : "monthly",
-            interval: 1,
-            item: {
-              name: `${planNamePrefix} - ${dbCycle} - ${currency} ${targetPrice} (Discounted)`,
-              amount: targetAmountSubunit,
-              currency: currency,
-              description: `Subscription with ${validatedCoupon.discountPercent}% discount via coupon ${validatedCoupon.code}`,
-            },
-          });
-
-          dynamicPlan = await prisma.dynamicPlan.create({
-            data: {
-              razorpayId: rpPlan.id,
-              plan: dbPlan,
-              billingCycle: dbCycle,
-              currency: currency,
-              amount: targetAmountSubunit,
-            },
-          });
-        } catch (error: any) {
-          console.error("Dynamic Razorpay Plan Creation Failed:", error);
-          return NextResponse.json({ 
-            error: "Failed to initialize payment gateway for discounted subscription. Please contact support.",
-            details: error.message 
-          }, { status: 500 });
-        }
-      }
-
-      planId = dynamicPlan.razorpayId;
+    // 5. Select or create Razorpay Plan ID (always use base plan ID)
+    if (currency === "INR") {
+      planId = dbCycle === BillingCycle.YEARLY ? config.razorpayPlanYearlyINR || "" : config.razorpayPlanMonthlyINR || "";
     } else {
-      // No discount - get base plan ID
-      if (currency === "INR") {
-        planId = dbCycle === BillingCycle.YEARLY ? config.razorpayPlanYearlyINR || "" : config.razorpayPlanMonthlyINR || "";
-      } else {
-        planId = dbCycle === BillingCycle.YEARLY ? config.razorpayPlanYearlyUSD || "" : config.razorpayPlanMonthlyUSD || "";
-      }
+      planId = dbCycle === BillingCycle.YEARLY ? config.razorpayPlanYearlyUSD || "" : config.razorpayPlanMonthlyUSD || "";
+    }
 
-      // If not configured, create it dynamically
-      if (!planId) {
-        const targetAmountSubunit = Math.round(targetPrice * 100);
-        try {
-          const rpPlan = await razorpay.plans.create({
-            period: dbCycle === BillingCycle.YEARLY ? "yearly" : "monthly",
-            interval: 1,
-            item: {
-              name: `${planNamePrefix} - ${dbCycle} (${currency})`,
-              amount: targetAmountSubunit,
-              currency: currency,
-              description: `${planNamePrefix} base plan`,
-            },
-          });
+    // If not configured, create it dynamically
+    if (!planId) {
+      const targetAmountSubunit = Math.round(basePrice * 100);
+      try {
+        const rpPlan = await razorpay.plans.create({
+          period: dbCycle === BillingCycle.YEARLY ? "yearly" : "monthly",
+          interval: 1,
+          item: {
+            name: `${planNamePrefix} - ${dbCycle} (${currency})`,
+            amount: targetAmountSubunit,
+            currency: currency,
+            description: `${planNamePrefix} base plan`,
+          },
+        });
 
-          planId = rpPlan.id;
+        planId = rpPlan.id;
 
-          const updateData: any = {};
-          if (currency === "INR") {
-            if (dbCycle === BillingCycle.YEARLY) updateData.razorpayPlanYearlyINR = planId;
-            else updateData.razorpayPlanMonthlyINR = planId;
-          } else {
-            if (dbCycle === BillingCycle.YEARLY) updateData.razorpayPlanYearlyUSD = planId;
-            else updateData.razorpayPlanMonthlyUSD = planId;
-          }
-
-          await prisma.planConfig.update({
-            where: { plan: dbPlan },
-            data: updateData,
-          });
-        } catch (error: any) {
-          console.error("Base Razorpay Plan Creation Failed:", error);
-          return NextResponse.json({ 
-            error: "Failed to initialize base plan on payment gateway. Please contact support.",
-            details: error.message 
-          }, { status: 500 });
+        const updateData: any = {};
+        if (currency === "INR") {
+          if (dbCycle === BillingCycle.YEARLY) updateData.razorpayPlanYearlyINR = planId;
+          else updateData.razorpayPlanMonthlyINR = planId;
+        } else {
+          if (dbCycle === BillingCycle.YEARLY) updateData.razorpayPlanYearlyUSD = planId;
+          else updateData.razorpayPlanMonthlyUSD = planId;
         }
+
+        await prisma.planConfig.update({
+          where: { plan: dbPlan },
+          data: updateData,
+        });
+      } catch (error: any) {
+        console.error("Base Razorpay Plan Creation Failed:", error);
+        return NextResponse.json({ 
+          error: "Failed to initialize base plan on payment gateway. Please contact support.",
+          details: error.message 
+        }, { status: 500 });
       }
     }
 
@@ -202,7 +178,8 @@ export async function POST(req: NextRequest) {
     let subscription;
     try {
       if (isTrial) {
-        const startAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60; // 7 days from now
+        const trialDays = isIndia ? 7 : 3;
+        const startAt = Math.floor(Date.now() / 1000) + trialDays * 24 * 60 * 60; // 7 or 3 days from now
         const trialAmount = currency === "INR" ? 9900 : 100; // ₹99 or $1
 
         subscription = await razorpay.subscriptions.create({
@@ -213,16 +190,42 @@ export async function POST(req: NextRequest) {
           addons: [
             {
               item: {
-                name: `${planNamePrefix} 7-Day Trial`,
+                name: `${planNamePrefix} ${trialDays}-Day Trial`,
                 amount: trialAmount,
                 currency: currency,
-                description: "Initial 7-day trial charge with 100 credits"
+                description: `Initial ${trialDays}-day trial charge with 100 credits`
               }
             }
           ],
           notes: {
             is_trial: "true",
             credits_to_grant: "100"
+          }
+        });
+      } else if (validatedCoupon && targetPrice < basePrice) {
+        // First month/year discount applied via addon upfront payment
+        const cycleDays = dbCycle === BillingCycle.YEARLY ? 365 : 30;
+        const startAt = Math.floor(Date.now() / 1000) + cycleDays * 24 * 60 * 60;
+        const discountAmountSubunit = Math.round(targetPrice * 100);
+
+        subscription = await razorpay.subscriptions.create({
+          plan_id: planId,
+          customer_notify: 1,
+          total_count: 12,
+          start_at: startAt,
+          addons: [
+            {
+              item: {
+                name: `${planNamePrefix} - First ${dbCycle === BillingCycle.YEARLY ? "Year" : "Month"} Discounted`,
+                amount: discountAmountSubunit,
+                currency: currency,
+                description: `First cycle with ${validatedCoupon.discountPercent}% discount via coupon ${validatedCoupon.code}`
+              }
+            }
+          ],
+          notes: {
+            is_discounted: "true",
+            coupon_code: validatedCoupon.code
           }
         });
       } else {
@@ -242,7 +245,7 @@ export async function POST(req: NextRequest) {
       if (isInvalidPlanError) {
         console.warn(`[Razorpay] Plan ID ${planId} was invalid. Regenerating plan dynamically...`);
         
-        const targetAmountSubunit = Math.round(targetPrice * 100);
+        const targetAmountSubunit = Math.round(basePrice * 100);
         const rpPlan = await razorpay.plans.create({
           period: dbCycle === BillingCycle.YEARLY ? "yearly" : "monthly",
           interval: 1,
@@ -275,7 +278,8 @@ export async function POST(req: NextRequest) {
 
         // Retry subscription creation
         if (isTrial) {
-          const startAt = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+          const trialDays = isIndia ? 7 : 3;
+          const startAt = Math.floor(Date.now() / 1000) + trialDays * 24 * 60 * 60;
           const trialAmount = currency === "INR" ? 9900 : 100;
 
           subscription = await razorpay.subscriptions.create({
@@ -286,16 +290,41 @@ export async function POST(req: NextRequest) {
             addons: [
               {
                 item: {
-                  name: `${planNamePrefix} 7-Day Trial`,
+                  name: `${planNamePrefix} ${trialDays}-Day Trial`,
                   amount: trialAmount,
                   currency: currency,
-                  description: "Initial 7-day trial charge with 100 credits"
+                  description: `Initial ${trialDays}-day trial charge with 100 credits`
                 }
               }
             ],
             notes: {
               is_trial: "true",
               credits_to_grant: "100"
+            }
+          });
+        } else if (validatedCoupon && targetPrice < basePrice) {
+          const cycleDays = dbCycle === BillingCycle.YEARLY ? 365 : 30;
+          const startAt = Math.floor(Date.now() / 1000) + cycleDays * 24 * 60 * 60;
+          const discountAmountSubunit = Math.round(targetPrice * 100);
+
+          subscription = await razorpay.subscriptions.create({
+            plan_id: planId,
+            customer_notify: 1,
+            total_count: 12,
+            start_at: startAt,
+            addons: [
+              {
+                item: {
+                  name: `${planNamePrefix} - First ${dbCycle === BillingCycle.YEARLY ? "Year" : "Month"} Discounted`,
+                  amount: discountAmountSubunit,
+                  currency: currency,
+                  description: `First cycle with ${validatedCoupon.discountPercent}% discount via coupon ${validatedCoupon.code}`
+                }
+              }
+            ],
+            notes: {
+              is_discounted: "true",
+              coupon_code: validatedCoupon.code
             }
           });
         } else {
@@ -320,3 +349,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+

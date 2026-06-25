@@ -53,6 +53,10 @@ export async function POST(req: Request) {
     // 5. Generate dynamic questions using fast & cheap model
     const modelId = "google/gemini-2.5-flash-lite";
 
+    const languageName = language
+      ? language.charAt(0).toUpperCase() + language.slice(1)
+      : "English";
+
     const promptText = `
 You are a script development assistant. For the topic: "${prompt}", generate exactly 3 clarifying questions that will help shape a compelling YouTube script.
 
@@ -67,13 +71,14 @@ CONSTRAINTS:
 3. Questions should be 10–18 words, grounded in this specific topic.
 4. Each question must have exactly 3 meaningfully distinct answer options (3–6 words each).
 5. No generic questions — every question must feel like it could only be asked for this topic.
+6. LANGUAGE: You MUST generate all questions and option choices in the ${languageName} language. Do not use English unless the requested language is English. If the language is Hinglish, write the questions and options in Hinglish (a mix of Hindi and English written using the Latin script).
 `;
 
     const { object } = await generateObject({
       model: openrouterClient(modelId),
       schema: ClarifyingQuestionsSchema,
       prompt: promptText,
-      system: "You are a specialized script editor and YouTube content strategist. Generate 3 highly specific script options in JSON based on the prompt.",
+      system: `You are a specialized script editor and YouTube content strategist. Generate 3 highly specific script options in JSON based on the prompt. You MUST generate all questions and options in the ${languageName} language.`,
       temperature: 0.75,
     });
 

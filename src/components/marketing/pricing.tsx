@@ -27,62 +27,65 @@ interface PricingPlan {
 
 const plans: PricingPlan[] = [
     {
-        title: "Free Trial",
+        title: "Starter Trial",
         price: {
-            monthly: "₹0",
-            yearly: "₹0",
+            monthly: "₹99",
+            yearly: "₹99",
         },
-        description: "Perfect for exploring Vidzara.",
-        badge: "Free for 1 Month",
+        description: "Low-friction entry gateway.",
+        badge: "7-Day Trial",
         features: [
-            "Video SEO Generator (limited)",
-            "Topic Generator (limited)",
-            "Content Safety Check (basic)",
+            "100 AI Credits Included",
+            "Access to All AI Tools",
+            "Script Writing & SEO Generation",
+            "Thumbnail Concepts & Hook Detection",
+            "Topic & Niche Suggestions",
             "Creator Growth Dashboard",
+            "Limited Trial Access",
         ],
-        notIncluded: [
-            "Script Writing",
-            "Thumbnail Concepts",
-            "Competitor Analysis",
-        ],
-        cta: "Start Free Trial",
+        cta: "Start 7-Day Trial",
     },
     {
-        title: "Limited Pro",
+        title: "Creator Pro",
         price: {
-            monthly: "₹599",
-            yearly: "₹5,999",
+            monthly: "₹1,199",
+            yearly: "₹11,999",
         },
-        description: "For growing creators.",
+        description: "Best for serious & growing creators.",
         features: [
-            "Video SEO Generator",
-            "Shorts Script Writing",
-            "Topic Generator",
-            "Hook Detector (Shorts)",
-            "Thumbnail Concepts",
-            "Consistency Checker",
-            "Niche Finder",
+            "800 AI Credits / Month",
+            "Access to All AI Tools",
+            "Create Long-form & Shorts Scripts",
+            "AI SEO Optimization Suite",
+            "Thumbnail Concept Generator",
+            "Competitor & Channel Analysis",
+            "Save Project History",
+            "Faster AI Generation",
+            "Monthly Credit Renewal",
         ],
         badge: "Most Popular",
         highlight: true,
         cta: "Upgrade to Pro",
     },
     {
-        title: "Unlimited Pro",
+        title: "Studio Unlimited",
         price: {
-            monthly: "₹899",
-            yearly: "₹8,999",
+            monthly: "₹3,499",
+            yearly: "₹34,999",
         },
-        description: "For serious creators who want it all.",
-        badge: "Values",
+        description: "Premium anchor for elite users & agencies.",
+        badge: "Best Value",
         highlight: false,
         features: [
-            "All features unlocked",
-            "Long + Shorts Script Writing",
-            "Script Shortener",
-            "SEO, Topics, Hooks (Unlimited)",
-            "Thumbnails & Safety Check (Unlimited)",
-            "No daily limits",
+            "6,000 AI Credits / Month",
+            "Everything in the Creator Pro",
+            "Access to All AI Tools",
+            "High-Volume AI Generations",
+            "Faster Priority Processing",
+            "Bulk Content Creation",
+            "Advanced Usage Capacity",
+            "Early Access Features",
+            "Premium Priority Support",
         ],
         cta: "Go Unlimited",
     },
@@ -151,6 +154,8 @@ export function Pricing() {
 }
 
 function PricingCard({ plan, billingCycle }: { plan: PricingPlan, billingCycle: BillingCycle }) {
+    const isTrial = plan.title === "Starter Trial";
+    
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -179,10 +184,10 @@ function PricingCard({ plan, billingCycle }: { plan: PricingPlan, billingCycle: 
                     <h3 className="text-xl sm:text-2xl font-bold">{plan.title}</h3>
                     <div className="mt-2 flex items-baseline gap-1">
                         <span className="text-3xl sm:text-4xl font-bold tracking-tight">
-                            {billingCycle === "monthly" ? plan.price.monthly : plan.price.yearly}
+                            {isTrial ? "₹99" : (billingCycle === "monthly" ? plan.price.monthly : plan.price.yearly)}
                         </span>
                         <span className="text-muted-foreground text-sm font-medium">
-                            / {billingCycle === "monthly" ? "month" : "year"}
+                            / {isTrial ? "7 days" : (billingCycle === "monthly" ? "month" : "year")}
                         </span>
                     </div>
                     <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>

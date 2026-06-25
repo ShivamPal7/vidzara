@@ -329,18 +329,20 @@ export function ScriptPromptInput({ className, usage, state, onStateChange, onSu
                         onClick={() => setPopoverView("tone")}
                         className="flex items-center justify-between gap-3 rounded-lg px-2.5 py-2 hover:bg-accent/60 transition-colors text-left w-full"
                       >
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex items-center justify-center size-7 rounded-md bg-indigo-500/10 text-indigo-400">
+                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                          <div className="flex items-center justify-center size-7 rounded-md bg-indigo-500/10 text-indigo-400 shrink-0">
                             <Smile className="size-4" />
                           </div>
-                          <div className="flex flex-col">
+                          <div className="flex flex-col flex-1 min-w-0">
                             <span className="text-sm font-medium">Tone</span>
-                            <span className="text-xs text-muted-foreground">
-                              {state.tone || "Select tone..."}
+                            <span className="text-xs text-muted-foreground line-clamp-2 overflow-hidden text-ellipsis whitespace-normal">
+                              {state.tone?.startsWith("Transcript: ") && state.tone.length > 80
+                                ? `${state.tone.slice(0, 80)}...`
+                                : state.tone || "Select tone..."}
                             </span>
                           </div>
                         </div>
-                        <ChevronRight className="size-4 text-muted-foreground" />
+                        <ChevronRight className="size-4 text-muted-foreground shrink-0" />
                       </button>
                     </motion.div>
                   )}

@@ -49,15 +49,15 @@ export async function POST(req: NextRequest) {
         const baseConfig = await prisma.planConfig.findFirst({
           where: { plan: existingSub.plan },
         });
-        creditsToAdd = baseConfig ? baseConfig.monthlyCredits : 1200;
+        creditsToAdd = baseConfig ? baseConfig.monthlyCredits : 800;
       } else {
         // Standard renewal charge
         const baseConfig = await prisma.planConfig.findFirst({
           where: { plan: existingSub.plan },
         });
         creditsToAdd = existingSub.billingCycle === BillingCycle.YEARLY
-          ? (baseConfig ? baseConfig.yearlyCredits : 14400)
-          : (baseConfig ? baseConfig.monthlyCredits : 1200);
+          ? (baseConfig ? baseConfig.yearlyCredits : 9600)
+          : (baseConfig ? baseConfig.monthlyCredits : 800);
       }
 
       // Update user credits and transition status to ACTIVE

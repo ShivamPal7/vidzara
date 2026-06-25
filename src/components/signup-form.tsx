@@ -28,7 +28,7 @@ export function SignupForm({
         const formData = new FormData(e.currentTarget)
         const email = formData.get("email") as string
         const password = formData.get("password") as string
-        const name = formData.get("name") as string
+        const name = email.split("@")[0] || "User"
 
         await signUp.email({
             email,
@@ -123,22 +123,6 @@ export function SignupForm({
 
                 {/* Form */}
                 <form onSubmit={handleCredentialsSignUp} className="flex flex-col gap-4">
-
-                    {/* Full name */}
-                    <div className="flex flex-col gap-1.5">
-                        <label htmlFor="name" className="text-[0.8125rem] font-medium text-foreground/60">
-                            Full name
-                        </label>
-                        <Input
-                            id="name"
-                            name="name"
-                            type="text"
-                            placeholder="Alex Johnson"
-                            required
-                            autoComplete="name"
-                            className="h-10 rounded-lg bg-muted/30 border-border/50 text-sm placeholder:text-muted-foreground/30 focus-visible:border-primary/50 focus-visible:ring-0 transition-colors"
-                        />
-                    </div>
 
                     {/* Email */}
                     <div className="flex flex-col gap-1.5">

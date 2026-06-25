@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Coins, Zap, Loader2 } from "lucide-react";
@@ -8,10 +8,42 @@ import { cn } from "@/lib/utils";
 import Script from "next/script";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getUserCreditsAction } from "@/actions/credits";
 
 export function CreditTopUp({ isIndia }: { isIndia: boolean }) {
   const [loading, setLoading] = useState<number | null>(null);
+  const [plan, setPlan] = useState<string>("FREE");
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
+  const [fetchingPlan, setFetchingPlan] = useState(true);
   const router = useRouter();
+
+  const fetchUserPlan = async () => {
+    try {
+      setFetchingPlan(true);
+      const result = await getUserCreditsAction();
+      if (result.success) {
+        setPlan(result.plan || "FREE");
+        setSubscriptionStatus(result.subscriptionStatus || null);
+      }
+    } catch (e) {
+      console.error("Failed to fetch user plan for top-up eligibility:", e);
+    } finally {
+      setFetchingPlan(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserPlan();
+
+    const handleCreditsUpdated = () => {
+      fetchUserPlan();
+    };
+
+    window.addEventListener("credits-updated", handleCreditsUpdated);
+    return () => window.removeEventListener("credits-updated", handleCreditsUpdated);
+  }, []);
+
+  const isEligible = (plan === "LIMITED_PRO" || plan === "UNLIMITED_PRO") && subscriptionStatus === "ACTIVE";
 
   const topUps = [
     { credits: 250, price: isIndia ? "₹299" : "$5", amount: isIndia ? 29900 : 500, currency: isIndia ? "INR" : "USD" },
@@ -20,6 +52,11 @@ export function CreditTopUp({ isIndia }: { isIndia: boolean }) {
   ];
 
   const handlePayment = async (amount: number, currency: string, index: number) => {
+    if (!isEligible) {
+      toast.error("Top-ups are only available for active Pro and Unlimited plans.");
+      return;
+    }
+
     try {
       setLoading(index);
       
@@ -86,16 +123,21 @@ export function CreditTopUp({ isIndia }: { isIndia: boolean }) {
           </div>
         </CardHeader>
         <CardContent className="px-4 sm:px-6">
+          {!fetchingPlan && !isEligible && (
+            <div className="mb-4 text-xs font-semibold text-rose-500 bg-rose-500/10 border border-rose-500/20 px-3 py-2.5 rounded-xl flex items-center gap-2">
+              <span>⚠️ Top-ups are only available for active Creator Pro and Studio Unlimited subscription plans.</span>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {topUps.map((bundle, i) => (
               <Button
                 key={bundle.credits}
                 variant="secondary"
                 onClick={() => handlePayment(bundle.amount, bundle.currency, i)}
-                disabled={loading !== null}
+                disabled={loading !== null || fetchingPlan || !isEligible}
                 className={cn(
                   "font-semibold py-5 h-auto w-full transition-all flex flex-col items-center gap-1 border",
-                  bundle.popular ? "border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary" : "border-muted"
+                  bundle.popular && isEligible ? "border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary" : "border-muted"
                 )}
               >
                 {loading === i ? (

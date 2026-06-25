@@ -171,17 +171,27 @@ export async function refineScript(input: z.infer<typeof refineSchema>) {
     // Verify ownership
     const generation = await prisma.generation.findFirst({
       where: { id: validated.generationId, userId, feature: Feature.SCRIPT_WRITER },
-      select: { id: true, output: true },
+      select: { id: true, output: true, input: true },
     });
 
     if (!generation) {
       return { success: false as const, error: "Script not found." };
     }
 
-    // Since this is a refinement, we can just use GeminiProvider directly 
-    // with a specific refinement prompt instead of going through the full AIEngine
-    const { GeminiProvider } = await import("@/lib/ai/provider");
+    // Since this is a refinement, we can generate text using OpenRouter Client
+    const { generateText } = await import("ai");
+    const { openrouterClient } = await import("@/lib/ai/client");
+    const { FEATURE_MODELS } = await import("@/lib/ai/models");
     
+    // For script refinement, we use a faster and cheaper model (Gemini 2.5 Flash)
+    const modelId = "google/gemini-2.5-flash";
+
+    const inputData = generation.input as any;
+    const language = inputData?.language;
+    const languageName = language
+      ? language.charAt(0).toUpperCase() + language.slice(1)
+      : "English";
+
     const currentYear = new Date().getFullYear();
     const refinePrompt = `
 You are an expert YouTube scriptwriter and editor.
@@ -196,12 +206,19 @@ ${validated.content}
 Return ONLY the refined script formatted in HTML (using <h3> and <p> and <strong> tags). Do not include markdown blocks like \`\`\`html.
 Keep the parts of the script that are not affected by the instruction exactly the same.
 
+LANGUAGE CONSTRAINT:
+- The script is written in ${languageName}. You MUST write the refined script content in ${languageName} language. Do not translate the script to English or any other language unless explicitly requested.
+
 CRITICAL SYSTEM DIRECTIVE (CURRENT YEAR):
 - The current year is ${currentYear}.
 - When refining, if you mention or update references to the current year, you MUST use "${currentYear}" instead of "2024" or "2025".
 `;
 
-    const result = await GeminiProvider.generateText(refinePrompt);
+    const result = await generateText({
+      model: openrouterClient(modelId),
+      prompt: refinePrompt,
+      temperature: 0.3, // Lower temperature for high fidelity to instructions and original script structure
+    });
     let refinedContent = result.text.trim();
     if (refinedContent.startsWith("\`\`\`html")) {
       refinedContent = refinedContent.replace(/^\`\`\`html/, "").replace(/\`\`\`$/, "").trim();

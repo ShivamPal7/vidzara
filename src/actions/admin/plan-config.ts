@@ -46,12 +46,12 @@ export async function getPlanConfigsInternal() {
     const defaults = [
       {
         plan: Plan.LIMITED_PRO,
-        monthlyPriceINR: 999,
-        yearlyPriceINR: 7999,
+        monthlyPriceINR: 1199,
+        yearlyPriceINR: 11999,
         monthlyPriceUSD: 19,
         yearlyPriceUSD: 190,
-        monthlyCredits: 1200,
-        yearlyCredits: 14400,
+        monthlyCredits: 800,
+        yearlyCredits: 9600,
         razorpayPlanMonthlyINR: process.env.RAZORPAY_PLAN_CREATOR_MONTHLY_INR || null,
         razorpayPlanYearlyINR: process.env.RAZORPAY_PLAN_CREATOR_YEARLY_INR || null,
         razorpayPlanMonthlyUSD: null,
@@ -60,7 +60,7 @@ export async function getPlanConfigsInternal() {
       {
         plan: Plan.UNLIMITED_PRO,
         monthlyPriceINR: 3499,
-        yearlyPriceINR: 27999,
+        yearlyPriceINR: 34999,
         monthlyPriceUSD: 59,
         yearlyPriceUSD: 590,
         monthlyCredits: 6000,

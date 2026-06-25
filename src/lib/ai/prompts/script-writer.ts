@@ -8,6 +8,10 @@ export const ScriptWriterPrompt: PromptTemplate = {
   generatePrompt: (input: any) => {
     const { prompt, format, duration, tone, language, styleAnalysis } = input;
 
+    const languageName = language
+      ? language.charAt(0).toUpperCase() + language.slice(1)
+      : "English";
+
     const isShort = format === "short" || format === "insta" || format === "instagram" || format === "tiktok";
     const durationInMinutes = parseFloat(duration) || (isShort ? 1 : 10);
     const estimatedWords = Math.round(durationInMinutes * 150);
@@ -35,7 +39,7 @@ CONSTRAINTS & PARAMETERS:
 - Format: ${isShort ? `Vertical Short-Form Video (${format === "tiktok" ? "TikTok" : format === "insta" || format === "instagram" ? "Instagram Reel" : "Shorts/Reel/TikTok"}) specifically targeted for a ${timeLabel} duration.` : "Long-form YouTube Video"}
 - Target Length: Aim for approximately ${estimatedWords} words. You should generate a comprehensive script that provides enough depth and content to match this length (which corresponds to a ${timeLabel} video at a standard speaking pace).
 - Tone/Vibe: ${tone || "Highly engaging, storytelling-driven, authoritative yet conversational"}
-- Language: STRICTLY write the ENTIRE script in ${language || "English"}. Do not use any other language. All spoken text must be in this language.
+- Language: STRICTLY write the ENTIRE script in ${languageName}. Do not use any other language. All spoken text must be in this language.
 
 VIRAL PSYCHOLOGY RULES YOU MUST FOLLOW:
 1. NO BORING INTROS. Never say "Welcome back to the channel". Start exactly where the action or mystery is at its peak.
@@ -77,6 +81,7 @@ REFINEMENT SUGGESTIONS RULES:
 - 'refinementSuggestions' must contain exactly 3 short follow-up prompts for editing the WRITTEN SCRIPT TEXT ONLY.
 - Each suggestion must be a direct command under 6 words. (e.g. "Make the hook shorter", "Add a cliffhanger ending", "Use simpler words", "Make outro punchier")
 - DO NOT suggest visuals, camera directions, audio cues, pacing notes, or anything outside the written text.
+- LANGUAGE: You MUST write these 3 refinement suggestions in the ${languageName} language. Do not use English unless the requested language is English. If the language is Hinglish, write the suggestions in Hinglish.
 
 Write the best script of your career.
 `;

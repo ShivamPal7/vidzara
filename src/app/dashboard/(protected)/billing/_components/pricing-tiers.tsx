@@ -30,6 +30,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
   const [currentCycle, setCurrentCycle] = useState<string>("MONTHLY");
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [hasBoughtSub, setHasBoughtSub] = useState<boolean>(false);
   
   // Dynamic Pricing Configurations
   const [configs, setConfigs] = useState<PlanConfigData[]>([]);
@@ -50,6 +51,7 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
         setCurrentPlan(result.plan || "FREE");
         setCurrentCycle(result.billingCycle || "MONTHLY");
         setSubscriptionStatus(result.subscriptionStatus || null);
+        setHasBoughtSub(result.hasBoughtSubscription || false);
       }
     } catch (e) {
       console.error("Failed to fetch user plan", e);
@@ -125,12 +127,12 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
   const starterPrice = isIndia ? 99 : 1;
   const starterCredits = 100;
 
-  let creatorMonthly = isIndia ? 999 : 19;
-  let creatorYearly = isIndia ? 7999 : 190;
-  let creatorCredits = 1200;
+  let creatorMonthly = isIndia ? 1199 : 19;
+  let creatorYearly = isIndia ? 11999 : 190;
+  let creatorCredits = 800;
 
   let studioMonthly = isIndia ? 3499 : 59;
-  let studioYearly = isIndia ? 27999 : 590;
+  let studioYearly = isIndia ? 34999 : 590;
   let studioCredits = 6000;
 
   // Match configurations from DB
@@ -315,11 +317,12 @@ export function PricingTiers({ isIndia }: { isIndia: boolean }) {
             <Button 
               className="w-full" 
               variant={isStarterActive ? "default" : "outline"}
-              disabled={isStarterActive || loadingPlan === (isIndia ? "trial_creator_monthly_inr" : "trial_creator_monthly_usd")}
+              disabled={isStarterActive || hasBoughtSub || currentPlan !== "FREE" || loadingPlan === (isIndia ? "trial_creator_monthly_inr" : "trial_creator_monthly_usd")}
               onClick={() => handleSubscribe(isIndia ? "trial_creator_monthly_inr" : "trial_creator_monthly_usd")}
             >
               {loadingPlan === (isIndia ? "trial_creator_monthly_inr" : "trial_creator_monthly_usd") ? <Loader2 className="w-5 h-5 animate-spin" /> :
-               isStarterActive ? "Current Plan" : `Start ${isIndia ? "7-Day" : "3-Day"} Trial`}
+               isStarterActive ? "Current Plan" :
+               (hasBoughtSub || currentPlan !== "FREE") ? "Trial Unavailable" : `Start ${isIndia ? "7-Day" : "3-Day"} Trial`}
             </Button>
           </CardFooter>
         </Card>

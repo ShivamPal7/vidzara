@@ -102,11 +102,11 @@ export async function validateCouponAction({ code, plan, billingCycle, isIndia }
     if (isIndia) {
       if (plan === Plan.LIMITED_PRO) {
         originalPrice = billingCycle === BillingCycle.YEARLY 
-          ? (config?.yearlyPriceINR ?? 7999) 
-          : (config?.monthlyPriceINR ?? 999);
+          ? (config?.yearlyPriceINR ?? 11999) 
+          : (config?.monthlyPriceINR ?? 1199);
       } else if (plan === Plan.UNLIMITED_PRO) {
         originalPrice = billingCycle === BillingCycle.YEARLY 
-          ? (config?.yearlyPriceINR ?? 27999) 
+          ? (config?.yearlyPriceINR ?? 34999) 
           : (config?.monthlyPriceINR ?? 3499);
       }
     } else {

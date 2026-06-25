@@ -67,7 +67,13 @@ export async function completeOnboarding(data: OnboardingData) {
         },
       });
 
-      // 2. Create Subscription (Free Trial) if not exists
+      // 2. Sync display name to User name
+      await tx.user.update({
+        where: { id: user.id },
+        data: { name: validData.displayName },
+      });
+
+      // 3. Create Subscription (Free Trial) if not exists
       const existingSub = await tx.subscription.findUnique({
         where: { userId: user.id },
       });

@@ -121,18 +121,18 @@ export async function POST(req: NextRequest) {
           if (baseConfig) {
             creditsToAdd = dbCycle === BillingCycle.YEARLY ? baseConfig.yearlyCredits : baseConfig.monthlyCredits;
           } else {
-            creditsToAdd = dbPlan === Plan.UNLIMITED_PRO ? 6000 : 1200;
+            creditsToAdd = dbPlan === Plan.UNLIMITED_PRO ? 6000 : 800;
           }
         } else {
           // 3. Fallback to existing environment variables
           if (planId === process.env.RAZORPAY_PLAN_CREATOR_MONTHLY_INR) {
             dbPlan = Plan.LIMITED_PRO;
             dbCycle = BillingCycle.MONTHLY;
-            creditsToAdd = 1200;
+            creditsToAdd = 800;
           } else if (planId === process.env.RAZORPAY_PLAN_CREATOR_YEARLY_INR) {
             dbPlan = Plan.LIMITED_PRO;
             dbCycle = BillingCycle.YEARLY;
-            creditsToAdd = 14400; // 1200 * 12
+            creditsToAdd = 9600; // 800 * 12
           } else if (planId === process.env.RAZORPAY_PLAN_STUDIO_MONTHLY_INR) {
             dbPlan = Plan.UNLIMITED_PRO;
             dbCycle = BillingCycle.MONTHLY;
@@ -148,9 +148,38 @@ export async function POST(req: NextRequest) {
       // 4. Update Database inside a transaction
       await prisma.$transaction(async (tx) => {
         const isTrial = subscription.notes && (subscription.notes as any).is_trial === "true";
+        const isDiscounted = subscription.notes && (subscription.notes as any).is_discounted === "true";
+        
         const actualCreditsToAdd = isTrial ? 100 : creditsToAdd;
         const subStatus = isTrial ? SubscriptionStatus.TRIALING : SubscriptionStatus.ACTIVE;
-        const trialEnds = isTrial ? new Date(Number(subscription.current_end) * 1000) : null;
+        
+        let trialEnds: Date | null = null;
+        if (isTrial) {
+          if ((subscription as any).start_at) {
+            trialEnds = new Date(Number((subscription as any).start_at) * 1000);
+          } else if (subscription.current_end) {
+            trialEnds = new Date(Number(subscription.current_end) * 1000);
+          }
+        }
+
+        let periodEnd: Date;
+        if (isTrial || isDiscounted) {
+          if ((subscription as any).start_at) {
+            periodEnd = new Date(Number((subscription as any).start_at) * 1000);
+          } else {
+            // Fallback
+            const days = dbCycle === BillingCycle.YEARLY ? 365 : (isTrial ? 7 : 30);
+            periodEnd = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+          }
+        } else {
+          if (subscription.current_end) {
+            periodEnd = new Date(Number(subscription.current_end) * 1000);
+          } else {
+            // Fallback
+            const days = dbCycle === BillingCycle.YEARLY ? 365 : 30;
+            periodEnd = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+          }
+        }
 
         // Increment user credits
         await tx.user.update({
@@ -167,7 +196,7 @@ export async function POST(req: NextRequest) {
             status: subStatus,
             gateway: Gateway.RAZORPAY,
             gatewaySubscriptionId: razorpay_subscription_id,
-            currentPeriodEnd: new Date(Number(subscription.current_end) * 1000),
+            currentPeriodEnd: periodEnd,
             trialEndsAt: trialEnds,
           },
           create: {
@@ -177,7 +206,7 @@ export async function POST(req: NextRequest) {
             status: subStatus,
             gateway: Gateway.RAZORPAY,
             gatewaySubscriptionId: razorpay_subscription_id,
-            currentPeriodEnd: new Date(Number(subscription.current_end) * 1000),
+            currentPeriodEnd: periodEnd,
             trialEndsAt: trialEnds,
           }
         });
@@ -281,9 +310,9 @@ export async function POST(req: NextRequest) {
               }
             } else {
               if (dbPlan === Plan.LIMITED_PRO) {
-                amountPaid = dbCycle === BillingCycle.MONTHLY ? 999 : 7999;
+                amountPaid = dbCycle === BillingCycle.MONTHLY ? 1199 : 11999;
               } else if (dbPlan === Plan.UNLIMITED_PRO) {
-                amountPaid = dbCycle === BillingCycle.MONTHLY ? 3499 : 27999;
+                amountPaid = dbCycle === BillingCycle.MONTHLY ? 3499 : 34999;
               }
             }
           }
